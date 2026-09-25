@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulação — Painel comercial (Netrin)</title>
+  <style>
+    :root {
+      --primary: #4f169d;
+      --primary-50: #ede8f5;
+      --primary-400: #7245b1;
+      --secondary-400: #8456e4;
+      --card: #fff;
+      --border: #e4e4e7;
+      --muted: #71717a;
+      --warning-bg: #fffbeb;
+      --warning-border: #fcd34d;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, "Segoe UI", system-ui, sans-serif; color: #18181b; background: #f4f4f5; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 70px; background: #fafafa; box-shadow: 0 0 12px rgba(0,0,0,.06);
+      transition: width .22s ease; overflow: hidden; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar:hover { width: 280px; }
+    .sidebar-logo { height: 64px; display: flex; align-items: center; padding-left: 22px; font-weight: 700; color: var(--primary); white-space: nowrap; }
+    .logo-long { display: none; } .sidebar:hover .logo-short { display: none; } .sidebar:hover .logo-long { display: inline; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 12px; width: calc(100% - 16px); margin: 4px 8px;
+      border: none; background: transparent; padding: 10px; border-radius: 8px; cursor: pointer; color: #3f3f46; font: inherit;
+    }
+    .nav-btn:hover { background: #f4f4f5; }
+    .nav-btn.active { color: var(--primary); font-weight: 600; }
+    .nav-btn.active .ico { background: var(--primary-50); }
+    .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; }
+    .lbl { opacity: 0; white-space: nowrap; } .sidebar:hover .lbl { opacity: 1; }
+    .main { flex: 1; min-width: 0; }
+    .topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 24px; }
+    .banner { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 28px; }
+    .title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .title-ico { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-50); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .stat small { color: var(--muted); font-size: 12px; }
+    .stat strong { display: block; font-size: 22px; margin-top: 4px; }
+    .filters { background: #fafafa; border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+    .field label { font-size: 12px; color: var(--muted); }
+    .field input, .field select { padding: 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+    .field select[multiple] { min-height: 70px; }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .card h2 { margin: 0 0 8px; font-size: 16px; }
+    .hidden { display: none !important; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; font: inherit; font-size: 13px; }
+    .btn.on { background: var(--primary-50); border-color: var(--primary); color: var(--primary); }
+    .client { background: #fff; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; }
+    .client summary { padding: 16px; cursor: pointer; list-style: none; }
+    .client summary::-webkit-details-marker { display: none; }
+    .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+    .chip.danger { background: #fee2e2; color: #b91c1c; }
+    .chip.warning { background: #fef3c7; color: #b45309; }
+    .chip.success { background: #dcfce7; color: #15803d; }
+    .chip.secondary { background: var(--primary-50); color: var(--primary); }
+    .cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 8px; }
+    .cell { background: #fafafa; border-radius: 8px; padding: 8px; font-size: 13px; }
+    .cell span { display: block; font-size: 11px; color: var(--muted); }
+    .nested { padding: 0 16px 16px; }
+    .box { background: #fafafa; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span class="logo-short">N</span><span class="logo-long">Netrin · Simulação</span></div>
+    <button type="button" class="nav-btn active" data-view="dashboard"><span class="ico">⌂</span><span class="lbl">Dashboard</span></button>
+    <button type="button" class="nav-btn" data-view="clientes"><span class="ico">👤</span><span class="lbl">Clientes</span></button>
+  </aside>
+  <div class="main">
+    <header class="topbar"><strong>Simulação — Painel comercial</strong><span style="font-size:12px;color:var(--muted)">Arquivo único · mock</span></header>
+    <div class="content">
+      <div class="banner"><strong>Como usar:</strong> envie este arquivo <code>simulacao-painel-comercial.html</code> por e-mail/Teams. A pessoa salva e abre com duplo clique no Chrome ou Edge. Funciona offline (sem fonte externa).</div>
+      <section id="view-dashboard">
+        <div class="title"><div class="title-ico">⌂</div><h1>Dashboard</h1></div>
+        <div class="stats" id="dash-stats"></div>
+        <div class="filters" id="dash-filters"></div>
+        <div class="grid2" id="dash-charts"></div>
+      </section>
+      <section id="view-clientes" class="hidden">
+        <div class="title"><div class="title-ico">👤</div><h1>Clientes</h1></div>
+        <div id="cli-ui"></div>
+        <div id="cli-list"></div>
+      </section>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="mock-json">[{"id":"CL-1001","cnpj":"12345678000190","razaoSocial":"Alpha Indústria S.A.","dataInicio":"12/03/2019","mediaFaturamento3m":185000,"saude":"risco_medio","receita12m":2120000,"minimoContratado":150000,"faturadoPorMes":192000,"mrr":178000,"tipo":"base","consumoMedioPct":82,"contracts":[{"id":"CT-A1","name":"Contrato corporativo 2019","vigencia":"01/01/2024 — 31/12/2026","renovacaoAutomatica":true,"receita12m":1450000,"mediaFaturamento3m":120000,"minimoContratado":100000,"consumoMedioFranquiasPct":88,"mrr":115000,"franchises":[{"name":"Franquia Matriz SP","servico":"BGC","centroCusto":"Maria","modeloCobranca":"Faixa de preço","consumoMedioPct":92,"mediaFaturamento3m":72000},{"name":"Franquia Filial RJ","servico":"API","centroCusto":"Junior","modeloCobranca":"Preço fixo","consumoMedioPct":84,"mediaFaturamento3m":48000}]},{"id":"CT-A2","name":"Aditivo PLD 2025","vigencia":"01/03/2025 — 28/02/2027","renovacaoAutomatica":true,"receita12m":670000,"mediaFaturamento3m":65000,"minimoContratado":50000,"consumoMedioFranquiasPct":76,"mrr":63000,"franchises":[{"name":"Franquia Compliance","servico":"PLD","centroCusto":"Juliana","modeloCobranca":"Excedente em faixa","consumoMedioPct":76,"mediaFaturamento3m":65000}]}]},{"id":"CL-1002","cnpj":"98765432000111","razaoSocial":"Beta Serviços Financeiros Ltda.","dataInicio":"05/08/2021","mediaFaturamento3m":94500,"saude":"risco_alto","receita12m":1050000,"minimoContratado":80000,"faturadoPorMes":98000,"mrr":91000,"tipo":"novos_negocios","consumoMedioPct":42,"contracts":[{"id":"CT-B1","name":"Contrato onboarding 2024","vigencia":"15/01/2024 — 14/01/2027","renovacaoAutomatica":true,"receita12m":1050000,"mediaFaturamento3m":94500,"minimoContratado":80000,"consumoMedioFranquiasPct":42,"mrr":91000,"franchises":[{"name":"Franquia Digital","servico":"Workflow","centroCusto":"Camila","modeloCobranca":"Pacote + excedente","consumoMedioPct":38,"mediaFaturamento3m":58000},{"name":"Franquia BDV","servico":"BDV","centroCusto":"Matheus","modeloCobranca":"Por consulta","consumoMedioPct":46,"mediaFaturamento3m":36500}]}]},{"id":"CL-1003","cnpj":"11222333000144","razaoSocial":"Gamma Comércio Exterior ME","dataInicio":"20/11/2017","mediaFaturamento3m":312000,"saude":"oportunidade","receita12m":3680000,"minimoContratado":280000,"faturadoPorMes":325000,"mrr":305000,"tipo":"base","consumoMedioPct":118,"contracts":[{"id":"CT-G1","name":"Master SAP + IDV","vigencia":"01/01/2023 — 31/12/2025","renovacaoAutomatica":true,"receita12m":3680000,"mediaFaturamento3m":312000,"minimoContratado":280000,"consumoMedioFranquiasPct":118,"mrr":305000,"franchises":[{"name":"Franquia SAP","servico":"SAP","centroCusto":"Dielson","modeloCobranca":"Preço fixo por faixa","consumoMedioPct":125,"mediaFaturamento3m":198000},{"name":"Franquia IDV","servico":"IDV","centroCusto":"Transição","modeloCobranca":"Faixa de preço","consumoMedioPct":111,"mediaFaturamento3m":114000}]}]},{"id":"CL-1004","cnpj":"55667788000122","razaoSocial":"Delta Logística Integrada S.A.","dataInicio":"03/02/2022","mediaFaturamento3m":67200,"saude":"risco_medio","receita12m":780000,"minimoContratado":60000,"faturadoPorMes":71000,"mrr":65000,"tipo":"base","consumoMedioPct":58,"contracts":[{"id":"CT-D1","name":"Monitoramento operacional","vigencia":"01/07/2023 — 30/06/2026","renovacaoAutomatica":false,"receita12m":780000,"mediaFaturamento3m":67200,"minimoContratado":60000,"consumoMedioFranquiasPct":58,"mrr":65000,"franchises":[{"name":"Franquia Hub Sul","servico":"Monitoramento","centroCusto":"Maria","modeloCobranca":"Pacote mensal","consumoMedioPct":58,"mediaFaturamento3m":67200}]}]},{"id":"CL-1005","cnpj":"33445566000177","razaoSocial":"Epsilon Projetos Especiais Ltda.","dataInicio":"18/09/2025","mediaFaturamento3m":41000,"saude":"sucesso","receita12m":82000,"minimoContratado":35000,"faturadoPorMes":44500,"mrr":40000,"tipo":"novos_negocios","consumoMedioPct":96,"contracts":[{"id":"CT-E1","name":"Projeto Ariba rollout","vigencia":"01/09/2025 — 31/08/2026","renovacaoAutomatica":true,"receita12m":82000,"mediaFaturamento3m":41000,"minimoContratado":35000,"consumoMedioFranquiasPct":96,"mrr":40000,"franchises":[{"name":"Franquia Ariba","servico":"Ariba","centroCusto":"Camila","modeloCobranca":"Projeto fechado","consumoMedioPct":96,"mediaFaturamento3m":41000}]}]}]</script>
+<script>
+const H={risco_alto:"Risco alto (≤ 50%)",risco_medio:"Risco médio (50% a 90%)",sucesso:"Sucesso (90% a 100%)",oportunidade:"Oportunidade (> 100%)"};
+const HC={risco_alto:"danger",risco_medio:"warning",sucesso:"success",oportunidade:"secondary"};
+const PC=["Junior","Camila","Juliana","Transição","Maria","Matheus","Dielson"];
+const SV=["API","Ariba","BGC","BDV","PLD","Workflow","Monitoramento","SAP","IDV","Projetos"];
+const MO=[{m:"Jan",v:112e4,p:0},{m:"Fev",v:1185e3,p:0},{m:"Mar",v:124e4,p:0},{m:"Abr",v:131e4,p:0},{m:"Mai",v:1295e3,p:0},{m:"Jun",v:1355e3,p:0},{m:"Jul",v:142e4,p:0},{m:"Ago",v:1398e3,p:0},{m:"Set",v:1465e3,p:0},{m:"Out",v:151e4,p:1},{m:"Nov",v:1545e3,p:1},{m:"Dez",v:159e4,p:1}];
+const SM={c:128,ct:214,f:386,m:142500};
+const C=JSON.parse(document.getElementById("mock-json")?document.getElementById("mock-json").textContent:"[]");
+const fmt=n=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}).format(n);
+const fc=n=>new Intl.NumberFormat("pt-BR",{notation:"compact",maximumFractionDigits:1}).format(n);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const fr=c=>c.contracts.flatMap(t=>t.franchises);
+const ms=el=>{const v=[...el.selectedOptions].map(o=>o.value);return!v.length||v.includes("todos")?["todos"]:v;};
+const mm=(s,v)=>s.includes("todos")||s.includes(v);
+function baseFilter(st){
+  return C.filter(c=>{
+    if(st.q){const q=st.q.toLowerCase();if(!c.razaoSocial.toLowerCase().includes(q)&&!c.id.toLowerCase().includes(q)&&!c.cnpj.includes(st.q.replace(/\D/g,"")))return false;}
+    if(!mm(st.h,c.saude))return false;
+    if(!mm(st.t,c.tipo))return false;
+    const f=fr(c);
+    if(!st.pc.includes("todos")&&!f.some(x=>st.pc.includes(x.centroCusto)))return false;
+    if(!st.sv.includes("todos")&&!f.some(x=>st.sv.includes(x.servico)))return false;
+    return true;
+  });
+}
+const D={q:"",h:["todos"],pc:["todos"],t:["todos"],sv:["todos"]};
+const L={q:"",h:["todos"],pc:["todos"],t:["todos"],sv:["todos"],bo:"none",bv:"",co:"none",cv:"",sb:"",sc:""};
+function aggSvc(cs){const m=new Map();cs.forEach(c=>fr(c).forEach(fr=>{const e=m.get(fr.servico)||{n:0,b:0};e.n++;e.b+=fr.mediaFaturamento3m;m.set(fr.servico,e);}));return[...m].map(([l,d])=>({l,...d})).sort((a,b)=>b.b-a.b);}
+function aggPc(cs){const m=new Map();cs.forEach(c=>fr(c).forEach(fr=>{const e=m.get(fr.centroCusto)||{n:0,b:0};e.n++;e.b+=fr.mediaFaturamento3m;m.set(fr.centroCusto,e);}));return[...m].map(([l,d])=>({l,...d})).sort((a,b)=>b.b-a.b);}
+function aggH(cs){const o={risco_alto:0,risco_medio:0,sucesso:0,oportunidade:0};cs.forEach(c=>o[c.saude]++);return o;}
+function bars(rows){
+  if(!rows.length)return"<p style='color:#71717a'>Sem dados</p>";
+  const mf=Math.max(...rows.map(r=>r.n),1),mb=Math.max(...rows.map(r=>r.b),1);
+  let s='<p style="font-size:12px;color:#71717a"><span style="display:inline-block;width:10px;height:10px;background:#7245b1;margin-right:4px"></span>Franquias <span style="display:inline-block;width:10px;height:10px;background:#8456e4;margin-left:12px;margin-right:4px"></span>Fat. 3m</p><svg width="100%" viewBox="0 0 500 '+rows.length*40+'">';
+  rows.forEach((r,i)=>{const y=i*40+6,w1=r.n/mf*160,w2=r.b/mb*160;s+=`<text x="0" y="${y+14}" font-size="11">${esc(r.l)}</text><rect x="110" y="${y}" width="${w1}" height="10" fill="#7245b1"/><rect x="110" y="${y+14}" width="${w2}" height="10" fill="#8456e4"/>`;});
+  return s+"</svg>";
+}
+function line(){
+  const w=500,h=180,p=40,pts=MO,mx=Math.max(...pts.map(x=>x.v))*1.05,mn=Math.min(...pts.map(x=>x.v))*.95;
+  const tx=i=>p+i*((w-2*p)/(pts.length-1)),ty=v=>h-p-((v-mn)/(mx-mn))*(h-2*p);
+  let d="",dp="",lr=0;pts.forEach((pt,i)=>{if(!pt.p){d+=(i===0?"M":"L")+tx(i)+" "+ty(pt.v)+" ";lr=i;}else dp+=(dp?"L":"M")+tx(i)+" "+ty(pt.v)+" ";});
+  let s=`<svg width="100%" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="none" stroke="#4f169d" stroke-width="2"/><path d="M ${tx(lr)} ${ty(pts[lr].v)} ${dp.replace(/^M/,"L")}" fill="none" stroke="#4f169d" stroke-width="2" stroke-dasharray="5 4"/>`;
+  pts.forEach((pt,i)=>s+=`<circle cx="${tx(i)}" cy="${ty(pt.v)}" r="3" fill="${pt.p?"#fff":"#4f169d"}" stroke="#4f169d"/><text x="${tx(i)}" y="${h-8}" font-size="10" text-anchor="middle">${pt.m}</text>`);
+  return s+"</svg>";
+}
+function health(o){
+  const ord=["risco_alto","risco_medio","sucesso","oportunidade"],col=["#ef4444","#f59e0b","#22c55e","#652cdd"],mx=Math.max(...ord.map(k=>o[k]),1);
+  let s='<svg width="100%" viewBox="0 0 500 160">';ord.forEach((k,i)=>{const v=o[k],bh=v/mx*90,x=20+i*120;s+=`<rect x="${x}" y="${100-bh}" width="50" height="${bh}" rx="4" fill="${col[i]}"/><text x="${x+25}" y="${92-bh}" text-anchor="middle" font-size="12">${v}</text><text x="${x+25}" y="115" font-size="8" text-anchor="middle">${esc(H[k])}</text>`;});
+  return s+"</svg>";
+}
+function msHtml(id,label,opts,sel){
+  return `<div class="field"><label>${label}</label><select id="${id}" multiple><option value="todos">Todos</option>${opts.map(o=>`<option value="${o}"${sel.includes("todos")||sel.includes(o)?" selected":""}>${esc(o)}</option>`).join("")}</select></div>`;
+}
+function renderDash(){
+  const st={q:document.getElementById("dq").value,h:ms(document.getElementById("dh")),pc:ms(document.getElementById("dpc")),t:ms(document.getElementById("dt")),sv:ms(document.getElementById("dsv"))};
+  const fl=baseFilter(st),sc=fl.length/C.length||0;
+  document.getElementById("dash-stats").innerHTML=`<div class="stat"><small>Clientes ativos faturados</small><strong>${Math.round(SM.c*sc)}</strong></div><div class="stat"><small>Contratos ativos</small><strong>${Math.round(SM.ct*sc)}</strong></div><div class="stat"><small>Franquias ativas</small><strong>${Math.round(SM.f*sc)}</strong></div><div class="stat"><small>Média fat. 3 meses</small><strong>${fmt(SM.m)}</strong></div>`;
+  document.getElementById("dash-charts").innerHTML=`<div class="card"><h2>Faturamento por serviço</h2>${bars(aggSvc(fl).map(r=>({l:r.l,n:r.n,b:r.b})))}</div><div class="card"><h2>Faturamento por centro de custo</h2>${bars(aggPc(fl).map(r=>({l:r.l,n:r.n,b:r.b})))}</div><div class="card"><h2>Faturamento mensal</h2>${line()}</div><div class="card"><h2>Saúde dos clientes</h2><small>Nível de consumo</small>${health(aggH(fl))}</div>`;
+}
+function bindDashFilters(){
+  document.getElementById("dash-filters").innerHTML=`<div class="field"><label>Busca</label><input id="dq" /></div><div class="field"><label>Competência</label><select id="dc"><option>Setembro/2025</option><option>Agosto/2025</option></select></div>${msHtml("dh","Saúde",Object.keys(H),D.h)}${msHtml("dpc","Centros de lucro",PC,D.pc)}<div class="field"><label>Tipo</label><select id="dt" multiple><option value="todos">Todos</option><option value="base">Clientes base</option><option value="novos_negocios">Novos negócios</option></select></div>${msHtml("dsv","Serviço",SV,D.sv)}`;
+  ["dq","dh","dpc","dt","dsv","dc"].forEach(id=>{const el=document.getElementById(id);el.addEventListener("input",renderDash);el.addEventListener("change",renderDash);});
+  renderDash();
+}
+function cells(p){return `<div class="cells">${p.map(([a,b])=>`<div class="cell"><span>${a}</span>${esc(b)}</div>`).join("")}</div>`;}
+function renderCli(){
+  document.getElementById("cli-ui").innerHTML=`<div class="filters"><div class="field"><label>Busca</label><input id="lq" value="${esc(L.q)}" /></div>${msHtml("lh","Saúde",Object.keys(H),L.h)}${msHtml("lpc","Centros",PC,L.pc)}<div class="field"><label>Tipo</label><select id="lt" multiple><option value="todos">Todos</option><option value="base">Clientes base</option><option value="novos_negocios">Novos negócios</option></select></div>${msHtml("lsv","Serviço",SV,L.sv)}</div><div class="filters"><div class="field"><label>Faturamento</label><select id="lbo"><option value="none">Sem filtro</option><option value="gt">Maior que</option><option value="lt">Menor que</option></select></div><div class="field"><label>Valor R$</label><input id="lbv" type="number" /></div><div class="field"><label>Consumo</label><select id="lco"><option value="none">Sem filtro</option><option value="gt">Maior que</option><option value="lt">Menor que</option></select></div><div class="field"><label>%</label><input id="lcv" type="number" /></div></div><div class="sort-row" style="margin:12px 0"><span style="font-size:13px;color:var(--muted)">Ordenar:</span> <button type="button" class="btn" data-s="bd">Fat ↓</button> <button type="button" class="btn" data-s="ba">Fat ↑</button> <button type="button" class="btn" data-s="cd">Cons ↓</button> <button type="button" class="btn" data-s="ca">Cons ↑</button></div><p id="lcnt" style="font-size:14px;color:var(--muted)"></p>`;
+  document.getElementById("lbo").value=L.bo;document.getElementById("lco").value=L.co;
+  const paint=()=>{
+    L.q=document.getElementById("lq").value;L.h=ms(document.getElementById("lh"));L.pc=ms(document.getElementById("lpc"));L.t=ms(document.getElementById("lt"));L.sv=ms(document.getElementById("lsv"));
+    L.bo=document.getElementById("lbo").value;L.bv=document.getElementById("lbv").value;L.co=document.getElementById("lco").value;L.cv=document.getElementById("lcv").value;
+    let list=baseFilter({q:L.q,h:L.h,pc:L.pc,t:L.t,sv:L.sv});
+    list=list.filter(c=>{if(L.bo!=="none"&&L.bv){const t=+L.bv;if(!isNaN(t)){if(L.bo==="gt"&&c.faturadoPorMes<=t)return false;if(L.bo==="lt"&&c.faturadoPorMes>=t)return false;}}if(L.co!=="none"&&L.cv){const t=+L.cv;if(!isNaN(t)){if(L.co==="gt"&&c.consumoMedioPct<=t)return false;if(L.co==="lt"&&c.consumoMedioPct>=t)return false;}}return true;});
+    if(L.sb==="d")list.sort((a,b)=>b.faturadoPorMes-a.faturadoPorMes);else if(L.sb==="a")list.sort((a,b)=>a.faturadoPorMes-b.faturadoPorMes);else if(L.sc==="d")list.sort((a,b)=>b.consumoMedioPct-a.consumoMedioPct);else if(L.sc==="a")list.sort((a,b)=>a.consumoMedioPct-b.consumoMedioPct);
+    document.getElementById("lcnt").textContent=list.length+" cliente(s)";
+    document.getElementById("cli-list").innerHTML=list.map(c=>`<details class="client" open><summary><strong>${esc(c.razaoSocial)}</strong> · ${c.id} · <span class="chip ${HC[c.saude]}">${H[c.saude]}</span>${cells([["CNPJ",c.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,"$1.$2.$3/$4-$5")],["Início",c.dataInicio],["Fat/mês",fmt(c.faturadoPorMes)],["Cons %",c.consumoMedioPct+"%"],["MRR",fmt(c.mrr)]])}</summary><div class="nested">${c.contracts.map(ct=>`<div class="box"><strong>${esc(ct.name)}</strong>${cells([["Vigência",ct.vigencia],["Renovação",ct.renovacaoAutomatica?"Sim":"Não"],["MRR",fmt(ct.mrr)]])}${ct.franchises.map(fr=>`<div class="box" style="margin-left:12px;background:#fff"><em>${esc(fr.name)}</em>${cells([["Serviço",fr.servico],["Centro",fr.centroCusto],["Modelo",fr.modeloCobranca],["Cons %",fr.consumoMedioPct+"%"]])}</div>`).join("")}</div>`).join("")}</div></details>`).join("");
+  };
+  ["lq","lh","lpc","lt","lsv","lbo","lbv","lco","lcv"].forEach(id=>{const el=document.getElementById(id);el.addEventListener("input",paint);el.addEventListener("change",paint);});
+  document.querySelectorAll("#cli-ui .btn").forEach(b=>b.addEventListener("click",()=>{L.sb="";L.sc="";const s=b.dataset.s;if(s==="bd")L.sb="d";if(s==="ba")L.sb="a";if(s==="cd")L.sc="d";if(s==="ca")L.sc="a";renderCli();}));
+  paint();
+}
+function view(v){
+  document.getElementById("view-dashboard").classList.toggle("hidden",v!=="dashboard");
+  document.getElementById("view-clientes").classList.toggle("hidden",v!=="clientes");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
+  if(v==="clientes")renderCli();
+  location.hash=v;
+}
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>view(b.dataset.view)));
+view((location.hash||"#dashboard").replace("#","")==="clientes"?"clientes":"dashboard");
+bindDashFilters();
+</script>
+</body>
+</html>

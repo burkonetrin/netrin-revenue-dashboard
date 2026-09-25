@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "src",
+    "components",
+    "shared",
+    "utils",
+    "constants.ts",
+    "types.ts",
+    "mockData.ts",
+    "cohortMockData.ts",
+    "clientesDashboardMockData.ts",
+    "clientesDashboardMockFormat.ts",
+    "prototypeMenuItems.tsx"
+  ],
+  "exclude": ["vite.config.ts", "dist", "node_modules"]
+}
+
