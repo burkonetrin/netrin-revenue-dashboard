@@ -2,7 +2,7 @@
 
 import { Button } from "@heroui/react";
 import { Download, SlidersHorizontal } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BAR_CTR,
   BAR_HEALTH,
@@ -12,7 +12,6 @@ import {
 import { ChartCard } from "./charts/ChartCard";
 import { DashboardViewTabs } from "./CohortRetentionPanel";
 import { PrototypeBanner } from "./PrototypeBanner";
-import { ClientDetailView } from "./clientes-mock-hero/ClientDetailView";
 import {
   ClientesFilterDrawer,
   type FilterDrawerStatus,
@@ -53,16 +52,6 @@ export function ClientesDashboardMockPage() {
     inativo: false,
   });
   const [showInactiveItems, setShowInactiveItems] = useState(false);
-  const [detailClientId, setDetailClientId] = useState<string | null>(null);
-
-  const openClientDetail = useCallback((id: string) => {
-    setDetailClientId(id);
-    window.scrollTo(0, 0);
-  }, []);
-
-  const closeClientDetail = useCallback(() => {
-    setDetailClientId(null);
-  }, []);
 
   useEffect(() => {
     if (filterOpen) setFilterDrawerMounted(true);
@@ -118,7 +107,7 @@ export function ClientesDashboardMockPage() {
           />
         </ChartCard>
       </div>
-      <ChartCard className="mb-0">
+      <ChartCard title="Cohort" className="mb-0">
         <CohortTableMock />
       </ChartCard>
     </section>
@@ -129,7 +118,6 @@ export function ClientesDashboardMockPage() {
       <ChartCard className="overflow-visible mb-0">
         <ClientsListSection
           statusFilter={statusFilter}
-          onOpenClient={openClientDetail}
           showInactiveItems={showInactiveItems}
           onOpenFilters={() => setFilterOpen(true)}
           onToggleShowInactive={() => setShowInactiveItems((v) => !v)}
@@ -144,26 +132,16 @@ export function ClientesDashboardMockPage() {
       <div className="mb-4">
         <PrototypeBanner />
       </div>
-      {detailClientId ? (
-        <ClientDetailView
-          clientId={detailClientId}
-          onBack={closeClientDetail}
-          showInactiveItems={showInactiveItems}
+      <div className="mb-5">
+        <PageTitle
+          icon={<CustomersIcon color="currentColor" />}
+          label="Clientes"
         />
-      ) : (
-        <>
-          <div className="mb-5">
-            <PageTitle
-              icon={<CustomersIcon color="currentColor" />}
-              label="Clientes"
-            />
-          </div>
-          <DashboardViewTabs
-            dashboard={dashboardContent}
-            clientes={clientesContent}
-          />
-        </>
-      )}
+      </div>
+      <DashboardViewTabs
+        dashboard={dashboardContent}
+        clientes={clientesContent}
+      />
       {filterDrawerMounted ? (
         <ClientesFilterDrawer
           isOpen={filterOpen}

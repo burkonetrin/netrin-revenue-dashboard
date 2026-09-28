@@ -78,7 +78,6 @@ function sortedClients(
 
 interface ClientsListSectionProps {
   statusFilter: FilterDrawerStatus;
-  onOpenClient: (id: string) => void;
   showInactiveItems: boolean;
   onOpenFilters: () => void;
   onToggleShowInactive: () => void;
@@ -87,7 +86,6 @@ interface ClientsListSectionProps {
 
 export function ClientsListSection({
   statusFilter,
-  onOpenClient,
   showInactiveItems,
   onOpenFilters,
   onToggleShowInactive,
@@ -238,13 +236,9 @@ export function ClientsListSection({
                       <ClientStatusChip ativo={c.ativo} />
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      <button
-                        type="button"
-                        className="text-primary font-medium hover:underline cursor-pointer bg-transparent border-none p-0 text-left block"
-                        onClick={() => onOpenClient(c.id)}
-                      >
+                      <span className="font-medium text-zinc-900 block">
                         {c.nome}
-                      </button>
+                      </span>
                       <span className="block text-[11px] text-zinc-500 mt-0.5 font-normal">
                         {c.cnpj}
                       </span>

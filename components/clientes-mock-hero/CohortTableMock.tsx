@@ -31,7 +31,7 @@ export function CohortTableMock() {
             if (key === "retention" || key === "mrr") setMetric(key);
           }}
         >
-          <SelectItem key="retention">Logo retention</SelectItem>
+          <SelectItem key="retention">Retenção</SelectItem>
           <SelectItem key="mrr">MRR</SelectItem>
         </Select>
       </div>
