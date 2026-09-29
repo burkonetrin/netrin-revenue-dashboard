@@ -70,7 +70,7 @@ export function ClientesDashboardMockPage() {
         </span>
       </p>
       <DashboardKpiGrid />
-      <ChartCard title="Evolução mensal">
+      <ChartCard title="Evolução mensal" className="mb-6">
         <EvolutionChartMock />
       </ChartCard>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
