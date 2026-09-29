@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../design-system/nucleus-layout.css";
 
 @plugin "../shared/lib/hero.ts";
 @source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
@@ -33,6 +34,57 @@
   --color-secondary-900: #2a125d;
   --color-secondary: #652cdd;
   --color-secondary-foreground: #ffffff;
+
+  --color-tertiary-50: #e7f3ed;
+  --color-tertiary-100: #b6dac6;
+  --color-tertiary-200: #92c8aa;
+  --color-tertiary-300: #61afb4;
+  --color-tertiary-400: #429f6c;
+  --color-tertiary-500: #138747;
+  --color-tertiary-600: #117b41;
+  --color-tertiary-700: #0d6032;
+  --color-tertiary-800: #0a4a27;
+  --color-tertiary-900: #08391e;
+  --color-tertiary: #138747;
+
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success: #22c55e;
+  --color-success-foreground: #ffffff;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #ffffff;
+
+  --color-destructive-50: #fef2f2;
+  --color-destructive-100: #fee2e2;
+  --color-destructive-200: #fecaca;
+  --color-destructive-300: #f87171;
+  --color-destructive-400: #ef4444;
+  --color-destructive-500: #ef4444;
+  --color-destructive-600: #dc2626;
+  --color-destructive-700: #b91c1c;
+  --color-destructive-800: #991b1b;
+  --color-destructive-900: #7f1d1d;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
 }
 
 body {

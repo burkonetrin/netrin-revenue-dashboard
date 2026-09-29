@@ -1,7 +1,12 @@
 "use client";
 
-import { Select, SelectItem } from "@heroui/react";
+import { Select, SelectItem, Tab, Tabs } from "@heroui/react";
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { nucleusSelectProps } from "@/shared/styles/inputClassNames";
+import {
+  nucleusTableHeadCellCenterClass,
+  nucleusTableHeadCellClass,
+} from "@/shared/styles/tableClassNames";
 import {
   COHORT_OFFSETS,
   COHORT_ROWS,
@@ -43,8 +48,8 @@ export function CohortRetentionPanel() {
           </p>
         </div>
         <Select
+          {...nucleusSelectProps}
           label="Métrica"
-          size="sm"
           className="min-w-[200px] max-w-xs"
           selectedKeys={new Set([metric])}
           onSelectionChange={(keys) => {
@@ -61,14 +66,11 @@ export function CohortRetentionPanel() {
         <table className="w-full min-w-[880px] border-separate border-spacing-1 text-sm">
           <thead>
             <tr>
-              <th className="text-left text-xs font-medium text-zinc-500 px-2 py-2 w-40">
+              <th className={`${nucleusTableHeadCellClass} w-40`}>
                 Cohort / tamanho inicial
               </th>
               {COHORT_OFFSETS.map((o) => (
-                <th
-                  key={o}
-                  className="text-center text-xs font-medium text-zinc-500 px-1 py-2"
-                >
+                <th key={o} className={nucleusTableHeadCellCenterClass}>
                   M{o}
                 </th>
               ))}
@@ -139,45 +141,24 @@ export function DashboardViewTabs({
   dashboard: ReactNode;
   clientes: ReactNode;
 }) {
-  const [active, setActive] = useState<"dashboard" | "clientes">("dashboard");
-
   return (
-    <>
-      <div
-        className="flex border-b border-zinc-200 mb-5"
-        role="tablist"
-        aria-label="Visões do painel de clientes"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={active === "dashboard"}
-          className={`py-2.5 mr-5 -mb-px border-b-2 bg-transparent border-x-0 border-t-0 font-inherit text-sm cursor-pointer ${
-            active === "dashboard"
-              ? "text-primary font-semibold border-primary"
-              : "text-zinc-500 border-transparent"
-          }`}
-          onClick={() => setActive("dashboard")}
-        >
-          Dashboard
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={active === "clientes"}
-          className={`py-2.5 mr-5 -mb-px border-b-2 bg-transparent border-x-0 border-t-0 font-inherit text-sm cursor-pointer ${
-            active === "clientes"
-              ? "text-primary font-semibold border-primary"
-              : "text-zinc-500 border-transparent"
-          }`}
-          onClick={() => setActive("clientes")}
-        >
-          Clientes
-        </button>
-      </div>
-      <div role="tabpanel">
-        {active === "dashboard" ? dashboard : clientes}
-      </div>
-    </>
+    <Tabs
+      aria-label="Visões do painel de clientes"
+      color="primary"
+      variant="underlined"
+      classNames={{
+        tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+        cursor: "w-full bg-primary",
+        tab: "max-w-fit px-0 h-12",
+        tabContent: "group-data-[selected=true]:text-primary font-medium",
+      }}
+    >
+      <Tab key="dashboard" title="Dashboard">
+        {dashboard}
+      </Tab>
+      <Tab key="clientes" title="Clientes">
+        {clientes}
+      </Tab>
+    </Tabs>
   );
 }

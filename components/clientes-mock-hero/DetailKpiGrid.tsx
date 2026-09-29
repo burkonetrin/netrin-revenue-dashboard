@@ -11,11 +11,19 @@ import { MockInfoTooltip } from "./MockInfoTooltip";
 
 function DiscountBreakdownTooltip({
   lines,
+  saldoRemanescente,
 }: {
   lines: MockDiscountBreakdownLine[];
+  saldoRemanescente?: number;
 }) {
   return (
     <div className="text-[13px] space-y-3">
+      {saldoRemanescente != null ? (
+        <div>
+          <p className="font-semibold text-zinc-900 m-0">Saldo remanescente</p>
+          <p className="text-zinc-600 m-0 mt-0.5">{fmtDetail(saldoRemanescente)}</p>
+        </div>
+      ) : null}
       {lines.map((line) => (
         <div key={`${line.kind}-${line.name}`}>
           <p className="font-semibold text-zinc-900 m-0">{line.kind}:</p>
@@ -74,7 +82,10 @@ export function DetailKpiGrid() {
               {k.discountBreakdown?.length ? (
                 <MockInfoTooltip
                   content={
-                    <DiscountBreakdownTooltip lines={k.discountBreakdown} />
+                    <DiscountBreakdownTooltip
+                      lines={k.discountBreakdown}
+                      saldoRemanescente={k.discountSaldoRemanescente}
+                    />
                   }
                 />
               ) : null}

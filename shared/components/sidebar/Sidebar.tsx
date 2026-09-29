@@ -156,7 +156,9 @@ export function Sidebar({ items }: Readonly<SidebarProps>) {
           )}
         >
           {items.map((item) => {
-            const isActive = pathname === item.path;
+            const isActive =
+              pathname === item.path ||
+              (item.path.length > 1 && pathname.startsWith(`${item.path}/`));
 
             const iconWithActive =
               item.icon && typeof item.icon === "object" && "type" in item.icon

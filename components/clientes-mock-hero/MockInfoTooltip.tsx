@@ -58,7 +58,7 @@ export function MockInfoTooltip({ content }: MockInfoTooltipProps) {
     <MockHoverTip content={content}>
       <button
         type="button"
-        className="inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-[10px] text-zinc-500 cursor-default"
+        className="inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-primary bg-white text-[10px] font-medium text-primary cursor-default"
         aria-label="Mais informações"
       >
         i

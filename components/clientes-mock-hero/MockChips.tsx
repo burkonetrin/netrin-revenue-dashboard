@@ -18,6 +18,10 @@ const INVOICE_CHIP_CLASS: Record<string, string> = {
   "inv-paid": "bg-green-100 text-green-800",
   "inv-cancel-req": "bg-pink-100 text-pink-900",
   "inv-cancelled": "bg-red-100 text-red-900",
+  "inv-duplicate": "bg-violet-100 text-violet-900",
+  "inv-overdue": "bg-rose-100 text-rose-900",
+  "inv-installment": "bg-sky-100 text-sky-900",
+  "inv-writeoff": "bg-stone-200 text-stone-800",
 };
 
 const HEALTH_CHIP_CLASS: Record<string, string> = {
@@ -44,18 +48,12 @@ export function ClientStatusChip({ ativo }: { ativo: boolean }) {
   );
 }
 
-export function InvoiceStatusChip({
-  statusKey,
-  valorPagoParcial,
-}: {
-  statusKey: InvoiceStatusKey;
-  valorPagoParcial?: number;
-}) {
+export function InvoiceStatusChip({ statusKey }: { statusKey: InvoiceStatusKey }) {
   const meta = INVOICE_STATUS[statusKey] ?? {
     label: statusKey,
     chip: "inv-open",
   };
-  const label = invoiceStatusLabel(statusKey, valorPagoParcial);
+  const label = invoiceStatusLabel(statusKey);
   return (
     <Chip
       size="sm"

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PageTitle } from "@/shared/components/PageTitle";
-import { CustomersIcon } from "@/shared/components/sidebar/icons";
+import { PageHead } from "@/design-system/ui";
+import { Users } from "lucide-react";
 import { MOCK_CLIENTS } from "../mockData";
 import type { ClientsFiltersState } from "../types";
 import { filterAndSortClients } from "../utils/filtering";
@@ -33,12 +33,9 @@ export function CommercialClientsPage() {
   );
 
   return (
-    <div className="size-full p-6 space-y-6">
+    <div className="space-y-6">
       <PrototypeBanner />
-      <PageTitle
-        icon={<CustomersIcon color="currentColor" />}
-        label="Clientes"
-      />
+      <PageHead icon={<Users />} title="Clientes" />
 
       <ClientsFiltersBar filters={filters} onChange={setFilters} />
 

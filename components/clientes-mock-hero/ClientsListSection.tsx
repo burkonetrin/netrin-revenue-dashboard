@@ -1,17 +1,19 @@
 "use client";
 
-import {
-  Button,
-  Input,
-} from "@heroui/react";
 import { SlidersHorizontal } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import {
-  CLIENT_ROW_ACTIONS,
+  FieldInput,
+  OutlineButton,
+  PrimaryButton,
+  ToggleSwitch,
+} from "@/design-system/ui";
+import {
   CLIENTS,
   LIST_COLSPAN,
   type MockClient,
 } from "../../clientesDashboardMockData";
+import { clientRowActionsMenu } from "../../clientesDashboardMockFormat";
 import type { FilterDrawerStatus } from "./ClientesFilterDrawer";
 import { ContractsTableMock } from "./ContractsTableMock";
 import { DetailKpiGrid } from "./DetailKpiGrid";
@@ -21,11 +23,18 @@ import {
   HealthChip,
 } from "./MockChips";
 import { MockInfoTooltip } from "./MockInfoTooltip";
-import { NfeNotesPopover } from "./NfeNotesPopover";
 import { RowActionsDropdown } from "./RowActionsDropdown";
-
-const outlineBtnClass =
-  "border-zinc-200 bg-white text-zinc-700 font-normal data-[hover=true]:bg-zinc-50";
+import {
+  nucleusSortableTableHeadCellClass,
+  nucleusTableHeadCellCenterClass,
+  nucleusTableHeadCellClass,
+} from "@/shared/styles/tableClassNames";
+import {
+  BillClientsConfirmModal,
+  ClientWorkflowSidebars,
+  clientActionToWorkflowKind,
+  type ClientWorkflowKind,
+} from "./ClientWorkflowSidebars";
 
 export type TableSort = { key: "fat" | "cons" | null; dir: "asc" | "desc" };
 
@@ -102,6 +111,25 @@ export function ClientsListSection({
     key: null,
     dir: "desc",
   });
+  const [workflowClient, setWorkflowClient] = useState<MockClient | null>(
+    null,
+  );
+  const [workflowKind, setWorkflowKind] = useState<ClientWorkflowKind | null>(
+    null,
+  );
+  const [billModalOpen, setBillModalOpen] = useState(false);
+
+  const openWorkflowForClient = (client: MockClient, action: string) => {
+    const kind = clientActionToWorkflowKind(action);
+    if (!kind) return;
+    setWorkflowClient(client);
+    setWorkflowKind(kind);
+  };
+
+  const closeWorkflow = () => {
+    setWorkflowClient(null);
+    setWorkflowKind(null);
+  };
 
   const list = useMemo(
     () =>
@@ -136,40 +164,30 @@ export function ClientsListSection({
           {competenceLabel}
         </h2>
         <div className="flex flex-wrap gap-3 items-center w-full">
-          <Input
+          <FieldInput
             type="search"
             placeholder="Buscar cliente..."
             autoComplete="off"
             className="flex-1 min-w-[220px] max-w-[360px]"
-            size="sm"
             value={search}
-            onValueChange={setSearch}
+            onChange={(e) => setSearch(e.target.value)}
           />
-          <Button color="primary" size="sm" className="font-normal shrink-0">
-            Cadastrar cliente
-          </Button>
+          <PrimaryButton className="shrink-0">Cadastrar cliente</PrimaryButton>
           <div className="flex flex-wrap items-center gap-2.5 ms-auto shrink-0">
-            <Button
-              variant="bordered"
-              size="sm"
-              className={outlineBtnClass}
-              startContent={<SlidersHorizontal className="size-4 opacity-70" />}
-              onPress={onOpenFilters}
-            >
+            <OutlineButton onClick={onOpenFilters}>
+              <SlidersHorizontal />
               Filtros
-            </Button>
-            <Button variant="bordered" size="sm" className={outlineBtnClass}>
+            </OutlineButton>
+            <OutlineButton onClick={() => setBillModalOpen(true)}>
               Faturar clientes
-            </Button>
-            <Button
-              variant={showInactiveItems ? "solid" : "bordered"}
-              color={showInactiveItems ? "primary" : "default"}
-              size="sm"
-              className={showInactiveItems ? "" : outlineBtnClass}
-              onPress={onToggleShowInactive}
-            >
-              Exibir itens inativos
-            </Button>
+            </OutlineButton>
+            <ToggleSwitch
+              label="Exibir itens inativos"
+              checked={showInactiveItems}
+              onChange={(next) => {
+                if (next !== showInactiveItems) onToggleShowInactive();
+              }}
+            />
           </div>
         </div>
       </div>
@@ -177,37 +195,25 @@ export function ClientsListSection({
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <th className="text-left px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200">
-                Status
-              </th>
-              <th className="text-left px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200">
-                Razão social
-              </th>
-              <th className="text-left px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200">
-                Produtos
-              </th>
-              <th className="text-left px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200">
-                Referência
-              </th>
+              <th className={nucleusTableHeadCellClass}>Status</th>
+              <th className={nucleusTableHeadCellClass}>Razão social</th>
+              <th className={nucleusTableHeadCellClass}>Produtos</th>
+              <th className={nucleusTableHeadCellClass}>Referência</th>
               <th
-                className={`text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wide border-b border-zinc-200 cursor-pointer select-none ${
-                  tableSort.key === "fat"
-                    ? "text-primary"
-                    : "text-zinc-500"
-                }`}
+                className={nucleusSortableTableHeadCellClass(
+                  tableSort.key === "fat",
+                )}
                 onClick={() => toggleSort("fat")}
               >
-                Faturado{" "}
+                Valor{" "}
                 <span className="inline-flex align-middle ml-1 opacity-70">
                   {sortIcon("fat")}
                 </span>
               </th>
               <th
-                className={`text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wide border-b border-zinc-200 cursor-pointer select-none ${
-                  tableSort.key === "cons"
-                    ? "text-primary"
-                    : "text-zinc-500"
-                }`}
+                className={nucleusSortableTableHeadCellClass(
+                  tableSort.key === "cons",
+                )}
                 onClick={() => toggleSort("cons")}
               >
                 % Consumo{" "}
@@ -215,13 +221,12 @@ export function ClientsListSection({
                   {sortIcon("cons")}
                 </span>
               </th>
-              <th className="text-left px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200">
-                NF-e
-              </th>
-              <th className="text-center px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200 w-[72px]">
+              <th
+                className={`${nucleusTableHeadCellCenterClass} w-[72px]`}
+              >
                 Detalhes
               </th>
-              <th className="text-center px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wide border-b border-zinc-200 w-14">
+              <th className={`${nucleusTableHeadCellCenterClass} w-14`}>
                 Ações
               </th>
             </tr>
@@ -268,6 +273,9 @@ export function ClientsListSection({
                         amount={c.fat}
                         statusKey={c.faturaStatus}
                         valorPagoParcial={c.valorPagoParcial}
+                        valorPagoExcedente={c.pagamentoExcedente?.valor}
+                        excedenteDestino={c.pagamentoExcedente?.destino}
+                        parcelasAtrasadas={c.parcelasAtrasadas}
                       />
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
@@ -279,13 +287,6 @@ export function ClientsListSection({
                         {c.usado.toLocaleString("pt-BR")} de{" "}
                         {c.lim.toLocaleString("pt-BR")}
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      {c.nfe?.length ? (
-                        <NfeNotesPopover notes={c.nfe} />
-                      ) : (
-                        "—"
-                      )}
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top text-center">
                       <button
@@ -306,8 +307,11 @@ export function ClientsListSection({
                       onClick={(e) => e.stopPropagation()}
                     >
                       <RowActionsDropdown
+                        menu={clientRowActionsMenu(c)}
                         ariaLabel="Ações do cliente"
-                        items={[...CLIENT_ROW_ACTIONS]}
+                        onSelectAction={(action) =>
+                          openWorkflowForClient(c, action)
+                        }
                       />
                     </td>
                   </tr>
@@ -346,6 +350,18 @@ export function ClientsListSection({
           </tbody>
         </table>
       </div>
+      <ClientWorkflowSidebars
+        client={workflowClient}
+        kind={workflowKind}
+        onClose={closeWorkflow}
+      />
+      <BillClientsConfirmModal
+        open={billModalOpen}
+        clientCount={list.length}
+        competenceLabel={competenceLabel}
+        onClose={() => setBillModalOpen(false)}
+        onConfirm={() => {}}
+      />
     </div>
   );
 }

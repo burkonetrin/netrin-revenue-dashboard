@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  Button,
-  Checkbox,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  Input,
-  Select,
-  SelectItem,
-} from "@heroui/react";
+import { Button } from "@heroui/react";
 import { useMemo, useState } from "react";
+import { DynamicDrawer } from "@/shared/components/DynamicDrawer";
+import { FieldCheckbox, FieldInput, FieldSelect } from "@/design-system/ui";
 import {
   INVOICE_STATUS_FILTER_OPTIONS,
   MOCK_COMPETENCE_MONTHS,
@@ -23,16 +14,47 @@ export interface FilterDrawerStatus {
   inativo: boolean;
 }
 
-const DEFAULT_COMPARE_KEYS = new Set(["maior"]);
-const DEFAULT_COMPETENCE_FROM = new Set(["2025-07"]);
-const DEFAULT_COMPETENCE_TO = new Set(["2025-09"]);
-
 interface ClientesFilterDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   statusFilter: FilterDrawerStatus;
   onStatusFilterChange: (next: FilterDrawerStatus) => void;
   onApply: () => void;
+}
+
+const COMPARISON_OPERATORS = [
+  { key: "maior", label: "Maior que" },
+  { key: "menor", label: "Menor que" },
+  { key: "igual", label: "Igual a" },
+];
+
+function FilterCheckGroup({
+  title,
+  items,
+  checked,
+  onToggle,
+}: {
+  title: string;
+  items: { id: string; label: string }[];
+  checked: Record<string, boolean>;
+  onToggle: (id: string, value: boolean) => void;
+}) {
+  return (
+    <section className="mb-6">
+      <span className="ds-section-title">{title}</span>
+      <div className="flex flex-col gap-3">
+        {items.map(({ id, label }) => (
+          <FieldCheckbox
+            key={id}
+            isSelected={Boolean(checked[id])}
+            onValueChange={(value) => onToggle(id, value)}
+          >
+            {label}
+          </FieldCheckbox>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export function ClientesFilterDrawer({
@@ -43,8 +65,11 @@ export function ClientesFilterDrawer({
   onApply,
 }: ClientesFilterDrawerProps) {
   const [checkboxIds, setCheckboxIds] = useState<Record<string, boolean>>({});
-
   const competenceItems = useMemo(() => MOCK_COMPETENCE_MONTHS, []);
+  const competenceOptions = useMemo(
+    () => competenceItems.map((m) => ({ key: m.key, label: m.label })),
+    [competenceItems],
+  );
 
   const clearAll = () => {
     setCheckboxIds({});
@@ -55,245 +80,194 @@ export function ClientesFilterDrawer({
     setCheckboxIds((prev) => ({ ...prev, [id]: checked }));
   };
 
+  const handleClose = () => onOpenChange(false);
+
+  const filterBody = (
+    <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto pr-1">
+      <section className="mb-4">
+        <span className="ds-section-title">Competência</span>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldSelect
+            label="Competência inicial"
+            items={competenceOptions}
+            defaultSelectedKeys={new Set(["2025-07"])}
+          />
+          <FieldSelect
+            label="Competência final"
+            items={competenceOptions}
+            defaultSelectedKeys={new Set(["2025-09"])}
+          />
+        </div>
+      </section>
+      <FilterCheckGroup
+        title="Tipo"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={[
+          { id: "tipoBase", label: "Base" },
+          { id: "tipoNovos", label: "Novos negócios" },
+        ]}
+      />
+      <section className="mb-6">
+        <span className="ds-section-title">Status</span>
+        <div className="flex flex-col gap-3">
+          <FieldCheckbox
+            isSelected={statusFilter.ativo}
+            onValueChange={(ativo) =>
+              onStatusFilterChange({ ...statusFilter, ativo })
+            }
+          >
+            Ativo
+          </FieldCheckbox>
+          <FieldCheckbox
+            isSelected={statusFilter.inativo}
+            onValueChange={(inativo) =>
+              onStatusFilterChange({ ...statusFilter, inativo })
+            }
+          >
+            Inativo
+          </FieldCheckbox>
+        </div>
+      </section>
+      <FilterCheckGroup
+        title="Centros de lucro"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={["Juliana", "Matheus", "Junior Duraes", "Maria Luiza"].map(
+          (name) => ({ id: `cl_${name}`, label: name }),
+        )}
+      />
+      <FilterCheckGroup
+        title="Produtos"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={[
+          "Background Check",
+          "IDV",
+          "Monitoramento",
+          "Workflow",
+          "API",
+        ].map((name) => ({ id: `prod_${name}`, label: name }))}
+      />
+      <FilterCheckGroup
+        title="Saúde do cliente"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={[
+          "Risco alto (igual ou menor a 50%)",
+          "Risco médio (entre 51% a 90%)",
+          "Sucesso (entre 91% a 100%)",
+          "Oportunidade (maior que 100%)",
+        ].map((label) => ({ id: `health_${label}`, label }))}
+      />
+      <FilterCheckGroup
+        title="Tags"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={[
+          "Enterprise",
+          "Mid-market",
+          "SMB",
+          "Onboarding",
+          "Inadimplente",
+        ].map((tag) => ({ id: `tag_${tag}`, label: tag }))}
+      />
+      <FilterCheckGroup
+        title="Status da fatura"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={INVOICE_STATUS_FILTER_OPTIONS.map(({ key, label }) => ({
+          id: `inv_${key}`,
+          label,
+        }))}
+      />
+      <FilterCheckGroup
+        title="Método de pagamento"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={[
+          { id: "payBoleto", label: "Boleto" },
+          { id: "payTransfer", label: "Transferência bancária" },
+        ]}
+      />
+      <FilterCheckGroup
+        title="Upload de arquivos"
+        checked={checkboxIds}
+        onToggle={toggleCheck}
+        items={[
+          { id: "uploadSemNota", label: "Faturas sem nota anexada" },
+          { id: "uploadSemBoleto", label: "Faturas sem boleto anexado" },
+        ]}
+      />
+      <section className="mb-2">
+        <span className="ds-section-title">Filtros condicionais</span>
+        <div className="mb-3">
+          <p className="text-xs text-zinc-500 mb-1">Faturamento</p>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldSelect
+              items={COMPARISON_OPERATORS}
+              defaultSelectedKeys={new Set(["maior"])}
+              aria-label="Operador de faturamento"
+            />
+            <FieldInput placeholder="Valor em R$" />
+          </div>
+        </div>
+        <div>
+          <p className="text-xs text-zinc-500 mb-1">Consumo</p>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldSelect
+              items={COMPARISON_OPERATORS}
+              defaultSelectedKeys={new Set(["maior"])}
+              aria-label="Operador de consumo"
+            />
+            <FieldInput placeholder="% de consumo" />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+
   return (
-    <Drawer
+    <DynamicDrawer
+      size="lg"
+      title="Filtros"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      placement="right"
-      size="md"
-      isDismissable
       classNames={{
-        wrapper: "z-[10070]",
-        backdrop: "z-[10065]",
+        base: "max-w-[504px]",
+        header: "font-bold text-gray-950",
+        body: "flex-1! mb-0",
+        footer: "border-t-0",
       }}
-    >
-      <DrawerContent>
-        <DrawerHeader className="flex items-center justify-between border-b border-zinc-200">
-          <span className="text-[22px] font-semibold">Filtros</span>
-        </DrawerHeader>
-        <DrawerBody className="gap-6">
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Competência</p>
-            <div className="grid grid-cols-2 gap-3">
-              <Select
-                label="Competência inicial"
-                size="sm"
-                defaultSelectedKeys={DEFAULT_COMPETENCE_FROM}
-              >
-                {competenceItems.map((m) => (
-                  <SelectItem key={m.key}>{m.label}</SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Competência final"
-                size="sm"
-                defaultSelectedKeys={DEFAULT_COMPETENCE_TO}
-              >
-                {competenceItems.map((m) => (
-                  <SelectItem key={m.key}>{m.label}</SelectItem>
-                ))}
-              </Select>
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Tipo</p>
-            <div className="flex flex-col gap-2.5">
-              <Checkbox
-                isSelected={checkboxIds.tipoBase}
-                onValueChange={(v) => toggleCheck("tipoBase", v)}
-              >
-                Base
-              </Checkbox>
-              <Checkbox
-                isSelected={checkboxIds.tipoNovos}
-                onValueChange={(v) => toggleCheck("tipoNovos", v)}
-              >
-                Novos negócios
-              </Checkbox>
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Status</p>
-            <div className="flex flex-col gap-2.5">
-              <Checkbox
-                isSelected={statusFilter.ativo}
-                onValueChange={(v) =>
-                  onStatusFilterChange({ ...statusFilter, ativo: v })
-                }
-              >
-                Ativo
-              </Checkbox>
-              <Checkbox
-                isSelected={statusFilter.inativo}
-                onValueChange={(v) =>
-                  onStatusFilterChange({ ...statusFilter, inativo: v })
-                }
-              >
-                Inativo
-              </Checkbox>
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Centros de lucro</p>
-            <div className="flex flex-col gap-2.5">
-              {["Juliana", "Matheus", "Junior Duraes", "Maria Luiza"].map(
-                (name) => (
-                  <Checkbox
-                    key={name}
-                    isSelected={checkboxIds[`cl_${name}`]}
-                    onValueChange={(v) => toggleCheck(`cl_${name}`, v)}
-                  >
-                    {name}
-                  </Checkbox>
-                ),
-              )}
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Produtos</p>
-            <div className="flex flex-col gap-2.5">
-              {[
-                "Background Check",
-                "IDV",
-                "Monitoramento",
-                "Workflow",
-                "API",
-              ].map((name) => (
-                <Checkbox
-                  key={name}
-                  isSelected={checkboxIds[`prod_${name}`]}
-                  onValueChange={(v) => toggleCheck(`prod_${name}`, v)}
-                >
-                  {name}
-                </Checkbox>
-              ))}
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Saúde do cliente</p>
-            <div className="flex flex-col gap-2.5">
-              {[
-                "Risco alto (igual ou menor a 50%)",
-                "Risco médio (entre 51% a 90%)",
-                "Sucesso (entre 91% a 100%)",
-                "Oportunidade (maior que 100%)",
-              ].map((label) => (
-                <Checkbox
-                  key={label}
-                  isSelected={checkboxIds[`health_${label}`]}
-                  onValueChange={(v) => toggleCheck(`health_${label}`, v)}
-                >
-                  {label}
-                </Checkbox>
-              ))}
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Tags</p>
-            <div className="flex flex-col gap-2.5">
-              {[
-                "Enterprise",
-                "Mid-market",
-                "SMB",
-                "Onboarding",
-                "Inadimplente",
-              ].map((tag) => (
-                <Checkbox
-                  key={tag}
-                  isSelected={checkboxIds[`tag_${tag}`]}
-                  onValueChange={(v) => toggleCheck(`tag_${tag}`, v)}
-                >
-                  {tag}
-                </Checkbox>
-              ))}
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Status da fatura</p>
-            <div className="flex flex-col gap-2.5">
-              {INVOICE_STATUS_FILTER_OPTIONS.map(({ key, label }) => (
-                <Checkbox
-                  key={key}
-                  isSelected={checkboxIds[`inv_${key}`]}
-                  onValueChange={(v) => toggleCheck(`inv_${key}`, v)}
-                >
-                  {label}
-                </Checkbox>
-              ))}
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Método de pagamento</p>
-            <div className="flex flex-col gap-2.5">
-              <Checkbox
-                isSelected={checkboxIds.payBoleto}
-                onValueChange={(v) => toggleCheck("payBoleto", v)}
-              >
-                Boleto
-              </Checkbox>
-              <Checkbox
-                isSelected={checkboxIds.payTransfer}
-                onValueChange={(v) => toggleCheck("payTransfer", v)}
-              >
-                Transferência bancária
-              </Checkbox>
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Upload de arquivos</p>
-            <div className="flex flex-col gap-2.5">
-              <Checkbox
-                isSelected={checkboxIds.uploadSemNota}
-                onValueChange={(v) => toggleCheck("uploadSemNota", v)}
-              >
-                Faturas sem nota anexada
-              </Checkbox>
-              <Checkbox
-                isSelected={checkboxIds.uploadSemBoleto}
-                onValueChange={(v) => toggleCheck("uploadSemBoleto", v)}
-              >
-                Faturas sem boleto anexado
-              </Checkbox>
-            </div>
-          </section>
-          <section>
-            <p className="text-[13px] font-semibold mb-2.5">Filtros condicionais</p>
-            <div className="mb-3">
-              <p className="text-xs text-zinc-500 mb-1">Faturamento</p>
-              <div className="grid grid-cols-2 gap-3">
-                <Select size="sm" defaultSelectedKeys={DEFAULT_COMPARE_KEYS}>
-                  <SelectItem key="maior">Maior que</SelectItem>
-                  <SelectItem key="menor">Menor que</SelectItem>
-                  <SelectItem key="igual">Igual a</SelectItem>
-                </Select>
-                <Input placeholder="Valor em R$" size="sm" />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-zinc-500 mb-1">Consumo</p>
-              <div className="grid grid-cols-2 gap-3">
-                <Select size="sm" defaultSelectedKeys={DEFAULT_COMPARE_KEYS}>
-                  <SelectItem key="maior">Maior que</SelectItem>
-                  <SelectItem key="menor">Menor que</SelectItem>
-                  <SelectItem key="igual">Igual a</SelectItem>
-                </Select>
-                <Input placeholder="% de consumo" size="sm" />
-              </div>
-            </div>
-          </section>
-        </DrawerBody>
-        <DrawerFooter className="border-t border-zinc-200 justify-end gap-2">
-          <Button variant="bordered" onPress={() => onOpenChange(false)}>
+      component={filterBody}
+      footer={
+        <div className="flex w-full gap-2.5 flex-wrap">
+          <Button
+            variant="light"
+            onPress={handleClose}
+            className="h-10 flex-1 min-w-[120px] border border-gray-300"
+          >
             Cancelar
           </Button>
-          <Button variant="bordered" onPress={clearAll}>
+          <Button
+            variant="light"
+            onPress={clearAll}
+            className="h-10 flex-1 min-w-[120px] border border-gray-300"
+          >
             Limpar filtros
           </Button>
-          <Button color="primary" onPress={onApply}>
+          <Button
+            color="primary"
+            className="h-10 flex-1 min-w-[120px]"
+            onPress={() => {
+              onApply();
+              onOpenChange(false);
+            }}
+          >
             Filtrar
           </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </div>
+      }
+    />
   );
 }

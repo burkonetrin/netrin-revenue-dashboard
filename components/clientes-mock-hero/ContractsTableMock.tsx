@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  nucleusTableHeadCellClass,
+  nucleusTableHeadCellCompactClass,
+} from "@/shared/styles/tableClassNames";
 import { Button } from "@heroui/react";
 import { Fragment } from "react";
 import {
@@ -44,29 +48,17 @@ function FranchiseNestedTable({
       ) : null}
       <table className="w-full border-collapse text-[11px] bg-white">
         <thead>
-          <tr className="bg-white">
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
-              Franquia
-            </th>
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
-              Centro de lucro
-            </th>
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
-              Vigência
-            </th>
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
-              Valor
-            </th>
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
+          <tr>
+            <th className={nucleusTableHeadCellCompactClass}>Franquia</th>
+            <th className={nucleusTableHeadCellCompactClass}>Centro de lucro</th>
+            <th className={nucleusTableHeadCellCompactClass}>Vigência</th>
+            <th className={nucleusTableHeadCellCompactClass}>Valor</th>
+            <th className={nucleusTableHeadCellCompactClass}>
               Consultas no período
             </th>
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
-              Excedente
-            </th>
-            <th className="text-left p-2 text-[10px] text-zinc-500 border-b border-zinc-200 bg-white">
-              Faturado
-            </th>
-            <th className="w-10 bg-white" />
+            <th className={nucleusTableHeadCellCompactClass}>Excedente</th>
+            <th className={nucleusTableHeadCellCompactClass}>Faturado</th>
+            <th className={`${nucleusTableHeadCellCompactClass} w-10`} />
           </tr>
         </thead>
         <tbody>
@@ -165,6 +157,9 @@ export function ContractsTableMock({
   const contracts = visibleContracts(showInactiveItems);
 
   const cellPad = inlineDetail ? "px-4 py-3.5" : "px-3 py-3";
+  const headCell = inlineDetail
+    ? nucleusTableHeadCellClass
+    : `${nucleusTableHeadCellClass} h-10 px-3`;
   const tableClass = inlineDetail
     ? "w-full border-collapse text-[13px] bg-white"
     : "w-full border-collapse text-xs bg-white";
@@ -172,52 +167,16 @@ export function ContractsTableMock({
   return (
     <table className={tableClass}>
       <thead>
-        <tr className="bg-white">
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Contrato
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Imposto
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Valor mínimo
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Média últimos 3 meses
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Total últimos 12 meses
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            MRR
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Consumo médio
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Faturado
-          </th>
-          <th
-            className={`text-left ${cellPad} text-[10px] uppercase text-zinc-500 border-b border-zinc-200 bg-white`}
-          >
-            Franquias
-          </th>
+        <tr>
+          <th className={headCell}>Contrato</th>
+          <th className={headCell}>Imposto</th>
+          <th className={headCell}>Valor mínimo</th>
+          <th className={headCell}>Média últimos 3 meses</th>
+          <th className={headCell}>Total últimos 12 meses</th>
+          <th className={headCell}>MRR</th>
+          <th className={headCell}>Consumo médio</th>
+          <th className={headCell}>Faturado</th>
+          <th className={headCell}>Franquias</th>
         </tr>
       </thead>
       <tbody>

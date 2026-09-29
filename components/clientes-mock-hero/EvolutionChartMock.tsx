@@ -16,7 +16,6 @@ import {
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
 import { CmpRight } from "./CmpRight";
-import { Divider } from "@heroui/react";
 
 function TooltipRow({
   label,
@@ -163,7 +162,7 @@ export function EvolutionChartMock() {
                 showCmp
               />
             ) : null}
-            <Divider className="my-2" />
+            <hr className="my-2 border-0 border-t border-[var(--ds-border)]" />
             {legendVis.cl ? (
               <TooltipRow
                 label="Clientes ativos"

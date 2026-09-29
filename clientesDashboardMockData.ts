@@ -7,13 +7,24 @@ export type InvoiceStatusKey =
   | "pago_parcial"
   | "pago_total"
   | "cancel_solicitado"
-  | "nota_cancelada";
+  | "nota_cancelada"
+  | "pago_duplicidade"
+  | "nota_vencida"
+  | "divida_parcelada"
+  | "baixa_contabil";
 
 export interface MockNfeNote {
   tipo: string;
   nome: string;
   vencimento: string;
   statusPagamento: string;
+}
+
+export interface MockParcelaAtrasada {
+  numero: number;
+  valor: number;
+  /** Competência no formato mês/ano. */
+  competencia: string;
 }
 
 export interface MockClient {
@@ -34,6 +45,16 @@ export interface MockClient {
   faturaStatus: InvoiceStatusKey;
   /** Valor já pago quando `faturaStatus` é `pago_parcial`. */
   valorPagoParcial?: number;
+  /** Parcelas em atraso (badge dívida parcelada). */
+  parcelasAtrasadas?: MockParcelaAtrasada[];
+  /** Valor de pagamento não identificado (fluxo de vinculação). */
+  pagamentoNaoIdentificadoValor?: number;
+  /** Pagamento excedente vinculado a NF (fluxo de consulta). */
+  pagamentoExcedente?: {
+    valor: number;
+    notaDescricao: string;
+    destino: "reembolsado" | "abatido";
+  };
   nfe: MockNfeNote[];
 }
 
@@ -109,6 +130,7 @@ export interface MockDetailKpi {
   c: number;
   pct?: boolean;
   chip?: string;
+  discountSaldoRemanescente?: number;
   discountBreakdown?: MockDiscountBreakdownLine[];
   total12FranchiseBreakdown?: MockFranchiseTotal12Line[];
 }
@@ -163,13 +185,13 @@ export interface CohortRow {
 }
 
 export const DETAIL_CONTEXT = "__detail__";
-export const LIST_COLSPAN = 9;
+export const LIST_COLSPAN = 8;
 
 export const INVOICE_STATUS: Record<
   InvoiceStatusKey,
   { label: string; chip: string }
 > = {
-  aberta: { label: "Aberta", chip: "inv-open" },
+  aberta: { label: "Fatura aberta", chip: "inv-open" },
   enviada_faturar: { label: "Enviada para faturar", chip: "inv-sent" },
   faturado_aberto: {
     label: "Pagamento em aberto",
@@ -182,24 +204,67 @@ export const INVOICE_STATUS: Record<
     chip: "inv-cancel-req",
   },
   nota_cancelada: { label: "Nota cancelada", chip: "inv-cancelled" },
+  pago_duplicidade: { label: "Pago excedente", chip: "inv-duplicate" },
+  nota_vencida: { label: "Nota vencida", chip: "inv-overdue" },
+  divida_parcelada: { label: "Dívida parcelada", chip: "inv-installment" },
+  baixa_contabil: { label: "Baixa contábil", chip: "inv-writeoff" },
 };
 
-export const CLIENT_ROW_ACTIONS = [
-  "Adicionar fatura",
-  "Faturar cliente",
-  "Cancelar nota",
-  "Encaminhar consumo",
-  "Gerar histórico de consultas",
-  "Ajustar fatura",
-  "Atualizar status de pagamento",
+/** Ordem exibida na sidebar de filtros e na vitrine de badges na listagem. */
+export const INVOICE_STATUS_ORDER: InvoiceStatusKey[] = [
+  "aberta",
+  "enviada_faturar",
+  "faturado_aberto",
+  "pago_parcial",
+  "pago_total",
+  "cancel_solicitado",
+  "nota_cancelada",
+  "pago_duplicidade",
+  "nota_vencida",
+  "divida_parcelada",
+  "baixa_contabil",
 ];
 
-export const INVOICE_STATUS_FILTER_OPTIONS = (
-  Object.entries(INVOICE_STATUS) as [
-    InvoiceStatusKey,
-    { label: string; chip: string },
-  ][]
-).map(([key, meta]) => ({ key, label: meta.label }));
+export type ClientRowMenuEntry =
+  | { kind: "action"; label: string; badge?: string }
+  | { kind: "divider" }
+  | { kind: "heading"; label: string };
+
+export const CLIENT_ROW_ACTIONS_MENU: ClientRowMenuEntry[] = [
+  { kind: "action", label: "Encaminhar consumo por e-mail" },
+  { kind: "action", label: "Gerar histórico de consultas" },
+  { kind: "divider" },
+  { kind: "heading", label: "Faturamento" },
+  { kind: "action", label: "Adicionar fatura" },
+  { kind: "action", label: "Ajustar fatura" },
+  { kind: "action", label: "Faturar cliente" },
+  { kind: "divider" },
+  { kind: "heading", label: "Nota fiscal" },
+  { kind: "action", label: "Ver notas fiscais" },
+  { kind: "action", label: "Vincular pagamento não identificado" },
+  { kind: "action", label: "Ver pagamento excedente" },
+  { kind: "action", label: "Baixa contábil" },
+  { kind: "action", label: "Cancelar nota" },
+];
+
+/** @deprecated Use `CLIENT_ROW_ACTIONS_MENU`. */
+export const CLIENT_ROW_ACTIONS_PRIMARY: string[] = [];
+
+/** @deprecated Use `CLIENT_ROW_ACTIONS_MENU`. */
+export const CLIENT_ROW_ACTIONS_SECONDARY: string[] = [];
+
+/** @deprecated Use PRIMARY + SECONDARY no menu de ações. */
+export const CLIENT_ROW_ACTIONS = [
+  ...CLIENT_ROW_ACTIONS_PRIMARY,
+  ...CLIENT_ROW_ACTIONS_SECONDARY,
+];
+
+export const INVOICE_STATUS_FILTER_OPTIONS = INVOICE_STATUS_ORDER.map(
+  (key) => ({
+    key,
+    label: INVOICE_STATUS[key].label,
+  }),
+);
 
 export const MOCK_COMPETENCE_MONTHS = [
   { key: "2025-01", label: "jan/2025" },
@@ -401,8 +466,45 @@ export const LEGEND: LegendItem[] = [
   { id: "fr", l: "Franquias ativas", c: "#22c55e", type: "bar" },
 ];
 
-export const CLIENTS: MockClient[] = [
-  {
+const CLIENT_PROFILES_BY_STATUS: Record<
+  InvoiceStatusKey,
+  Omit<MockClient, "faturaStatus">
+> = {
+  aberta: {
+    id: "fenix",
+    nome: "Fênix Tecnologia e Pagamentos",
+    cnpj: "67.890.123/0001-45",
+    inicio: "01/04/2023",
+    ativo: true,
+    prod: 1,
+    produtos: ["Background Check"],
+    referencia: "set/2025 - set/2025",
+    fat: 98700,
+    cons: 131,
+    usado: 9825,
+    lim: 7500,
+    s: "oportunidade",
+    vencimentoNF: "01/04/2026",
+    nfe: [],
+  },
+  enviada_faturar: {
+    id: "cerrado",
+    nome: "Cerrado Agro Participações",
+    cnpj: "34.567.890/0001-12",
+    inicio: "20/11/2017",
+    ativo: true,
+    prod: 2,
+    produtos: ["Background Check", "IDV"],
+    referencia: "set/2025 - set/2025",
+    fat: 158200,
+    cons: 74,
+    usado: 8880,
+    lim: 12e3,
+    s: "warning",
+    vencimentoNF: "20/11/2026",
+    nfe: [],
+  },
+  faturado_aberto: {
     id: "alpha",
     nome: "Alpha Serviços Financeiros LTDA",
     cnpj: "12.345.678/0001-90",
@@ -423,7 +525,6 @@ export const CLIENTS: MockClient[] = [
     lim: 2e4,
     s: "oportunidade",
     vencimentoNF: "12/12/2026",
-    faturaStatus: "faturado_aberto",
     nfe: [
       {
         tipo: "Franquia",
@@ -437,70 +538,15 @@ export const CLIENTS: MockClient[] = [
         vencimento: "15/01/2027",
         statusPagamento: "Pagamento em aberto",
       },
-    ],
-  },
-  {
-    id: "boreal",
-    nome: "Boreal Logística S.A.",
-    cnpj: "23.456.789/0001-01",
-    inicio: "05/08/2021",
-    ativo: true,
-    prod: 3,
-    produtos: ["Workflow", "API", "Monitoramento"],
-    referencia: "ago/2025 - set/2025",
-    fat: 196500,
-    cons: 96,
-    usado: 14400,
-    lim: 15e3,
-    s: "sucesso",
-    vencimentoNF: "05/10/2026",
-    faturaStatus: "pago_total",
-    nfe: [
       {
         tipo: "Franquia",
-        nome: "Workflow corporativo",
-        vencimento: "05/10/2026",
-        statusPagamento: "Pago totalmente",
+        nome: "Workflow enterprise",
+        vencimento: "20/01/2027",
+        statusPagamento: "Fatura aberta",
       },
     ],
   },
-  {
-    id: "cerrado",
-    nome: "Cerrado Agro Participações",
-    cnpj: "34.567.890/0001-12",
-    inicio: "20/11/2017",
-    ativo: true,
-    prod: 2,
-    produtos: ["Background Check", "IDV"],
-    referencia: "set/2025 - set/2025",
-    fat: 158200,
-    cons: 74,
-    usado: 8880,
-    lim: 12e3,
-    s: "warning",
-    vencimentoNF: "20/11/2026",
-    faturaStatus: "enviada_faturar",
-    nfe: [],
-  },
-  {
-    id: "delta",
-    nome: "Delta Seguros Corretora",
-    cnpj: "45.678.901/0001-23",
-    inicio: "03/02/2022",
-    ativo: false,
-    prod: 3,
-    produtos: ["Background Check", "Workflow", "API"],
-    referencia: "jan/2025 - dez/2025",
-    fat: 142900,
-    cons: 43,
-    usado: 4300,
-    lim: 1e4,
-    s: "danger",
-    vencimentoNF: "—",
-    faturaStatus: "nota_cancelada",
-    nfe: [],
-  },
-  {
+  pago_parcial: {
     id: "estrela",
     nome: "Estrela Varejo Digital ME",
     cnpj: "56.789.012/0001-34",
@@ -515,36 +561,53 @@ export const CLIENTS: MockClient[] = [
     lim: 9e3,
     s: "warning",
     vencimentoNF: "18/09/2026",
-    faturaStatus: "pago_parcial",
     valorPagoParcial: 72_840,
     nfe: [
       {
         tipo: "Franquia",
         nome: "Pacote IDV",
         vencimento: "18/09/2026",
-        statusPagamento: "Pago parcial (R$ 72.840)",
+        statusPagamento: "Pago parcial",
+      },
+      {
+        tipo: "Franquia",
+        nome: "Monitoramento lojas",
+        vencimento: "25/09/2026",
+        statusPagamento: "Pagamento em aberto",
+      },
+      {
+        tipo: "Contrato",
+        nome: "CONTRATO varejo 2025",
+        vencimento: "30/09/2026",
+        statusPagamento: "Pago parcial",
       },
     ],
   },
-  {
-    id: "fenix",
-    nome: "Fênix Tecnologia e Pagamentos",
-    cnpj: "67.890.123/0001-45",
-    inicio: "01/04/2023",
+  pago_total: {
+    id: "boreal",
+    nome: "Boreal Logística S.A.",
+    cnpj: "23.456.789/0001-01",
+    inicio: "05/08/2021",
     ativo: true,
-    prod: 1,
-    produtos: ["Background Check"],
-    referencia: "set/2025 - set/2025",
-    fat: 98700,
-    cons: 131,
-    usado: 9825,
-    lim: 7500,
-    s: "oportunidade",
-    vencimentoNF: "01/04/2026",
-    faturaStatus: "aberta",
-    nfe: [],
+    prod: 3,
+    produtos: ["Workflow", "API", "Monitoramento"],
+    referencia: "ago/2025 - set/2025",
+    fat: 196500,
+    cons: 96,
+    usado: 14400,
+    lim: 15e3,
+    s: "sucesso",
+    vencimentoNF: "05/10/2026",
+    nfe: [
+      {
+        tipo: "Franquia",
+        nome: "Workflow corporativo",
+        vencimento: "05/10/2026",
+        statusPagamento: "Pago totalmente",
+      },
+    ],
   },
-  {
+  cancel_solicitado: {
     id: "horizonte",
     nome: "Horizonte Saúde Operadora",
     cnpj: "89.012.345/0001-67",
@@ -559,10 +622,186 @@ export const CLIENTS: MockClient[] = [
     lim: 5e3,
     s: "sucesso",
     vencimentoNF: "15/06/2026",
-    faturaStatus: "cancel_solicitado",
+    nfe: [
+      {
+        tipo: "Franquia",
+        nome: "Monitoramento corporativo",
+        vencimento: "15/06/2026",
+        statusPagamento: "Solicitado cancelamento",
+      },
+      {
+        tipo: "Franquia",
+        nome: "Workflow API",
+        vencimento: "20/06/2026",
+        statusPagamento: "Solicitado cancelamento",
+      },
+      {
+        tipo: "Contrato",
+        nome: "CONTRATO saúde 2026",
+        vencimento: "30/06/2026",
+        statusPagamento: "Solicitado cancelamento",
+      },
+    ],
+  },
+  nota_cancelada: {
+    id: "delta",
+    nome: "Delta Seguros Corretora",
+    cnpj: "45.678.901/0001-23",
+    inicio: "03/02/2022",
+    ativo: false,
+    prod: 3,
+    produtos: ["Background Check", "Workflow", "API"],
+    referencia: "jan/2025 - dez/2025",
+    fat: 142900,
+    cons: 43,
+    usado: 4300,
+    lim: 1e4,
+    s: "danger",
+    vencimentoNF: "—",
     nfe: [],
   },
-];
+  pago_duplicidade: {
+    id: "guara",
+    nome: "Guará Indústria de Alimentos",
+    cnpj: "78.901.234/0001-56",
+    inicio: "10/05/2018",
+    ativo: true,
+    prod: 2,
+    produtos: ["Background Check", "IDV"],
+    referencia: "ago/2025 - set/2025",
+    fat: 87300,
+    cons: 61,
+    usado: 3660,
+    lim: 6e3,
+    s: "warning",
+    vencimentoNF: "10/09/2026",
+    pagamentoNaoIdentificadoValor: 4_520,
+    pagamentoExcedente: {
+      valor: 3_280,
+      notaDescricao: "Background Check",
+      destino: "abatido",
+    },
+    nfe: [
+      {
+        tipo: "Franquia",
+        nome: "Background Check",
+        vencimento: "10/09/2026",
+        statusPagamento: "Pago excedente",
+      },
+      {
+        tipo: "Franquia",
+        nome: "ID Validation",
+        vencimento: "10/10/2026",
+        statusPagamento: "Pagamento em aberto",
+      },
+      {
+        tipo: "Contrato",
+        nome: "CONTRATO Guará 2025",
+        vencimento: "15/09/2026",
+        statusPagamento: "Pago totalmente",
+      },
+    ],
+  },
+  nota_vencida: {
+    id: "ipe",
+    nome: "Ipê Construções LTDA",
+    cnpj: "90.123.456/0001-78",
+    inicio: "22/01/2020",
+    ativo: true,
+    prod: 1,
+    produtos: ["Workflow"],
+    referencia: "set/2025 - set/2025",
+    fat: 64800,
+    cons: 38,
+    usado: 1520,
+    lim: 4e3,
+    s: "danger",
+    vencimentoNF: "05/08/2026",
+    nfe: [
+      {
+        tipo: "Contrato",
+        nome: "Obra corporativa",
+        vencimento: "05/08/2026",
+        statusPagamento: "Nota vencida",
+      },
+      {
+        tipo: "Franquia",
+        nome: "Workflow canteiro",
+        vencimento: "10/08/2026",
+        statusPagamento: "Nota vencida",
+      },
+      {
+        tipo: "Franquia",
+        nome: "Consultas avulsas",
+        vencimento: "15/08/2026",
+        statusPagamento: "Pagamento em aberto",
+      },
+    ],
+  },
+  divida_parcelada: {
+    id: "jurema",
+    nome: "Jurema Educação S.A.",
+    cnpj: "01.234.567/0001-89",
+    inicio: "14/03/2021",
+    ativo: true,
+    prod: 2,
+    produtos: ["API", "Monitoramento"],
+    referencia: "jul/2025 - set/2025",
+    fat: 52300,
+    cons: 105,
+    usado: 3150,
+    lim: 3e3,
+    s: "oportunidade",
+    vencimentoNF: "14/09/2026",
+    parcelasAtrasadas: [
+      { numero: 1, valor: 18_500, competencia: "jul/2025" },
+      { numero: 2, valor: 18_500, competencia: "ago/2025" },
+      { numero: 3, valor: 9_200, competencia: "set/2025" },
+    ],
+    nfe: [],
+  },
+  baixa_contabil: {
+    id: "estacao",
+    nome: "Estação Data Hub LTDA",
+    cnpj: "11.222.333/0001-44",
+    inicio: "07/11/2016",
+    ativo: false,
+    prod: 1,
+    produtos: ["Background Check"],
+    referencia: "jan/2025 - set/2025",
+    fat: 41200,
+    cons: 0,
+    usado: 0,
+    lim: 5e3,
+    s: "danger",
+    vencimentoNF: "—",
+    nfe: [
+      {
+        tipo: "Franquia",
+        nome: "Background Check corporativo",
+        vencimento: "30/08/2026",
+        statusPagamento: "Baixa contábil",
+      },
+      {
+        tipo: "Franquia",
+        nome: "Pacote consultas avulsas",
+        vencimento: "15/09/2026",
+        statusPagamento: "Baixa contábil",
+      },
+      {
+        tipo: "Contrato",
+        nome: "CONTRATO data hub",
+        vencimento: "01/09/2026",
+        statusPagamento: "Baixa contábil",
+      },
+    ],
+  },
+};
+
+export const CLIENTS: MockClient[] = INVOICE_STATUS_ORDER.map((statusKey) => ({
+  ...CLIENT_PROFILES_BY_STATUS[statusKey],
+  faturaStatus: statusKey,
+}));
 
 export const DETAIL_KPIS: MockDetailKpi[] = [
   { l: "Média últimos 3 meses", c: 1e6 },
@@ -579,6 +818,7 @@ export const DETAIL_KPIS: MockDetailKpi[] = [
   {
     l: "Descontos",
     c: 60e3,
+    discountSaldoRemanescente: 14_500,
     discountBreakdown: [
       { kind: "Franquia", name: "Franquia de IDV", value: 35e3 },
       { kind: "Contrato", name: "CONTRATO 01", value: 25e3 },

@@ -1,10 +1,13 @@
-import type React from "react";
+"use client";
+
+import type { ReactNode } from "react";
 
 interface PageTitleProps {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
 }
 
+/** Cabeçalho de página com ícone circular e título (Nucleus). */
 export function PageTitle({ icon, label }: Readonly<PageTitleProps>) {
   return (
     <div className="w-full flex items-center gap-3">

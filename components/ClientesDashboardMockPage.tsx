@@ -1,8 +1,7 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { Download, SlidersHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Download, SlidersHorizontal, Users } from "lucide-react";
+import { useState } from "react";
 import {
   BAR_CTR,
   BAR_HEALTH,
@@ -21,11 +20,7 @@ import { CohortTableMock } from "./clientes-mock-hero/CohortTableMock";
 import { DashboardKpiGrid } from "./clientes-mock-hero/DashboardKpiGrid";
 import { EvolutionChartMock } from "./clientes-mock-hero/EvolutionChartMock";
 import { HorizontalBarsMock } from "./clientes-mock-hero/HorizontalBarsMock";
-import { PageTitle } from "@/shared/components/PageTitle";
-import { CustomersIcon } from "@/shared/components/sidebar/icons";
-
-const outlineBtnClass =
-  "border-zinc-200 bg-white text-zinc-700 font-normal data-[hover=true]:bg-zinc-50";
+import { OutlineButton, PageHead } from "@/design-system/ui";
 
 function downloadClientsCsv() {
   const header = "Razão social;CNPJ;Faturamento;Consumo %";
@@ -46,46 +41,33 @@ function downloadClientsCsv() {
 export function ClientesDashboardMockPage() {
   const [periodLabel, setPeriodLabel] = useState("set/2025");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterDrawerMounted, setFilterDrawerMounted] = useState(false);
   const [statusFilter, setStatusFilter] = useState<FilterDrawerStatus>({
     ativo: false,
     inativo: false,
   });
   const [showInactiveItems, setShowInactiveItems] = useState(false);
 
-  useEffect(() => {
-    if (filterOpen) setFilterDrawerMounted(true);
-  }, [filterOpen]);
-
   const filterToolbar = (
     <div className="flex flex-wrap gap-2.5 mb-2">
-      <Button
-        variant="bordered"
-        size="sm"
-        className={outlineBtnClass}
-        startContent={<SlidersHorizontal className="size-4 opacity-70" />}
-        onPress={() => setFilterOpen(true)}
-      >
+      <OutlineButton onClick={() => setFilterOpen(true)}>
+        <SlidersHorizontal />
         Filtros
-      </Button>
-      <Button
-        variant="bordered"
-        size="sm"
-        className={outlineBtnClass}
-        startContent={<Download className="size-4 opacity-70" />}
-        onPress={downloadClientsCsv}
-      >
+      </OutlineButton>
+      <OutlineButton onClick={downloadClientsCsv}>
+        <Download />
         Download CSV
-      </Button>
+      </OutlineButton>
     </div>
   );
 
   const dashboardContent = (
     <section>
       {filterToolbar}
-      <p className="text-sm text-zinc-600 my-2 mb-6">
+      <p className="text-sm text-zinc-500 my-2 mb-6">
         Período:{" "}
-        <span className="font-medium text-zinc-900">{periodLabel}</span>
+        <span className="font-medium text-zinc-900">
+          {periodLabel}
+        </span>
       </p>
       <DashboardKpiGrid />
       <ChartCard title="Evolução mensal">
@@ -128,32 +110,23 @@ export function ClientesDashboardMockPage() {
   );
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto py-7 px-8 pb-12">
-      <div className="mb-4">
-        <PrototypeBanner />
-      </div>
-      <div className="mb-5">
-        <PageTitle
-          icon={<CustomersIcon color="currentColor" />}
-          label="Clientes"
-        />
-      </div>
+    <div className="space-y-6">
+      <PrototypeBanner />
+      <PageHead icon={<Users />} title="Clientes" />
       <DashboardViewTabs
         dashboard={dashboardContent}
         clientes={clientesContent}
       />
-      {filterDrawerMounted ? (
-        <ClientesFilterDrawer
-          isOpen={filterOpen}
-          onOpenChange={setFilterOpen}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          onApply={() => {
-            setPeriodLabel("set/2025");
-            setFilterOpen(false);
-          }}
-        />
-      ) : null}
+      <ClientesFilterDrawer
+        isOpen={filterOpen}
+        onOpenChange={setFilterOpen}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        onApply={() => {
+          setPeriodLabel("set/2025");
+          setFilterOpen(false);
+        }}
+      />
     </div>
   );
 }

@@ -77,13 +77,13 @@ export function ClientDetailView({
         ))}
       </div>
       <div className="mb-4">
-        <Dropdown>
+        <Dropdown placement="bottom-start">
           <DropdownTrigger>
-            <Button variant="bordered" size="sm">
+            <Button variant="bordered" size="sm" radius="sm">
               Ações ▾
             </Button>
           </DropdownTrigger>
-          <DropdownMenu aria-label="Ações de contrato">
+          <DropdownMenu aria-label="Ações de contrato" variant="flat">
             {CONTRACT_ACTIONS.map((action) => (
               <DropdownItem key={action}>{action}</DropdownItem>
             ))}

@@ -2,6 +2,8 @@
 
 import { Button, Input, Select, SelectItem } from "@heroui/react";
 import { Download } from "lucide-react";
+import { nucleusSelectProps } from "@/shared/styles/inputClassNames";
+import { defaultInputClassNames } from "@/shared/styles/inputClassNames";
 import {
   CLIENT_TYPE_OPTIONS,
   COMPETENCE_OPTIONS,
@@ -28,15 +30,18 @@ export function DashboardFiltersBar({
       <div className="flex flex-wrap gap-3 items-end flex-1">
       <Input
         label="Busca por cliente"
+        labelPlacement="outside"
+        radius="sm"
         size="sm"
+        classNames={defaultInputClassNames}
         className="min-w-[220px] max-w-sm"
         value={filters.search}
         onValueChange={(search) => onChange({ ...filters, search })}
         aria-label="Busca por cliente"
       />
       <Select
+        {...nucleusSelectProps}
         label="Competência"
-        size="sm"
         className="min-w-[180px] max-w-xs"
         selectedKeys={new Set([filters.competence])}
         onSelectionChange={(keys) => {

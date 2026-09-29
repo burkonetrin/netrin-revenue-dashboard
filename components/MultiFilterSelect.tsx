@@ -2,6 +2,7 @@
 
 import { Select, SelectItem } from "@heroui/react";
 import { useMemo } from "react";
+import { nucleusSelectProps } from "@/shared/styles/inputClassNames";
 
 export interface MultiFilterOption {
   key: string;
@@ -53,12 +54,12 @@ export function MultiFilterSelect({
 
   return (
     <Select
+      {...nucleusSelectProps}
       label={label}
       selectionMode="multiple"
       selectedKeys={new Set(value)}
       onSelectionChange={handleChange}
       className={className ?? "min-w-[200px] max-w-xs"}
-      size="sm"
       aria-label={label}
     >
       {items.map((item) => (

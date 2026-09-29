@@ -2,6 +2,10 @@
 
 import { Button, Input, Select, SelectItem } from "@heroui/react";
 import {
+  defaultInputClassNames,
+  nucleusSelectProps,
+} from "@/shared/styles/inputClassNames";
+import {
   CLIENT_TYPE_OPTIONS,
   HEALTH_OPTIONS,
   PROFIT_CENTERS,
@@ -21,7 +25,10 @@ export function ClientsFiltersBar({ filters, onChange }: ClientsFiltersBarProps)
       <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 flex flex-wrap gap-3 items-end">
         <Input
           label="Busca por cliente"
+          labelPlacement="outside"
+          radius="sm"
           size="sm"
+          classNames={defaultInputClassNames}
           className="min-w-[220px] max-w-sm"
           value={filters.search}
           onValueChange={(search) => onChange({ ...filters, search })}
@@ -57,8 +64,8 @@ export function ClientsFiltersBar({ filters, onChange }: ClientsFiltersBarProps)
 
       <div className="rounded-xl border border-zinc-200 bg-white p-4 flex flex-wrap gap-3 items-end">
         <Select
+          {...nucleusSelectProps}
           label="Faturamento"
-          size="sm"
           className="min-w-[140px]"
           selectedKeys={new Set([filters.billingOperator])}
           onSelectionChange={(keys) => {
@@ -74,7 +81,10 @@ export function ClientsFiltersBar({ filters, onChange }: ClientsFiltersBarProps)
         </Select>
         <Input
           label="Valor (R$)"
+          labelPlacement="outside"
+          radius="sm"
           size="sm"
+          classNames={defaultInputClassNames}
           type="number"
           className="min-w-[140px] max-w-[160px]"
           value={filters.billingValue}
@@ -84,8 +94,8 @@ export function ClientsFiltersBar({ filters, onChange }: ClientsFiltersBarProps)
           isDisabled={filters.billingOperator === "none"}
         />
         <Select
+          {...nucleusSelectProps}
           label="Consumo"
-          size="sm"
           className="min-w-[140px]"
           selectedKeys={new Set([filters.consumptionOperator])}
           onSelectionChange={(keys) => {
@@ -101,7 +111,10 @@ export function ClientsFiltersBar({ filters, onChange }: ClientsFiltersBarProps)
         </Select>
         <Input
           label="Consumo (%)"
+          labelPlacement="outside"
+          radius="sm"
           size="sm"
+          classNames={defaultInputClassNames}
           type="number"
           className="min-w-[140px] max-w-[160px]"
           value={filters.consumptionValue}

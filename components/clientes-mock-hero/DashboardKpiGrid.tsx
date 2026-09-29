@@ -11,7 +11,7 @@ function KpiIcon({ ico }: { ico: "trend" | "wallet" }) {
   const Icon = ico === "wallet" ? Wallet : TrendingUp;
   return (
     <span
-      className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full bg-primary-50 text-primary"
+      className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full bg-[var(--ds-primary-50)] text-[var(--ds-primary)]"
       aria-hidden
     >
       <Icon className="size-[18px]" />
@@ -25,9 +25,9 @@ export function DashboardKpiGrid() {
       {KPIS.map((k) => (
         <div
           key={k.l}
-          className="relative min-h-[108px] rounded-xl border border-zinc-200 bg-white p-[18px] shadow-sm"
+          className="relative min-h-[108px] rounded-xl border border-[var(--ds-border)] bg-[var(--ds-card)] p-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
         >
-          <span className="block text-[13px] text-zinc-500 pr-12">{k.l}</span>
+          <span className="block text-[13px] text-[var(--ds-muted)] pr-12">{k.l}</span>
           <KpiIcon ico={k.ico} />
           <div className="mt-3 flex flex-wrap items-baseline gap-2.5">
             <span className="text-[26px] font-semibold">{fmt(k.c)}</span>

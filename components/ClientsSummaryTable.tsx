@@ -6,6 +6,7 @@ import type { ClientMock } from "../types";
 import { HEALTH_CHIP_COLOR } from "../constants";
 import { HEALTH_OPTIONS } from "../constants";
 import { formatCnpj, formatCurrency, formatPercent } from "../utils/format";
+import { nucleusTableHeadCellClass } from "@/shared/styles/tableClassNames";
 
 function healthLabel(saude: ClientMock["saude"]) {
   return HEALTH_OPTIONS.find((h) => h.key === saude)?.label.split(" (")[0] ?? saude;
@@ -30,13 +31,13 @@ export function ClientsSummaryTable({ clients }: ClientsSummaryTableProps) {
       </header>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-500">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">Razão social</th>
-              <th className="px-4 py-3 font-medium">CNPJ</th>
-              <th className="px-4 py-3 font-medium">Produtos</th>
-              <th className="px-4 py-3 font-medium">Faturamento</th>
-              <th className="px-4 py-3 font-medium">% Consumo</th>
+              <th className={nucleusTableHeadCellClass}>Razão social</th>
+              <th className={nucleusTableHeadCellClass}>CNPJ</th>
+              <th className={nucleusTableHeadCellClass}>Produtos</th>
+              <th className={nucleusTableHeadCellClass}>Faturamento</th>
+              <th className={nucleusTableHeadCellClass}>% Consumo</th>
             </tr>
           </thead>
           <tbody>
