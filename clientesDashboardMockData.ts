@@ -83,9 +83,15 @@ export interface MockFranchise {
   total12q: number;
   total12v: number;
   user: string;
+  /** Login exibido ao lado do nome no menu ⋯. */
+  username?: string;
   tipo: string;
   status: string;
   renAuto: string;
+  /** Modelo de cobrança (tooltip na coluna Valor). */
+  billingModelName?: string;
+  billingFixedPrice?: number;
+  billingOveragePerQuery?: number;
 }
 
 export interface MockContract {
@@ -866,9 +872,13 @@ export const CONTRACTS_MOCK: MockContract[] = [
         total12q: 1e6,
         total12v: 1e6,
         user: "João da Silva",
+        username: "joao.silva",
         tipo: "Franquia de teste",
         status: "Ativa",
         renAuto: "Não",
+        billingModelName: "Preço fixo",
+        billingFixedPrice: 1_000,
+        billingOveragePerQuery: 10,
       },
       {
         id: "f2",
@@ -894,9 +904,13 @@ export const CONTRACTS_MOCK: MockContract[] = [
         total12q: 1e6,
         total12v: 1e6,
         user: "João da Silva",
+        username: "joao.silva",
         tipo: "Franquia de teste",
         status: "Ativa",
         renAuto: "Não",
+        billingModelName: "Preço fixo",
+        billingFixedPrice: 1_000,
+        billingOveragePerQuery: 10,
       },
       {
         id: "f3",

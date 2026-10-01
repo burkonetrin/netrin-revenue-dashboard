@@ -4,6 +4,7 @@ import {
   type ClientRowMenuEntry,
   type InvoiceStatusKey,
   type MockClient,
+  type MockFranchise,
   type MockNfeNote,
 } from "./clientesDashboardMockData";
 
@@ -126,6 +127,25 @@ export function nfeNoteAriaLabel(note: MockNfeNote): string {
 /** @deprecated Use `NfeNoteStacked` ou `nfeNoteAriaLabel`. */
 export function nfeRadioLabel(note: MockNfeNote): string {
   return nfeNoteAriaLabel(note);
+}
+
+export function franchiseUserLabel(franchise: MockFranchise): string {
+  if (franchise.username && franchise.user !== "—") {
+    return `${franchise.user} | ${franchise.username}`;
+  }
+  return franchise.user;
+}
+
+export function franchiseBillingModelTooltipContent(
+  franchise: MockFranchise,
+): { line1: string; line2: string } {
+  const modelName = franchise.billingModelName ?? "Preço fixo";
+  const fixed = franchise.billingFixedPrice ?? 1_000;
+  const overage = franchise.billingOveragePerQuery ?? 10;
+  return {
+    line1: `${modelName}: ${fmtDetail(fixed)}`,
+    line2: `Excedente: ${fmtDetail(overage)}/consulta`,
+  };
 }
 
 export function excedenteDestinoLabel(destino: "reembolsado" | "abatido"): string {

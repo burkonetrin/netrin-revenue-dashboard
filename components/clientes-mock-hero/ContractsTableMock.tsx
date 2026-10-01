@@ -11,7 +11,7 @@ import {
   type MockContract,
   type MockFranchise,
 } from "../../clientesDashboardMockData";
-import { fmt, fmtDetail, fmtN } from "../../clientesDashboardMockFormat";
+import { fmt, fmtDetail, fmtN, franchiseBillingModelTooltipContent } from "../../clientesDashboardMockFormat";
 import { FaturadoWithBadge } from "./FaturadoCell";
 import { FranchisePopover } from "./FranchisePopover";
 import { MockInfoTooltip } from "./MockInfoTooltip";
@@ -62,7 +62,9 @@ function FranchiseNestedTable({
           </tr>
         </thead>
         <tbody>
-          {franchises.map((f) => (
+          {franchises.map((f) => {
+            const billingTooltip = franchiseBillingModelTooltipContent(f);
+            return (
             <tr key={f.id} className="border-b border-zinc-100 bg-white">
               <td className="p-2 align-top bg-white">
                 <a href="#" className="block text-primary font-semibold no-underline">
@@ -85,19 +87,32 @@ function FranchiseNestedTable({
                 </span>
               </td>
               <td className="p-2 align-top bg-white">
-                {f.valorLabel ? (
-                  <strong>{f.valorLabel}</strong>
-                ) : (
-                  fmtDetail(f.valor)
-                )}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {f.valorLabel ? (
+                    <strong>{f.valorLabel}</strong>
+                  ) : (
+                    <span className="font-medium">{fmtDetail(f.valor)}</span>
+                  )}
+                  <MockInfoTooltip
+                    content={
+                      <div className="text-[13px] space-y-1">
+                        <p className="m-0 text-zinc-800">
+                          {billingTooltip.line1}
+                        </p>
+                        <p className="m-0 text-zinc-800">
+                          {billingTooltip.line2}
+                        </p>
+                      </div>
+                    }
+                  />
+                </div>
                 <span className="block text-[10px] text-zinc-500 mt-0.5">
                   MRR {fmtDetail(f.mrr)}
                 </span>
               </td>
               <td className="p-2 align-top bg-white">
-                <div className="font-medium">{fmtDetail(f.consVal)}</div>
-                <span className="block text-[10px] text-zinc-500 mt-0.5">
-                  {f.consUsed} de {fmtN(f.consLim)}{" "}
+                <div className="flex items-center gap-1.5 flex-wrap font-medium">
+                  {fmtDetail(f.consVal)}
                   <MockInfoTooltip
                     content={
                       <span>
@@ -107,6 +122,9 @@ function FranchiseNestedTable({
                       </span>
                     }
                   />
+                </div>
+                <span className="block text-[10px] text-zinc-500 mt-0.5">
+                  {f.consUsed} de {fmtN(f.consLim)}
                 </span>
               </td>
               <td className="p-2 align-top bg-white">
@@ -131,7 +149,8 @@ function FranchiseNestedTable({
                 <FranchisePopover franchise={f} noRenew={listMode} />
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

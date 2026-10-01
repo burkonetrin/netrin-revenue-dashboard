@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { MockFranchise } from "../../clientesDashboardMockData";
+import { franchiseUserLabel } from "../../clientesDashboardMockFormat";
 import { FloatingPopoverPortal } from "../FloatingPopoverPortal";
 
 interface FranchisePopoverProps {
@@ -46,7 +47,10 @@ export function FranchisePopover({
         minWidth={300}
       >
         <div className="flex flex-col gap-3">
-          <InfoBlock title="Usuários vinculados" value={franchise.user} />
+          <InfoBlock
+            title="Usuários vinculados"
+            value={franchiseUserLabel(franchise)}
+          />
           <InfoBlock title="Tipo" value={franchise.tipo} />
           <InfoBlock title="Status" value={franchise.status} />
           <InfoBlock title="Renovação automática" value={franchise.renAuto} />
