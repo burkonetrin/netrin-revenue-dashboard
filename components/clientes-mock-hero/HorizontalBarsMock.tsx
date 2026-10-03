@@ -7,6 +7,7 @@ import {
   ChartTooltipPortal,
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
+import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { CmpRight } from "./CmpRight";
 
 interface HorizontalBarsMockProps {
@@ -68,7 +69,7 @@ export function HorizontalBarsMock({
                     y: e.clientY,
                     content: (
                       <>
-                        <strong>{label}</strong>
+                        <span className={TOOLTIP_TITLE_CLASS}>{label}</span>
                         <div className="mt-1.5 font-semibold flex items-baseline gap-1.5">
                           {val}
                           <CmpRight cur={r.v} prev={r.p} />

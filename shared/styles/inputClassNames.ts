@@ -21,10 +21,9 @@ export const defaultCheckboxClassNames = {
   label: "text-sm text-gray-700",
 };
 
-/** Props padrão de Select HeroUI (Nucleus). */
+/** Props padrão de Select HeroUI (Nucleus — sem size sm; altura igual ao Input md). */
 export const nucleusSelectProps = {
   labelPlacement: "outside" as const,
   radius: "sm" as const,
-  size: "sm" as const,
   classNames: defaultSelectClassNames,
 };

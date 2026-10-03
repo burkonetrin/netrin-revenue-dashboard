@@ -7,6 +7,7 @@ import {
   ChartTooltipPortal,
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
+import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { KpiComparisonBadge } from "../KpiComparisonBadge";
 import { prototypePreviousValue } from "../../utils/comparison";
 
@@ -68,7 +69,7 @@ export function HealthBarChart({ counts }: HealthBarChartProps) {
                     y: e.clientY,
                     content: (
                       <div className="space-y-1">
-                        <p className="font-semibold">{HEALTH_CHART_LABELS[key]}</p>
+                        <p className={TOOLTIP_TITLE_CLASS}>{HEALTH_CHART_LABELS[key]}</p>
                         <div className="flex items-center gap-2">
                           <KpiComparisonBadge
                             current={count}

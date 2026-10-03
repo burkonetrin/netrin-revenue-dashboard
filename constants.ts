@@ -3,6 +3,9 @@ import type { ClientHealth, ProfitCenter, ServiceName } from "./types";
 /** URL pública da simulação (sem login). */
 export const PROTOTYPE_BASE_PATH = "/demo/commercial-dashboard";
 
+/** Listagem e detalhe de faturamento no protótipo. */
+export const BILLING_BASE_PATH = `${PROTOTYPE_BASE_PATH}/faturamento`;
+
 export const PROFIT_CENTERS: ProfitCenter[] = [
   "Junior",
   "Camila",

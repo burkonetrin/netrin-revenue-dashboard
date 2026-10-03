@@ -1,4 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BillingDetailPage } from "@/components/BillingDetailPage";
+import { BillingListPage } from "@/components/BillingListPage";
+import { CommercialClientDetailPage } from "@/components/CommercialClientDetailPage";
 import { CommercialClientsPage } from "@/components/CommercialClientsPage";
 import { CommercialDashboardPage } from "@/components/CommercialDashboardPage";
 import { CommercialPrototypeShell } from "@/components/CommercialPrototypeShell";
@@ -15,6 +18,9 @@ export function App() {
         <Route path={PROTOTYPE_BASE_PATH} element={<CommercialPrototypeShell />}>
           <Route index element={<CommercialDashboardPage />} />
           <Route path="clientes" element={<CommercialClientsPage />} />
+          <Route path="clientes/:clientId" element={<CommercialClientDetailPage />} />
+          <Route path="faturamento" element={<BillingListPage />} />
+          <Route path="faturamento/:id" element={<BillingDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

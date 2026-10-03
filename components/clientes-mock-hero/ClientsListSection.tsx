@@ -2,6 +2,8 @@
 
 import { SlidersHorizontal } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { PROTOTYPE_BASE_PATH } from "@/constants";
 import {
   FieldInput,
   OutlineButton,
@@ -23,6 +25,7 @@ import {
   HealthChip,
 } from "./MockChips";
 import { MockInfoTooltip } from "./MockInfoTooltip";
+import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { RowActionsDropdown } from "./RowActionsDropdown";
 import {
   nucleusSortableTableHeadCellClass,
@@ -241,9 +244,12 @@ export function ClientsListSection({
                       <ClientStatusChip ativo={c.ativo} />
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      <span className="font-medium text-zinc-900 block">
+                      <Link
+                        to={`${PROTOTYPE_BASE_PATH}/clientes/${c.id}`}
+                        className="font-medium text-primary block no-underline hover:underline"
+                      >
                         {c.nome}
-                      </span>
+                      </Link>
                       <span className="block text-[11px] text-zinc-500 mt-0.5 font-normal">
                         {c.cnpj}
                       </span>
@@ -254,7 +260,7 @@ export function ClientsListSection({
                         <MockInfoTooltip
                           content={
                             <div>
-                              <strong>Produtos</strong>
+                              <p className={`${TOOLTIP_TITLE_CLASS} m-0`}>Produtos</p>
                               <ul className="list-none p-0 m-1 mt-1">
                                 {c.produtos.map((p) => (
                                   <li key={p}>{p}</li>

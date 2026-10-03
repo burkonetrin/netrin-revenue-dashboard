@@ -6,6 +6,7 @@ import {
   ChartTooltipPortal,
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
+import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { KpiComparisonBadge } from "../KpiComparisonBadge";
 import { formatCompact, formatCurrency } from "../../utils/format";
 
@@ -66,7 +67,7 @@ export function VerticalBarChart({
                     y: e.clientY,
                     content: (
                       <div className="space-y-1">
-                        <p className="font-semibold">{point.label}</p>
+                        <p className={TOOLTIP_TITLE_CLASS}>{point.label}</p>
                         <div className="flex items-center gap-2">
                           <KpiComparisonBadge
                             current={point.value}

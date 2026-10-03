@@ -6,6 +6,7 @@ import {
   ChartTooltipPortal,
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
+import { TOOLTIP_MUTED_CLASS, TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { KpiComparisonBadge } from "../KpiComparisonBadge";
 import { formatCompact, formatCurrency } from "../../utils/format";
 
@@ -188,7 +189,7 @@ export function EvolutionComboChart({ points }: EvolutionComboChartProps) {
                     y: e.clientY,
                     content: (
                       <div className="space-y-1 min-w-[220px]">
-                        <p className="font-semibold text-zinc-900 mb-1">
+                        <p className={`${TOOLTIP_TITLE_CLASS} mb-1`}>
                           {p.month}
                           {prev ? " vs mês anterior" : ""}
                         </p>
@@ -202,7 +203,7 @@ export function EvolutionComboChart({ points }: EvolutionComboChartProps) {
                             }
                           />
                         ))}
-                        <p className="border-t border-zinc-100 pt-1 mt-1 text-zinc-500">
+                        <p className={`border-t border-zinc-100 pt-1 mt-1 ${TOOLTIP_MUTED_CLASS}`}>
                           Empilhado: {stackTotal.toLocaleString("pt-BR")} un.
                         </p>
                       </div>

@@ -2,6 +2,7 @@
 
 import { Download, SlidersHorizontal, Users } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   BAR_CTR,
   BAR_HEALTH,
@@ -46,6 +47,10 @@ export function ClientesDashboardMockPage() {
     inativo: false,
   });
   const [showInactiveItems, setShowInactiveItems] = useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mainViewTab =
+    searchParams.get("tab") === "clientes" ? "clientes" : "dashboard";
 
   const filterToolbar = (
     <div className="flex flex-wrap gap-2.5 mb-2">
@@ -114,6 +119,14 @@ export function ClientesDashboardMockPage() {
       <PrototypeBanner />
       <PageHead icon={<Users />} title="Clientes" />
       <DashboardViewTabs
+        selectedKey={mainViewTab}
+        onSelectedKeyChange={(key) => {
+          if (key === "clientes") {
+            setSearchParams({ tab: "clientes" });
+          } else {
+            setSearchParams({});
+          }
+        }}
         dashboard={dashboardContent}
         clientes={clientesContent}
       />

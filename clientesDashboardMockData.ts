@@ -56,6 +56,8 @@ export interface MockClient {
     destino: "reembolsado" | "abatido";
   };
   nfe: MockNfeNote[];
+  /** Exibe banner de pagamento pendente (aba Informações de pagamento). */
+  pendingPaymentInfo?: boolean;
 }
 
 export interface MockFranchise {
@@ -516,6 +518,7 @@ const CLIENT_PROFILES_BY_STATUS: Record<
     cnpj: "12.345.678/0001-90",
     inicio: "12/12/2026",
     ativo: true,
+    pendingPaymentInfo: true,
     prod: 5,
     produtos: [
       "Background Check",
@@ -1037,6 +1040,116 @@ export const DETAIL_PILL_TABS = [
   "Contatos do cliente",
   "Faturas",
   "Informações de pagamento",
+];
+
+export type ClientDetailTabKey =
+  | "sobre"
+  | "contratos"
+  | "usuarios"
+  | "contatos"
+  | "faturas"
+  | "informacoes-pagamento";
+
+export const CLIENT_DETAIL_TABS: { key: ClientDetailTabKey; title: string }[] =
+  [
+    { key: "sobre", title: "Sobre" },
+    { key: "contratos", title: "Contratos" },
+    { key: "usuarios", title: "Usuários" },
+    { key: "contatos", title: "Contatos do cliente" },
+    { key: "faturas", title: "Faturas" },
+    { key: "informacoes-pagamento", title: "Informações de pagamento" },
+  ];
+
+export interface MockClientUserRow {
+  id: string;
+  fullName: string;
+  email: string;
+  username: string;
+  token?: string;
+  isActive: boolean;
+}
+
+export interface MockClientContactRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  contactType: string;
+}
+
+export interface MockClientInvoiceRow {
+  id: string;
+  referenceLabel: string;
+  competence: string;
+  dueDate: string;
+  totalAmount: number;
+}
+
+export const MOCK_CLIENT_USERS: MockClientUserRow[] = [
+  {
+    id: "u1",
+    fullName: "João da Silva",
+    email: "joao.silva@empresa.com.br",
+    username: "joao.silva",
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-token-joao",
+    isActive: true,
+  },
+  {
+    id: "u2",
+    fullName: "Maria Souza",
+    email: "maria.souza@empresa.com.br",
+    username: "maria.souza",
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-token-maria",
+    isActive: true,
+  },
+  {
+    id: "u3",
+    fullName: "Carlos Mendes",
+    email: "carlos.mendes@empresa.com.br",
+    username: "carlos.mendes",
+    isActive: false,
+  },
+];
+
+export const MOCK_CLIENT_CONTACTS: MockClientContactRow[] = [
+  {
+    id: "ct1",
+    name: "Ana Paula",
+    email: "ana.paula@empresa.com.br",
+    phone: "11987654321",
+    contactType: "Financeiro",
+  },
+  {
+    id: "ct2",
+    name: "Roberto Lima",
+    email: "roberto.lima@empresa.com.br",
+    phone: "21976543210",
+    contactType: "Comercial",
+  },
+];
+
+export const MOCK_CLIENT_INVOICES: MockClientInvoiceRow[] = [
+  {
+    id: "inv1",
+    referenceLabel: "set/2025 · Período 3 meses",
+    competence: "set/2025",
+    dueDate: "10/10/2025",
+    totalAmount: 284_000,
+  },
+  {
+    id: "inv2",
+    referenceLabel: "ago/2025 · Período 3 meses",
+    competence: "ago/2025",
+    dueDate: "10/09/2025",
+    totalAmount: 196_500,
+  },
+  {
+    id: "inv3",
+    referenceLabel: "jul/2025 · Período 3 meses",
+    competence: "jul/2025",
+    dueDate: "10/08/2025",
+    totalAmount: 121_400,
+  },
 ];
 
 export function isEvoReal(point: EvoPoint): point is EvoPointReal {

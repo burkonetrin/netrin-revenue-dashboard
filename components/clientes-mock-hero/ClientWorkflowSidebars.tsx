@@ -366,7 +366,7 @@ export function BillClientsConfirmModal({
       onClose={onClose}
       title="Faturar clientes"
       description={
-        <p className="text-sm text-zinc-700 m-0">
+        <p className="m-0">
           Faturando {clientCount} clientes para a competência {competenceLabel}
         </p>
       }

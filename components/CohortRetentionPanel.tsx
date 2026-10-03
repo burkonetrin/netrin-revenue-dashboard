@@ -137,15 +137,26 @@ export function CohortRetentionPanel() {
 export function DashboardViewTabs({
   dashboard,
   clientes,
+  selectedKey = "dashboard",
+  onSelectedKeyChange,
 }: {
   dashboard: ReactNode;
   clientes: ReactNode;
+  selectedKey?: "dashboard" | "clientes";
+  onSelectedKeyChange?: (key: "dashboard" | "clientes") => void;
 }) {
   return (
     <Tabs
       aria-label="Visões do painel de clientes"
       color="primary"
       variant="underlined"
+      selectedKey={selectedKey}
+      onSelectionChange={(key) => {
+        const k = String(key);
+        if (k === "dashboard" || k === "clientes") {
+          onSelectedKeyChange?.(k);
+        }
+      }}
       classNames={{
         tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
         cursor: "w-full bg-primary",

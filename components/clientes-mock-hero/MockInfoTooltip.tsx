@@ -5,6 +5,8 @@ import {
   ChartTooltipPortal,
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
+import { TOOLTIP_BODY_CLASS } from "@/shared/constants/tooltip.constants";
+import { InfoOutlineButton } from "@/shared/components/InfoOutlineIcon";
 
 interface MockHoverTipProps {
   content: ReactNode;
@@ -55,14 +57,8 @@ interface MockInfoTooltipProps {
 
 export function MockInfoTooltip({ content }: MockInfoTooltipProps) {
   return (
-    <MockHoverTip content={content}>
-      <button
-        type="button"
-        className="inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-primary bg-white text-[10px] font-medium text-primary cursor-default"
-        aria-label="Mais informações"
-      >
-        i
-      </button>
+    <MockHoverTip content={<div className={TOOLTIP_BODY_CLASS}>{content}</div>}>
+      <InfoOutlineButton aria-label="Mais informações" />
     </MockHoverTip>
   );
 }

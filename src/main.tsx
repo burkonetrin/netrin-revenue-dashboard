@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { HeroUIProviderWrapper } from "@/shared/lib/HeroUIProvider";
+import { QueryProvider } from "@/shared/lib/QueryProvider";
 import "./index.css";
 
 const root = document.getElementById("root");
@@ -12,7 +13,9 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <HeroUIProviderWrapper>
-      <App />
+      <QueryProvider>
+        <App />
+      </QueryProvider>
     </HeroUIProviderWrapper>
   </StrictMode>,
 );

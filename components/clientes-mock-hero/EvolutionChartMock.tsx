@@ -15,6 +15,7 @@ import {
   ChartTooltipPortal,
   type ChartTooltipState,
 } from "../ChartTooltipPortal";
+import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { CmpRight } from "./CmpRight";
 
 function TooltipRow({
@@ -101,7 +102,7 @@ export function EvolutionChartMock() {
       if (i <= LAST_REAL && isEvoReal(p) && isEvoReal(prev)) {
         content = (
           <>
-            <div className="font-semibold text-[13px] mb-2">{title}</div>
+            <div className={`${TOOLTIP_TITLE_CLASS} mb-2`}>{title}</div>
             {legendVis.total ? (
               <TooltipRow
                 label="Total faturado"
@@ -198,7 +199,7 @@ export function EvolutionChartMock() {
       } else if (legendVis.proj && !isEvoReal(p) && isEvoReal(prev)) {
         content = (
           <>
-            <div className="font-semibold text-[13px] mb-2">{title}</div>
+            <div className={`${TOOLTIP_TITLE_CLASS} mb-2`}>{title}</div>
             <TooltipRow
               label="Projeção"
               color="#ef4444"

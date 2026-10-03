@@ -9,6 +9,11 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@heroui/react";
+import {
+  HEROUI_MODAL_CLASS_NAMES,
+  MODAL_FOOTER_BUTTON_CLASS,
+  MODAL_TITLE_CLASS,
+} from "@/shared/constants/modal.constants";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -33,16 +38,22 @@ export function ConfirmModal({
   isConfirmLoading = false,
 }: ConfirmModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen} onClose={onClose} size="md" classNames={HEROUI_MODAL_CLASS_NAMES}>
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
+        <ModalHeader className={`flex flex-col gap-1 ${MODAL_TITLE_CLASS}`}>{title}</ModalHeader>
         <ModalBody>{description}</ModalBody>
         <ModalFooter>
-          <Button variant="light" onPress={onClose} isDisabled={isConfirmLoading}>
+          <Button
+            variant="light"
+            className={MODAL_FOOTER_BUTTON_CLASS}
+            onPress={onClose}
+            isDisabled={isConfirmLoading}
+          >
             {cancelLabel}
           </Button>
           <Button
             color="primary"
+            className={MODAL_FOOTER_BUTTON_CLASS}
             onPress={onConfirm}
             isLoading={isConfirmLoading}
           >

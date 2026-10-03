@@ -16,9 +16,9 @@ function ParcelasAtrasadasTooltip({
   parcelas: MockParcelaAtrasada[];
 }) {
   return (
-    <div className="text-[13px] space-y-2">
+    <div className="space-y-2">
       {parcelas.map((p) => (
-        <p key={p.numero} className="m-0 text-zinc-800">
+        <p key={p.numero} className="m-0">
           Parcela {p.numero}: {fmtDetail(p.valor)} em {p.competencia}
         </p>
       ))}
@@ -58,11 +58,11 @@ function StatusWithExtras({
       {showPagoParcial ? (
         <MockInfoTooltip
           content={
-            <div className="text-[13px] space-y-1">
-              <p className="m-0 text-zinc-800">
+            <div className="space-y-1">
+              <p className="m-0">
                 Valor pago: {fmtDetail(valorPagoParcial)}
               </p>
-              <p className="m-0 text-zinc-800">
+              <p className="m-0">
                 A pagar:{" "}
                 {fmtDetail(Math.max(0, faturadoAmount - valorPagoParcial))}
               </p>
@@ -73,12 +73,12 @@ function StatusWithExtras({
       {showPagoExcedente ? (
         <MockInfoTooltip
           content={
-            <div className="text-[13px] space-y-1">
-              <p className="m-0 text-zinc-800">
+            <div className="space-y-1">
+              <p className="m-0">
                 Valor pago em excedente: {fmtDetail(valorPagoExcedente)}
               </p>
               {excedenteDestino ? (
-                <p className="m-0 text-zinc-800">
+                <p className="m-0">
                   {excedenteDestinoLabel(excedenteDestino)}
                 </p>
               ) : null}

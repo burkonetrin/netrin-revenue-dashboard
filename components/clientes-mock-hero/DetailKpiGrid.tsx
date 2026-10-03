@@ -8,6 +8,7 @@ import {
 } from "../../clientesDashboardMockData";
 import { fmtDetail, fmtN } from "../../clientesDashboardMockFormat";
 import { MockInfoTooltip } from "./MockInfoTooltip";
+import { TOOLTIP_MUTED_CLASS, TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 
 function DiscountBreakdownTooltip({
   lines,
@@ -17,17 +18,17 @@ function DiscountBreakdownTooltip({
   saldoRemanescente?: number;
 }) {
   return (
-    <div className="text-[13px] space-y-3">
+    <div className="space-y-3">
       {saldoRemanescente != null ? (
         <div>
-          <p className="font-semibold text-zinc-900 m-0">Saldo remanescente</p>
-          <p className="text-zinc-600 m-0 mt-0.5">{fmtDetail(saldoRemanescente)}</p>
+          <p className={`${TOOLTIP_TITLE_CLASS} m-0`}>Saldo remanescente</p>
+          <p className={`${TOOLTIP_MUTED_CLASS} m-0 mt-0.5`}>{fmtDetail(saldoRemanescente)}</p>
         </div>
       ) : null}
       {lines.map((line) => (
         <div key={`${line.kind}-${line.name}`}>
-          <p className="font-semibold text-zinc-900 m-0">{line.kind}:</p>
-          <p className="text-zinc-600 m-0 mt-0.5">
+          <p className={`${TOOLTIP_TITLE_CLASS} m-0`}>{line.kind}:</p>
+          <p className={`${TOOLTIP_MUTED_CLASS} m-0 mt-0.5`}>
             {line.name}: {fmtDetail(line.value)}
           </p>
         </div>
@@ -42,11 +43,11 @@ function Total12FranchisesTooltip({
   lines: MockFranchiseTotal12Line[];
 }) {
   return (
-    <div className="text-[13px] space-y-3">
+    <div className="space-y-3">
       {lines.map((line) => (
         <div key={line.name}>
-          <p className="font-semibold text-zinc-900 m-0">{line.name}</p>
-          <p className="text-zinc-600 m-0 mt-0.5">
+          <p className={`${TOOLTIP_TITLE_CLASS} m-0`}>{line.name}</p>
+          <p className={`${TOOLTIP_MUTED_CLASS} m-0 mt-0.5`}>
             {fmtDetail(line.value)} · {fmtN(line.consultas)} consultas
           </p>
         </div>

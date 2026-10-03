@@ -15,6 +15,7 @@ import { fmt, fmtDetail, fmtN, franchiseBillingModelTooltipContent } from "../..
 import { FaturadoWithBadge } from "./FaturadoCell";
 import { FranchisePopover } from "./FranchisePopover";
 import { MockInfoTooltip } from "./MockInfoTooltip";
+import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 
 const CONTRACT_COLSPAN = 9;
 
@@ -95,13 +96,11 @@ function FranchiseNestedTable({
                   )}
                   <MockInfoTooltip
                     content={
-                      <div className="text-[13px] space-y-1">
-                        <p className="m-0 text-zinc-800">
+                      <div className="space-y-1">
+                        <p className={`${TOOLTIP_TITLE_CLASS} m-0`}>
                           {billingTooltip.line1}
                         </p>
-                        <p className="m-0 text-zinc-800">
-                          {billingTooltip.line2}
-                        </p>
+                        <p className="m-0">{billingTooltip.line2}</p>
                       </div>
                     }
                   />
@@ -116,7 +115,7 @@ function FranchiseNestedTable({
                   <MockInfoTooltip
                     content={
                       <span>
-                        <strong>Consumo neste mês</strong>
+                        <span className={TOOLTIP_TITLE_CLASS}>Consumo neste mês</span>
                         <br />
                         {f.consMes} consultas — {fmt(f.consMesVal)}
                       </span>

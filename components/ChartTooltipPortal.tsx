@@ -2,6 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useState, type ReactNode } from "react";
+import { TOOLTIP_BODY_CLASS } from "@/shared/constants/tooltip.constants";
 
 export interface ChartTooltipState {
   x: number;
@@ -25,7 +26,7 @@ export function ChartTooltipPortal({
 
   return createPortal(
     <div
-      className={`fixed z-[10050] max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg ${
+      className={`fixed z-[10050] max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-lg ${TOOLTIP_BODY_CLASS} ${
         interactive ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{
