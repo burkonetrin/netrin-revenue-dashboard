@@ -31,6 +31,7 @@ export function DynamicTable<T>({
   onExpandedChange,
   isLoading,
   disableRowHover = false,
+  getCellClassName,
 }: DynamicTableProps<T>) {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
@@ -158,7 +159,11 @@ export function DynamicTable<T>({
                   return (
                     <TableCell
                       key={String(column.id)}
-                      className={column.cellClassName}
+                      className={
+                        [column.cellClassName, getCellClassName?.(row, column.id)]
+                          .filter(Boolean)
+                          .join(" ") || undefined
+                      }
                     >
                       {column.render
                         ? column.render(

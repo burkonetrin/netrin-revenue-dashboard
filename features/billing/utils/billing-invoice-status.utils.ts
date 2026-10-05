@@ -4,7 +4,34 @@ import type {
   BillingInvoiceStatusMeta,
   BillingInvoiceStatusState,
 } from "../types/billing-invoice-status.types";
-import type { BillingInvoiceRecord } from "../types/billing.types";
+import type { BillingInvoiceRecord, BillingInvoiceNote } from "../types/billing.types";
+
+/** Status que disparam detalhes inline na tooltip multi-nota. */
+export const BILLING_STATUS_WITH_INFO_CONTENT: BillingInvoiceStatusKey[] = [
+  "pago_parcial",
+  "pago_total",
+  "pago_excedente",
+  "nota_vencida",
+  "nota_cancelada",
+];
+
+export function billingStatusHasInfoContent(status: BillingInvoiceStatusKey): boolean {
+  return BILLING_STATUS_WITH_INFO_CONTENT.includes(status);
+}
+
+export function resolveNoteBillingStatus(
+  note: Pick<BillingInvoiceNote, "billingStatus">,
+  recordStatus?: BillingInvoiceStatusKey,
+): BillingInvoiceStatusKey {
+  return note.billingStatus ?? recordStatus ?? "fatura_aberta";
+}
+
+export function shouldShowMultiNoteInlineStatusDetails(notes: BillingInvoiceNote[]): boolean {
+  if (notes.length <= 1) return false;
+  return notes.some(
+    (note) => note.billingStatus != null && billingStatusHasInfoContent(note.billingStatus),
+  );
+}
 
 export function buildBillingRecordKey(
   record: Pick<BillingInvoiceRecord, "id" | "source">,

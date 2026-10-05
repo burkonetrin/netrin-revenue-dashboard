@@ -47,6 +47,9 @@ export interface BillingInvoiceNote {
   isSeparateNfe?: boolean;
   /** Destinos efetivos representados por esta nota, quando disponíveis. */
   destinations?: BillingInvoiceDestination[];
+  /** Status da nota na listagem (multi-nota); fallback para status da linha. */
+  billingStatus?: BillingInvoiceStatusKey;
+  statusMeta?: BillingInvoiceStatusMeta;
 }
 
 /**

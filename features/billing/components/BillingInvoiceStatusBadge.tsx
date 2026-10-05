@@ -1,57 +1,35 @@
 "use client";
 
-import type { ReactNode } from "react";
 import {
   BILLING_INVOICE_STATUS_CHIP_CLASS,
   BILLING_INVOICE_STATUS_LABEL,
   type BillingInvoiceStatusKey,
   type BillingInvoiceStatusMeta,
 } from "../types/billing-invoice-status.types";
-import { formatCurrency } from "@/shared/utils/currency";
 import {
   HEROUI_TOOLTIP_CONTENT_CLASS_NAMES,
-  TOOLTIP_BODY_CLASS,
 } from "@/shared/constants/tooltip.constants";
 import { Chip, Tooltip } from "@heroui/react";
 import { InfoOutlineButton } from "@/shared/components/InfoOutlineIcon";
-
-function buildStatusTooltipContent(
-  status: BillingInvoiceStatusKey,
-  meta?: BillingInvoiceStatusMeta,
-): ReactNode | null {
-  if (status === "pago_parcial" || status === "nota_vencida") {
-    if (meta?.paidAmount != null && meta?.dueAmount != null) {
-      return (
-        <div className={`space-y-1 ${TOOLTIP_BODY_CLASS}`}>
-          <p>Valor pago: {formatCurrency(meta.paidAmount)}</p>
-          <p>Valor a pagar: {formatCurrency(meta.dueAmount)}</p>
-        </div>
-      );
-    }
-  }
-  if (status === "pago_excedente" && meta?.excessAmount != null) {
-    return (
-      <span className={TOOLTIP_BODY_CLASS}>
-        Valor pago em excedente: {formatCurrency(meta.excessAmount)}.
-      </span>
-    );
-  }
-  if (status === "nota_cancelada" && meta?.cancelReason) {
-    return <span className={TOOLTIP_BODY_CLASS}>{meta.cancelReason}</span>;
-  }
-  return null;
-}
+import { getBillingInvoiceStatusInfoContent } from "./BillingInvoiceStatusInfoContent";
 
 interface BillingInvoiceStatusBadgeProps {
   status: BillingInvoiceStatusKey;
   meta?: BillingInvoiceStatusMeta;
   className?: string;
+  /** Na tooltip multi-nota, detalhes ficam inline — sem ícone “i”. */
+  suppressInfoTooltip?: boolean;
 }
 
-export function BillingInvoiceStatusBadge({ status, meta, className }: BillingInvoiceStatusBadgeProps) {
+export function BillingInvoiceStatusBadge({
+  status,
+  meta,
+  className,
+  suppressInfoTooltip = false,
+}: BillingInvoiceStatusBadgeProps) {
   const label = BILLING_INVOICE_STATUS_LABEL[status];
   const chipClass = BILLING_INVOICE_STATUS_CHIP_CLASS[status];
-  const tooltip = buildStatusTooltipContent(status, meta);
+  const tooltip = getBillingInvoiceStatusInfoContent(status, meta);
 
   const chip = (
     <Chip
@@ -66,7 +44,7 @@ export function BillingInvoiceStatusBadge({ status, meta, className }: BillingIn
     </Chip>
   );
 
-  if (!tooltip) {
+  if (!tooltip || suppressInfoTooltip) {
     return chip;
   }
 

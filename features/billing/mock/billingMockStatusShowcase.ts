@@ -72,11 +72,14 @@ export function buildStatusShowcaseInvoice(
             id: `note-st-${status}-a`,
             ownerName: `${label} — Contrato A`,
             dueDate: "2026-05-10",
+            billingStatus: "fatura_fechada" as const,
           },
           {
             id: `note-st-${status}-b`,
             ownerName: `${label} — Contrato B`,
             dueDate: "2026-06-20",
+            billingStatus: "pago_parcial" as const,
+            statusMeta: { paidAmount: 600, dueAmount: 400 },
           },
         ],
       }

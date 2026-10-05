@@ -40,4 +40,6 @@ export interface DynamicTableProps<T> {
   onExpandedChange?: (key: string | number, isExpanded: boolean) => void;
   isLoading?: boolean;
   disableRowHover?: boolean;
+  /** Classes extras por célula (ex.: linha alta só na coluna de vencimento). */
+  getCellClassName?: (row: T, columnId: keyof T | string) => string | undefined;
 }

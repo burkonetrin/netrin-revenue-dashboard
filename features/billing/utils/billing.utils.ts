@@ -6,6 +6,7 @@ import type {
   BillingInvoiceScope,
   BillingListResponse,
 } from "../types/billing.types";
+import { BILLING_INVOICE_STATUS_LABEL } from "../types/billing-invoice-status.types";
 
 /** Rótulos de escopo de unificação de NFe na listagem de billing. */
 export const billingScopeLabels: Record<BillingInvoiceScope, string> = {
@@ -65,6 +66,31 @@ export function getBillingNoteTooltipTitle(
   }
 
   return `${billingScopeLabels[scope]}: ${note.ownerName}`;
+}
+
+/** Remove rótulo de status da fatura (ex.: "Fatura fechada — ") do nome da nota. */
+export function stripBillingStatusLabelFromOwnerName(ownerName: string): string {
+  const separators = [" — ", " - "] as const;
+  for (const label of Object.values(BILLING_INVOICE_STATUS_LABEL)) {
+    for (const sep of separators) {
+      const prefix = `${label}${sep}`;
+      if (ownerName.startsWith(prefix)) {
+        return ownerName.slice(prefix.length);
+      }
+    }
+  }
+  return ownerName;
+}
+
+/** Título na tooltip da coluna Download (sem prefixo de status da fatura). */
+export function getBillingNoteDownloadTooltipTitle(
+  note: BillingInvoiceNote,
+  scope: BillingInvoiceScope,
+): string {
+  return getBillingNoteTooltipTitle(
+    { ...note, ownerName: stripBillingStatusLabelFromOwnerName(note.ownerName) },
+    scope,
+  );
 }
 
 /** Ordena destinos na ordem visual grupo, contrato e franquia. */

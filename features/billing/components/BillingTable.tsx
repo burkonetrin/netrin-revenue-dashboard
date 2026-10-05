@@ -8,7 +8,7 @@ import { usePermission } from "@/shared/hooks/usePermission";
 import { formatCurrency } from "@/shared/utils/currency";
 import { Checkbox, Tooltip } from "@heroui/react";
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { canClientsOrBillingInvoice } from "../constants/billingInvoicePermissions.constants";
 import {
   HEROUI_TOOLTIP_PANEL_CLASS_NAMES,
@@ -21,12 +21,18 @@ import {
   getBillingDueDateDisplay,
   getBillingListingDueDateView,
   getBillingListingTooltipNotes,
-  getBillingNoteTooltipTitle,
+  getBillingNoteDownloadTooltipTitle,
 } from "../utils/billing.utils";
 import { BillingInvoiceStatusBadge } from "./BillingInvoiceStatusBadge";
+import { BillingInvoiceStatusInfoContent } from "./BillingInvoiceStatusInfoContent";
+import {
+  BillingDownloadCell,
+} from "./BillingDownloadCell";
 import {
   buildBillingRecordKey,
   isBillingCloseEligible,
+  resolveNoteBillingStatus,
+  shouldShowMultiNoteInlineStatusDetails,
 } from "../utils/billing-invoice-status.utils";
 
 interface BillingTableProps {
@@ -57,25 +63,25 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
 
   const statusBadge = <BillingInvoiceStatusBadge status={status} meta={meta} />;
 
+  const dueDateWithBadge = (dueDateLabel: ReactNode) => (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <span>{dueDateLabel}</span>
+      {statusBadge}
+    </span>
+  );
+
   if (view.kind === "placeholder") {
-    return (
-      <span className="inline-flex flex-wrap items-center gap-2">
-        <span>{getBillingDueDateDisplay(undefined, dueDateDisplayOptions)}</span>
-        {statusBadge}
-      </span>
-    );
+    return dueDateWithBadge(getBillingDueDateDisplay(undefined, dueDateDisplayOptions));
   }
 
   if (view.kind === "single") {
-    return (
-      <span className="inline-flex flex-wrap items-center gap-2">
-        <span>{getBillingDueDateDisplay(view.dueDate, dueDateDisplayOptions)}</span>
-        {statusBadge}
-      </span>
-    );
+    return dueDateWithBadge(getBillingDueDateDisplay(view.dueDate, dueDateDisplayOptions));
   }
 
   const orderedNotes = getBillingListingTooltipNotes(scope, view.notes);
+  const showInlineNoteDetails = shouldShowMultiNoteInlineStatusDetails(orderedNotes);
+  const recordStatus = record.billingStatus ?? "fatura_aberta";
+  const recordMeta = record.statusMeta;
 
   return (
     <Tooltip
@@ -92,21 +98,32 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
                     ? { ...note, destinations: [destination] }
                     : note;
                   const dueDate = destination?.dueDate ?? note.dueDate;
+                  const noteStatus = resolveNoteBillingStatus(note, recordStatus);
+                  const noteMeta = note.statusMeta ?? recordMeta;
 
                   return (
                     <div key={`${note.id}-${destination?.kind ?? "note"}-${destinationIndex}`}>
                       <p className={TOOLTIP_TITLE_CLASS}>
-                        {getBillingNoteTooltipTitle(destinationNote, scope)}
+                        {getBillingNoteDownloadTooltipTitle(destinationNote, scope)}
                       </p>
                       {destination?.kind === "contract_group"
                         ? destination.names.map((name) => <p key={`${note.id}-${name}`}>{name}</p>)
                         : null}
-                      <p className="inline-flex flex-wrap items-center gap-2">
-                        <span>
-                          Vencimento: {getBillingDueDateDisplay(dueDate, dueDateDisplayOptions)}
-                        </span>
-                        {statusBadge}
-                      </p>
+                      <div className="space-y-1">
+                        <p className="inline-flex flex-wrap items-center gap-2">
+                          <span>
+                            Vencimento: {getBillingDueDateDisplay(dueDate, dueDateDisplayOptions)}
+                          </span>
+                          <BillingInvoiceStatusBadge
+                            status={noteStatus}
+                            meta={noteMeta}
+                            suppressInfoTooltip={showInlineNoteDetails}
+                          />
+                        </p>
+                        {showInlineNoteDetails ? (
+                          <BillingInvoiceStatusInfoContent status={noteStatus} meta={noteMeta} />
+                        ) : null}
+                      </div>
                     </div>
                   );
                 },
@@ -222,6 +239,12 @@ export function BillingTable({
         id: "invoiceDetails",
         label: "Vencimento",
         render: (_value, row) => <BillingDueDate record={row} />,
+      },
+      {
+        id: "download",
+        label: "Download",
+        cellClassName: "align-middle",
+        render: (_value, row) => <BillingDownloadCell record={row} />,
       },
       {
         id: "totalAmount",
