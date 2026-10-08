@@ -128,7 +128,7 @@ export function BillingFiltersDrawer({
         base: "max-w-[504px]",
         header: "font-bold text-gray-950",
         body: "flex-1! mb-0",
-        footer: "border-t-0",
+        footer: "border-t-0 pb-0!",
       }}
       component={
         <div className="flex flex-col gap-8">

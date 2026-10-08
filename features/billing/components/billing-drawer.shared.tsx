@@ -10,7 +10,7 @@ export const billingDrawerClassNames = {
   base: "max-w-[504px]",
   header: "font-bold text-gray-950",
   body: "flex-1! mb-0",
-  footer: "border-t-0",
+  footer: "border-t-0 pb-0!",
 } as const;
 
 type DatePickerValue = ComponentProps<typeof DatePicker>["value"];
