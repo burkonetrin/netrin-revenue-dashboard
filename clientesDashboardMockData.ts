@@ -2,6 +2,7 @@ export type ClientHealthKey = "sucesso" | "warning" | "danger" | "oportunidade";
 
 export type InvoiceStatusKey =
   | "aberta"
+  | "fatura_fechada"
   | "enviada_faturar"
   | "faturado_aberto"
   | "pago_parcial"
@@ -193,13 +194,14 @@ export interface CohortRow {
 }
 
 export const DETAIL_CONTEXT = "__detail__";
-export const LIST_COLSPAN = 8;
+export const LIST_COLSPAN = 9;
 
 export const INVOICE_STATUS: Record<
   InvoiceStatusKey,
   { label: string; chip: string }
 > = {
   aberta: { label: "Fatura aberta", chip: "inv-open" },
+  fatura_fechada: { label: "Fatura fechada", chip: "inv-closed" },
   enviada_faturar: { label: "Enviada para faturar", chip: "inv-sent" },
   faturado_aberto: {
     label: "Pagamento em aberto",
@@ -221,6 +223,7 @@ export const INVOICE_STATUS: Record<
 /** Ordem exibida na sidebar de filtros e na vitrine de badges na listagem. */
 export const INVOICE_STATUS_ORDER: InvoiceStatusKey[] = [
   "aberta",
+  "fatura_fechada",
   "enviada_faturar",
   "faturado_aberto",
   "pago_parcial",
@@ -245,6 +248,7 @@ export const CLIENT_ROW_ACTIONS_MENU: ClientRowMenuEntry[] = [
   { kind: "heading", label: "Faturamento" },
   { kind: "action", label: "Adicionar fatura" },
   { kind: "action", label: "Ajustar fatura" },
+  { kind: "action", label: "Fechar fatura" },
   { kind: "action", label: "Faturar cliente" },
   { kind: "divider" },
   { kind: "heading", label: "Nota fiscal" },
@@ -493,6 +497,23 @@ const CLIENT_PROFILES_BY_STATUS: Record<
     lim: 7500,
     s: "oportunidade",
     vencimentoNF: "01/04/2026",
+    nfe: [],
+  },
+  fatura_fechada: {
+    id: "orion-fechada",
+    nome: "Orion Pagamentos (fatura fechada)",
+    cnpj: "89.012.345/0001-67",
+    inicio: "10/08/2024",
+    ativo: true,
+    prod: 2,
+    produtos: ["Background Check", "API"],
+    referencia: "set/2025 - set/2025",
+    fat: 74200,
+    cons: 88,
+    usado: 6600,
+    lim: 7500,
+    s: "sucesso",
+    vencimentoNF: "10/08/2026",
     nfe: [],
   },
   enviada_faturar: {

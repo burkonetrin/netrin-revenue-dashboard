@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import type { ApiBillingEntryResponse } from "../types/billing-api.types";
+import type { ApiBillingEntryResponse, ApiBillingTaskResponse } from "../types/billing-api.types";
 import type { BillingAdjustmentPayload } from "../types/billing-adjustment.types";
 import type { BillingContractDetail, BillingInvoiceDetail } from "../types/billing-detail.types";
 import type { BillingManualInvoice } from "../types/billing-detail.types";
@@ -168,4 +168,76 @@ export async function reassessBillingClient(_clientId: string) {
 
 export async function getBillingPaymentContext(_clientId: string) {
   return null;
+}
+
+const DEMO_BILLING_TASK_ID = "6a7b2b0fa94508c6a6835449";
+
+const KNOWN_MOCK_TASK_IDS = new Set([
+  DEMO_BILLING_TASK_ID,
+  "652f6f0a2b0e4c1a1b2c3d4e",
+  "a1b2c3d4e5f6789012345678",
+  "deadbeefdeadbeefdeadbeef",
+]);
+
+function buildDemoBillingTaskResponse(taskId: string): ApiBillingTaskResponse {
+  if (taskId === DEMO_BILLING_TASK_ID) {
+    return {
+      client: {
+        id: 1291,
+        name: "CINPAL COMPANHIA INDUSTRIAL DE PECAS PARA AUTOMOVEIS",
+        tenant: "cinpal_companhia_industrial_de_pecas_para_aut",
+      },
+      billingTask: {
+        id: taskId,
+        userId: "4135",
+        userUsername: "cinpal_companhia_industrial_de_pecas_par.for.bgc",
+        requestOrigin: "netrin-bff-api",
+        providerName: "ineodigital",
+        dataSource: "CenprotRegionalProtesto",
+        processId: null,
+        serviceType: "bgcApi",
+        requestUrl:
+          "http://api.netrin.com.br/v1/consulta-composta?token=e481a013-f2fb-4b11-a352-e497abec429f&timeout=90&s=consulta-protestos-cenprot-regional&cpf=37940580892",
+        requestBody: {
+          body: {
+            cpf: "37940580892",
+            timeout: "90",
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    client: {
+      id: 1001,
+      name: "Cliente protótipo",
+      tenant: "prototype_tenant",
+    },
+    billingTask: {
+      id: taskId,
+      userId: "100",
+      userUsername: "usuario.demo",
+      requestOrigin: "netrin-bff-api",
+      providerName: "netrin",
+      dataSource: "Fonte demo",
+      processId: null,
+      serviceType: "api",
+      requestUrl: "https://api.netrin.com.br/v1/consulta-composta",
+      requestBody: { body: { document: "00000000000" } },
+    },
+  };
+}
+
+/** GET /v1/billing/tasks/{task_id} — mock no protótipo; ID demo alinhado ao Administrator/tenant. */
+export async function getBillingTask(taskId: string): Promise<ApiBillingTaskResponse> {
+  await delay();
+  if (!KNOWN_MOCK_TASK_IDS.has(taskId)) {
+    throw new AxiosError("Task não encontrada", undefined, undefined, undefined, {
+      status: 404,
+      data: { message: "Task não encontrada para o identificador informado." },
+    } as never);
+  }
+
+  return buildDemoBillingTaskResponse(taskId);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  nucleusNativeTableClassName,
   nucleusTableHeadCellClass,
   nucleusTableHeadCellCompactClass,
 } from "@/shared/styles/tableClassNames";
@@ -41,13 +42,13 @@ function FranchiseNestedTable({
   listMode: boolean;
 }) {
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-2 my-2 mx-0">
+    <div className="my-2 mx-0">
       {!listMode ? (
         <Button color="primary" size="sm" className="mb-3">
           Nova franquia
         </Button>
       ) : null}
-      <table className="w-full border-collapse text-[11px] bg-white">
+      <table className={`${nucleusNativeTableClassName} text-[11px] bg-white`}>
         <thead>
           <tr>
             <th className={nucleusTableHeadCellCompactClass}>Franquia</th>
@@ -179,8 +180,8 @@ export function ContractsTableMock({
     ? nucleusTableHeadCellClass
     : `${nucleusTableHeadCellClass} h-10 px-3`;
   const tableClass = inlineDetail
-    ? "w-full border-collapse text-[13px] bg-white"
-    : "w-full border-collapse text-xs bg-white";
+    ? `${nucleusNativeTableClassName} text-[13px] bg-white`
+    : `${nucleusNativeTableClassName} text-xs bg-white`;
 
   return (
     <table className={tableClass}>

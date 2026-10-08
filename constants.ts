@@ -6,6 +6,9 @@ export const PROTOTYPE_BASE_PATH = "/demo/commercial-dashboard";
 /** Listagem e detalhe de faturamento no protótipo. */
 export const BILLING_BASE_PATH = `${PROTOTYPE_BASE_PATH}/faturamento`;
 
+/** Ferramentas de suporte (consulta de requisições + task ID) — rota legada `/faturamento/tasks`. */
+export const BILLING_TASKS_BASE_PATH = `${BILLING_BASE_PATH}/tasks`;
+
 export const PROFIT_CENTERS: ProfitCenter[] = [
   "Junior",
   "Camila",

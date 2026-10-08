@@ -90,7 +90,9 @@ export function DynamicTable<T>({
       classNames={{
         wrapper: classNames?.wrapper || "shadow-none",
         table: classNames?.table,
-        th: classNames?.th || "bg-gray-50 text-gray-700 font-semibold text-xs",
+        th:
+          classNames?.th ||
+          "bg-gray-50 text-gray-700 font-semibold text-xs first:rounded-s-lg last:rounded-e-lg",
         td:
           classNames?.td ||
           "text-gray-900 border-b border-gray-200 h-12 text-xs",

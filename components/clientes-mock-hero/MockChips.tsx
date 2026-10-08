@@ -12,6 +12,7 @@ import { invoiceStatusLabel } from "../../clientesDashboardMockFormat";
 
 const INVOICE_CHIP_CLASS: Record<string, string> = {
   "inv-open": "bg-zinc-100 text-zinc-600",
+  "inv-closed": "bg-zinc-200 text-zinc-700",
   "inv-sent": "bg-indigo-100 text-indigo-900",
   "inv-due": "bg-amber-100 text-amber-900",
   "inv-partial": "bg-orange-100 text-orange-800",

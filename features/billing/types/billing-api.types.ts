@@ -261,3 +261,32 @@ export interface ListBillingAllParams {
   page?: number;
   limit?: number;
 }
+
+export interface ApiBillingTaskClientResponse {
+  id: number;
+  name: string;
+  tenant: string;
+}
+
+export interface ApiBillingTaskDetailResponse {
+  id: string;
+  userId?: string | null;
+  userUsername?: string | null;
+  requestOrigin?: string | null;
+  providerName?: string | null;
+  dataSource?: string | null;
+  processId?: string | null;
+  serviceType?: string | null;
+  requestUrl?: string | null;
+  requestBody?: unknown;
+  responseBody?: unknown;
+  statusCode?: number | null;
+  createdAt?: string | null;
+  expireAt?: string | null;
+  isBillable?: boolean | null;
+}
+
+export interface ApiBillingTaskResponse {
+  client: ApiBillingTaskClientResponse;
+  billingTask: ApiBillingTaskDetailResponse;
+}

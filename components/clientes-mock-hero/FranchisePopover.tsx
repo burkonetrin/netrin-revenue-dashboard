@@ -1,5 +1,6 @@
 "use client";
 
+import { MoreHorizontal } from "lucide-react";
 import { useRef, useState } from "react";
 import type { MockFranchise } from "../../clientesDashboardMockData";
 import { franchiseUserLabel } from "../../clientesDashboardMockFormat";
@@ -31,12 +32,12 @@ export function FranchisePopover({
       <button
         ref={anchorRef}
         type="button"
-        className="inline-flex min-w-7 w-7 h-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 cursor-pointer border-none text-base leading-none"
+        className="inline-flex items-center justify-center border-none bg-transparent p-0 text-zinc-600 cursor-pointer outline-none"
         aria-label="Informações da franquia"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        ⋯
+        <MoreHorizontal size={18} />
       </button>
       <FloatingPopoverPortal
         open={open}

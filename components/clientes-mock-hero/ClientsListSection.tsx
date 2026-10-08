@@ -1,8 +1,9 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Checkbox } from "@heroui/react";
 import { PROTOTYPE_BASE_PATH } from "@/constants";
 import {
   FieldInput,
@@ -27,17 +28,34 @@ import {
 import { MockInfoTooltip } from "./MockInfoTooltip";
 import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { RowActionsDropdown } from "./RowActionsDropdown";
+import { CompetenceWithActiveClients } from "./CompetenceWithActiveClients";
 import {
+  nucleusNativeTableClassName,
   nucleusSortableTableHeadCellClass,
   nucleusTableHeadCellCenterClass,
   nucleusTableHeadCellClass,
 } from "@/shared/styles/tableClassNames";
 import {
-  BillClientsConfirmModal,
   ClientWorkflowSidebars,
   clientActionToWorkflowKind,
   type ClientWorkflowKind,
 } from "./ClientWorkflowSidebars";
+import {
+  BillingBillClientsConfirmModal,
+  BillingBillSingleClientConfirmModal,
+  BillingBulkCloseConfirmModal,
+} from "@/features/billing/components/BillingListConfirmModals";
+import { useBillingInvoiceStatusStore } from "@/features/billing/store/billing-invoice-status.store";
+import { getBillClientsBatchPreview } from "@/features/billing/utils/billing-bill-clients.utils";
+import { getCurrentMonth } from "@/features/billing/utils/billing-list.utils";
+import { formatBillingCompetence } from "@/features/billing/utils/billing.utils";
+import {
+  isClientListCloseEligible,
+  isClientListCloseToggleEligible,
+  isClientListBillEligible,
+  useClientListInvoiceStatusStore,
+} from "@/features/clients/store/client-list-invoice-status.store";
+import { resolveClientListInvoiceStatus } from "@/features/clients/utils/client-list-invoice-display.utils";
 
 export type TableSort = { key: "fat" | "cons" | null; dir: "asc" | "desc" };
 
@@ -120,9 +138,46 @@ export function ClientsListSection({
   const [workflowKind, setWorkflowKind] = useState<ClientWorkflowKind | null>(
     null,
   );
-  const [billModalOpen, setBillModalOpen] = useState(false);
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [isBulkCloseModalOpen, setIsBulkCloseModalOpen] = useState(false);
+  const [isBillClientsModalOpen, setIsBillClientsModalOpen] = useState(false);
+  const [billSingleClient, setBillSingleClient] = useState<MockClient | null>(null);
+
+  const statusRevision = useClientListInvoiceStatusStore((state) => state.revision);
+  const closeManyClients = useClientListInvoiceStatusStore((state) => state.closeMany);
+  const setClientClosed = useClientListInvoiceStatusStore((state) => state.setClosed);
+  const billSingleClientInvoice = useClientListInvoiceStatusStore((state) => state.billClient);
+  const billingStatusRevision = useBillingInvoiceStatusStore((state) => state.byKey);
+  const billClientsClosedInCompetence = useBillingInvoiceStatusStore(
+    (state) => state.billClientsClosedInCompetence,
+  );
+
+  const currentCompetence = getCurrentMonth();
+  const billClientsPreview = useMemo(() => {
+    void billingStatusRevision;
+    return getBillClientsBatchPreview(currentCompetence);
+  }, [currentCompetence, billingStatusRevision]);
 
   const openWorkflowForClient = (client: MockClient, action: string) => {
+    if (action === "Fechar fatura" || action === "Reabrir fatura") {
+      if (!isClientListCloseToggleEligible(client.id)) return;
+      const state = useClientListInvoiceStatusStore.getState().getState(client.id);
+      setClientClosed(client.id, state.status !== "fatura_fechada");
+      setSelectedClientIds((prev) => {
+        if (!prev.has(client.id)) return prev;
+        const next = new Set(prev);
+        next.delete(client.id);
+        return next;
+      });
+      return;
+    }
+    if (action === "Faturar cliente") {
+      if (!isClientListBillEligible(client.id)) return;
+      setBillSingleClient(client);
+      return;
+    }
     const kind = clientActionToWorkflowKind(action);
     if (!kind) return;
     setWorkflowClient(client);
@@ -138,6 +193,43 @@ export function ClientsListSection({
     () =>
       sortedClients(statusFilter, search, showInactiveItems, tableSort),
     [statusFilter, search, showInactiveItems, tableSort],
+  );
+
+  const eligibleClientIds = useMemo(() => {
+    void statusRevision;
+    return list.filter((client) => isClientListCloseEligible(client.id)).map((c) => c.id);
+  }, [list, statusRevision]);
+
+  const headerChecked =
+    eligibleClientIds.length > 0 &&
+    eligibleClientIds.every((id) => selectedClientIds.has(id));
+  const headerIndeterminate =
+    !headerChecked && eligibleClientIds.some((id) => selectedClientIds.has(id));
+
+  const handleToggleRow = useCallback((clientId: string, selected: boolean) => {
+    setSelectedClientIds((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(clientId);
+      else next.delete(clientId);
+      return next;
+    });
+  }, []);
+
+  const handleToggleHeader = useCallback(
+    (selected: boolean) => {
+      if (!selected) {
+        setSelectedClientIds(new Set());
+        return;
+      }
+      setSelectedClientIds(new Set(eligibleClientIds));
+    },
+    [eligibleClientIds],
+  );
+
+  const selectedCount = selectedClientIds.size;
+  const activeClientsDisplayed = useMemo(
+    () => list.filter((client) => client.ativo).length,
+    [list],
   );
 
   const effectiveExpanded =
@@ -160,16 +252,33 @@ export function ClientsListSection({
     return tableSort.dir === "asc" ? "↑" : "↓";
   };
 
+  const billClientsModalDescription = (
+    <div className="flex flex-col gap-4">
+      <p className="m-0">
+        Faturando {billClientsPreview.closedClientCount} clientes para a competência{" "}
+        {formatBillingCompetence(currentCompetence)}
+      </p>
+      {billClientsPreview.openInvoiceCount > 0 ? (
+        <p className="m-0">
+          Ainda existem {billClientsPreview.openInvoiceCount} faturas abertas nesta competência.
+          Esses clientes não serão faturados.
+        </p>
+      ) : null}
+    </div>
+  );
+
   return (
     <div>
       <div className="mb-4 listagem-head">
-        <h2 className="text-lg font-semibold mb-3 m-0 text-zinc-900">
-          {competenceLabel}
-        </h2>
+        <CompetenceWithActiveClients
+          className="mb-3"
+          competenceLabel={competenceLabel}
+          activeClientCount={activeClientsDisplayed}
+        />
         <div className="flex flex-wrap gap-3 items-center w-full">
           <FieldInput
             type="search"
-            placeholder="Buscar cliente..."
+            placeholder="Pesquise por cliente, nome fantasia ou CNPJ"
             autoComplete="off"
             className="flex-1 min-w-[220px] max-w-[360px]"
             value={search}
@@ -177,11 +286,16 @@ export function ClientsListSection({
           />
           <PrimaryButton className="shrink-0">Cadastrar cliente</PrimaryButton>
           <div className="flex flex-wrap items-center gap-2.5 ms-auto shrink-0">
+            {selectedCount > 0 ? (
+              <PrimaryButton onClick={() => setIsBulkCloseModalOpen(true)}>
+                Fechar faturas selecionadas ({selectedCount})
+              </PrimaryButton>
+            ) : null}
             <OutlineButton onClick={onOpenFilters}>
               <SlidersHorizontal />
               Filtros
             </OutlineButton>
-            <OutlineButton onClick={() => setBillModalOpen(true)}>
+            <OutlineButton onClick={() => setIsBillClientsModalOpen(true)}>
               Faturar clientes
             </OutlineButton>
             <ToggleSwitch
@@ -195,9 +309,19 @@ export function ClientsListSection({
         </div>
       </div>
       <div className="overflow-x-auto overflow-y-visible">
-        <table className="w-full border-collapse text-[13px]">
+        <table className={`${nucleusNativeTableClassName} text-[13px]`}>
           <thead>
             <tr>
+              <th className={`${nucleusTableHeadCellClass} w-12`}>
+                <Checkbox
+                  radius="sm"
+                  isSelected={headerChecked}
+                  isIndeterminate={headerIndeterminate}
+                  isDisabled={eligibleClientIds.length === 0}
+                  onValueChange={handleToggleHeader}
+                  aria-label="Selecionar todas as faturas elegíveis"
+                />
+              </th>
               <th className={nucleusTableHeadCellClass}>Status</th>
               <th className={nucleusTableHeadCellClass}>Razão social</th>
               <th className={nucleusTableHeadCellClass}>Produtos</th>
@@ -237,9 +361,28 @@ export function ClientsListSection({
           <tbody>
             {list.map((c) => {
               const open = effectiveExpanded === c.id;
+              void statusRevision;
+              const displayInvoiceStatus = resolveClientListInvoiceStatus(
+                c.id,
+                c.faturaStatus,
+              );
+              const rowCloseEligible = isClientListCloseEligible(c.id);
+
               return (
                 <Fragment key={c.id}>
                   <tr>
+                    <td
+                      className="px-4 py-3.5 border-b border-zinc-100 align-middle"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        radius="sm"
+                        isSelected={selectedClientIds.has(c.id)}
+                        isDisabled={!rowCloseEligible}
+                        onValueChange={(checked) => handleToggleRow(c.id, checked)}
+                        aria-label={`Selecionar ${c.nome}`}
+                      />
+                    </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
                       <ClientStatusChip ativo={c.ativo} />
                     </td>
@@ -277,7 +420,7 @@ export function ClientsListSection({
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
                       <FaturadoWithBadge
                         amount={c.fat}
-                        statusKey={c.faturaStatus}
+                        statusKey={displayInvoiceStatus}
                         valorPagoParcial={c.valorPagoParcial}
                         valorPagoExcedente={c.pagamentoExcedente?.valor}
                         excedenteDestino={c.pagamentoExcedente?.destino}
@@ -326,25 +469,23 @@ export function ClientsListSection({
                       <td colSpan={LIST_COLSPAN} className="p-0 border-b border-zinc-100 align-top">
                         <div className="px-4 py-4 bg-zinc-50">
                           <DetailKpiGrid />
-                          <div className="mt-4 bg-white border border-zinc-200 overflow-hidden">
-                            <div className="overflow-x-auto">
-                              <ContractsTableMock
-                                contextKey={c.id}
-                                expandedContractId={
-                                  expandedContractByClient[c.id] ?? null
-                                }
-                                onToggleContract={(id) =>
-                                  setExpandedContractByClient((prev) => ({
-                                    ...prev,
-                                    [c.id]:
-                                      prev[c.id] === id ? null : id,
-                                  }))
-                                }
-                                showInactiveItems={showInactiveItems}
-                                listMode
-                                inlineDetail
-                              />
-                            </div>
+                          <div className="mt-4 overflow-x-auto">
+                            <ContractsTableMock
+                              contextKey={c.id}
+                              expandedContractId={
+                                expandedContractByClient[c.id] ?? null
+                              }
+                              onToggleContract={(id) =>
+                                setExpandedContractByClient((prev) => ({
+                                  ...prev,
+                                  [c.id]:
+                                    prev[c.id] === id ? null : id,
+                                }))
+                              }
+                              showInactiveItems={showInactiveItems}
+                              listMode
+                              inlineDetail
+                            />
                           </div>
                         </div>
                       </td>
@@ -361,12 +502,33 @@ export function ClientsListSection({
         kind={workflowKind}
         onClose={closeWorkflow}
       />
-      <BillClientsConfirmModal
-        open={billModalOpen}
-        clientCount={list.length}
-        competenceLabel={competenceLabel}
-        onClose={() => setBillModalOpen(false)}
-        onConfirm={() => {}}
+      <BillingBulkCloseConfirmModal
+        isOpen={isBulkCloseModalOpen}
+        selectedCount={selectedCount}
+        onClose={() => setIsBulkCloseModalOpen(false)}
+        onConfirm={() => {
+          closeManyClients(Array.from(selectedClientIds));
+          setSelectedClientIds(new Set());
+          setIsBulkCloseModalOpen(false);
+        }}
+      />
+      <BillingBillClientsConfirmModal
+        isOpen={isBillClientsModalOpen}
+        onClose={() => setIsBillClientsModalOpen(false)}
+        description={billClientsModalDescription}
+        onConfirm={() => {
+          billClientsClosedInCompetence(currentCompetence);
+          setIsBillClientsModalOpen(false);
+        }}
+      />
+      <BillingBillSingleClientConfirmModal
+        isOpen={billSingleClient != null}
+        onClose={() => setBillSingleClient(null)}
+        onConfirm={() => {
+          if (!billSingleClient) return;
+          billSingleClientInvoice(billSingleClient.id);
+          setBillSingleClient(null);
+        }}
       />
     </div>
   );

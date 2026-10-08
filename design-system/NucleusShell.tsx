@@ -13,7 +13,7 @@ interface NucleusShellProps {
 /** Shell do protótipo: sidebar + navbar + conteúdo (layout Nucleus). */
 export function NucleusShell({ children }: NucleusShellProps) {
   return (
-    <div className="min-h-screen flex flex-row bg-zinc-50 text-zinc-900">
+    <div className="min-h-screen flex flex-row bg-white text-zinc-900">
       <Sidebar items={commercialDashboardPrototypeMenuItems} />
       <div className="flex flex-col flex-1 h-screen overflow-y-auto">
         <PrototypeNavbar />

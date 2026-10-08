@@ -5,7 +5,9 @@ import { CLIENTS_PERMISSIONS } from "@/features/clients/constants/clientsPermiss
 import { useClientById } from "@/features/clients/hooks/useClientById";
 import { usePermission } from "@/shared/hooks/usePermission";
 import { useEffect, useMemo, useState } from "react";
-import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import {
+  BillingBillSingleClientConfirmModal,
+} from "./BillingListConfirmModals";
 import { useBillingInvoiceStatusStore } from "../store/billing-invoice-status.store";
 import {
   canAdjustBillingInvoice,
@@ -157,13 +159,9 @@ export function BillingInvoiceDetailPage({
         onOpenChange={setIsAdjustmentsDrawerOpen}
       />
 
-      <ConfirmModal
+      <BillingBillSingleClientConfirmModal
         isOpen={isBillClientModalOpen}
         onClose={() => setIsBillClientModalOpen(false)}
-        title="Faturar cliente"
-        description="Este cliente será faturado e será solicitada a emissão de sua nota fiscal"
-        cancelLabel="Cancelar"
-        confirmLabel="Faturar cliente"
         onConfirm={() => {
           billClient(source, invoiceState.id);
           setIsBillClientModalOpen(false);

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button, Checkbox, Radio, RadioGroup } from "@heroui/react";
 import { DynamicDrawer } from "@/shared/components/DynamicDrawer";
-import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FieldTextarea } from "@/design-system/ui";
 import type { MockClient } from "../../clientesDashboardMockData";
 import {
@@ -341,40 +340,6 @@ export function ClientWorkflowSidebars({
           />
         ) : null
       }
-    />
-  );
-}
-
-interface BillClientsConfirmModalProps {
-  open: boolean;
-  clientCount: number;
-  competenceLabel: string;
-  onClose: () => void;
-  onConfirm: () => void;
-}
-
-export function BillClientsConfirmModal({
-  open,
-  clientCount,
-  competenceLabel,
-  onClose,
-  onConfirm,
-}: BillClientsConfirmModalProps) {
-  return (
-    <ConfirmModal
-      isOpen={open}
-      onClose={onClose}
-      title="Faturar clientes"
-      description={
-        <p className="m-0">
-          Faturando {clientCount} clientes para a competência {competenceLabel}
-        </p>
-      }
-      confirmLabel="Faturar clientes"
-      onConfirm={() => {
-        onConfirm();
-        onClose();
-      }}
     />
   );
 }

@@ -3,7 +3,6 @@
 import { MoreHorizontal } from "lucide-react";
 import { useMemo } from "react";
 import {
-  Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -58,16 +57,13 @@ export function RowActionsDropdown({
     <span className="inline-flex" onClick={(e) => e.stopPropagation()}>
       <Dropdown placement="bottom-end">
         <DropdownTrigger>
-          <Button
-            isIconOnly
-            size="sm"
-            radius="full"
-            variant="light"
+          <button
+            type="button"
             aria-label={ariaLabel}
-            className="min-w-7 w-7 h-7 bg-zinc-100 text-zinc-600"
+            className="inline-flex items-center justify-center border-none bg-transparent p-0 text-zinc-600 cursor-pointer outline-none"
           >
             <MoreHorizontal size={18} />
-          </Button>
+          </button>
         </DropdownTrigger>
         <DropdownMenu
           aria-label={ariaLabel}

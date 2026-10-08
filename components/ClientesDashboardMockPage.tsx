@@ -17,6 +17,7 @@ import {
   type FilterDrawerStatus,
 } from "./clientes-mock-hero/ClientesFilterDrawer";
 import { ClientsListSection } from "./clientes-mock-hero/ClientsListSection";
+import { CompetenceWithActiveClients } from "./clientes-mock-hero/CompetenceWithActiveClients";
 import { CohortTableMock } from "./clientes-mock-hero/CohortTableMock";
 import { DashboardKpiGrid } from "./clientes-mock-hero/DashboardKpiGrid";
 import { EvolutionChartMock } from "./clientes-mock-hero/EvolutionChartMock";
@@ -52,6 +53,8 @@ export function ClientesDashboardMockPage() {
   const mainViewTab =
     searchParams.get("tab") === "clientes" ? "clientes" : "dashboard";
 
+  const activeClientsOnDashboard = CLIENTS.filter((client) => client.ativo).length;
+
   const filterToolbar = (
     <div className="flex flex-wrap gap-2.5 mb-2">
       <OutlineButton onClick={() => setFilterOpen(true)}>
@@ -68,12 +71,12 @@ export function ClientesDashboardMockPage() {
   const dashboardContent = (
     <section>
       {filterToolbar}
-      <p className="text-sm text-zinc-500 my-2 mb-6">
-        Período:{" "}
-        <span className="font-medium text-zinc-900">
-          {periodLabel}
-        </span>
-      </p>
+      <CompetenceWithActiveClients
+        className="mb-6"
+        competencePrefix="Período:"
+        competenceLabel={periodLabel}
+        activeClientCount={activeClientsOnDashboard}
+      />
       <DashboardKpiGrid />
       <ChartCard title="Evolução mensal" className="mb-6">
         <EvolutionChartMock />
@@ -102,15 +105,13 @@ export function ClientesDashboardMockPage() {
 
   const clientesContent = (
     <section>
-      <ChartCard className="overflow-visible mb-0">
-        <ClientsListSection
-          statusFilter={statusFilter}
-          showInactiveItems={showInactiveItems}
-          onOpenFilters={() => setFilterOpen(true)}
-          onToggleShowInactive={() => setShowInactiveItems((v) => !v)}
-          competenceLabel={periodLabel}
-        />
-      </ChartCard>
+      <ClientsListSection
+        statusFilter={statusFilter}
+        showInactiveItems={showInactiveItems}
+        onOpenFilters={() => setFilterOpen(true)}
+        onToggleShowInactive={() => setShowInactiveItems((v) => !v)}
+        competenceLabel={periodLabel}
+      />
     </section>
   );
 

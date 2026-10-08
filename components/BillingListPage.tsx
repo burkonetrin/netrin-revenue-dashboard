@@ -34,7 +34,10 @@ import {
 } from "@/features/billing/store/billing-invoice-status.store";
 import { getBillClientsBatchPreview } from "@/features/billing/utils/billing-bill-clients.utils";
 import type { BillingInvoiceStatusKey } from "@/features/billing/types/billing-invoice-status.types";
-import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import {
+  BillingBillClientsConfirmModal,
+  BillingBulkCloseConfirmModal,
+} from "@/features/billing/components/BillingListConfirmModals";
 import { CLIENTS_PERMISSIONS } from "@/features/clients/constants/clientsPermissions.constants";
 import { PRODUCTS_PERMISSIONS } from "@/features/products/constants/productsPermissions.constants";
 import { PageTitle } from "@/shared/components/PageTitle";
@@ -393,13 +396,10 @@ function BillingListContent() {
         />
       ) : null}
 
-      <ConfirmModal
+      <BillingBulkCloseConfirmModal
         isOpen={isBulkCloseModalOpen}
+        selectedCount={selectedCount}
         onClose={() => setIsBulkCloseModalOpen(false)}
-        title="Fechar faturas selecionadas"
-        description={`${selectedCount} faturas serão fechadas. Deseja prosseguir?`}
-        cancelLabel="Cancelar"
-        confirmLabel="Fechar faturas"
         onConfirm={() => {
           closeMany(Array.from(selectedKeys));
           setSelectedKeys(new Set());
@@ -408,26 +408,23 @@ function BillingListContent() {
         }}
       />
 
-      <ConfirmModal
+      <BillingBillClientsConfirmModal
         isOpen={isBillClientsModalOpen}
         onClose={() => setIsBillClientsModalOpen(false)}
-        title="Faturar clientes"
         description={
-          <div className="space-y-2">
-            <p>
+          <div className="flex flex-col gap-4">
+            <p className="m-0">
               Faturando {closedInCompetenceCount} clientes para a competência{" "}
               {formatBillingCompetence(currentCompetence)}
             </p>
             {openInCompetenceCount > 0 ? (
-              <p>
+              <p className="m-0">
                 Ainda existem {openInCompetenceCount} faturas abertas nesta competência. Esses
                 clientes não serão faturados.
               </p>
             ) : null}
           </div>
         }
-        cancelLabel="Cancelar"
-        confirmLabel="Faturar clientes"
         onConfirm={() => {
           billClientsClosedInCompetence(currentCompetence);
           setIsBillClientsModalOpen(false);

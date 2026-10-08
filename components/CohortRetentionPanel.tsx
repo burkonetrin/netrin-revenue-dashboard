@@ -4,6 +4,7 @@ import { Select, SelectItem, Tab, Tabs } from "@heroui/react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { nucleusSelectProps } from "@/shared/styles/inputClassNames";
 import {
+  nucleusNativeTableClassName,
   nucleusTableHeadCellCenterClass,
   nucleusTableHeadCellClass,
 } from "@/shared/styles/tableClassNames";
@@ -63,7 +64,7 @@ export function CohortRetentionPanel() {
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white p-3">
-        <table className="w-full min-w-[880px] border-separate border-spacing-1 text-sm">
+        <table className={`${nucleusNativeTableClassName} min-w-[880px] text-sm`}>
           <thead>
             <tr>
               <th className={`${nucleusTableHeadCellClass} w-40`}>

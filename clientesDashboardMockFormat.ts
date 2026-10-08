@@ -7,6 +7,11 @@ import {
   type MockFranchise,
   type MockNfeNote,
 } from "./clientesDashboardMockData";
+import {
+  isClientListBillEligible,
+  isClientListCloseToggleEligible,
+  useClientListInvoiceStatusStore,
+} from "@/features/clients/store/client-list-invoice-status.store";
 
 export const fmt = (n: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -75,11 +80,25 @@ export function nfeNotesCountBadge(count: number): string {
 export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
   const count = clientInvoiceNotes(client).length;
   const badge = nfeNotesCountBadge(count);
-  return CLIENT_ROW_ACTIONS_MENU.map((entry) => {
+  const billing = useClientListInvoiceStatusStore.getState().getState(client.id);
+  const closeToggleLabel =
+    billing.status === "fatura_fechada" ? "Reabrir fatura" : "Fechar fatura";
+  const showCloseToggle = isClientListCloseToggleEligible(client.id);
+  const showBillClient = isClientListBillEligible(client.id);
+
+  return CLIENT_ROW_ACTIONS_MENU.flatMap((entry) => {
     if (entry.kind === "action" && entry.label === "Ver notas fiscais") {
-      return { ...entry, badge };
+      return [{ ...entry, badge }];
     }
-    return entry;
+    if (entry.kind === "action" && entry.label === "Fechar fatura") {
+      if (!showCloseToggle) return [];
+      return [{ ...entry, label: closeToggleLabel }];
+    }
+    if (entry.kind === "action" && entry.label === "Faturar cliente") {
+      if (!showBillClient) return [];
+      return [entry];
+    }
+    return [entry];
   });
 }
 

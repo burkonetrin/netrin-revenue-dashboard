@@ -1,7 +1,7 @@
 "use client";
 
 import { CONTRACTS_MOCK, MOCK_CLIENT_USERS } from "../../clientesDashboardMockData";
-import { FieldSelect } from "@/design-system/ui";
+import { NucleusDropdownTextButton } from "@/shared/components/NucleusDropdownTextButton";
 import { defaultInputClassNames } from "@/shared/styles/inputClassNames";
 import {
   Accordion,
@@ -10,8 +10,10 @@ import {
   AutocompleteItem,
   Checkbox,
   Chip,
+  DropdownItem,
   Input,
   Switch,
+  addToast,
 } from "@heroui/react";
 import {
   AlertCircle,
@@ -332,7 +334,7 @@ export function UserStepBasicInfoMock({
 }
 
 export function UserStepPermissionsMock() {
-  const [copyFromUserId, setCopyFromUserId] = useState<string | null>(null);
+  const [, setCopyFromUserId] = useState<string | null>(null);
   const [groups, setGroups] = useState<Record<string, boolean>>({
     g1: false,
     g2: true,
@@ -346,23 +348,33 @@ export function UserStepPermissionsMock() {
   const productLabel = "Nucleus";
   const isProductGroupSelected = Object.values(groups).some(Boolean);
   const isProductRoleSelected = Object.values(roles).some(Boolean);
+  const copyPermissionsLabel = "Copiar permissões de outro usuário";
 
   return (
     <div className="flex flex-col gap-10 pb-8">
-      <FieldSelect
-        label="Copiar permissões de outro usuário"
-        aria-label="Copiar permissões de outro usuário"
-        placeholder="Selecione um usuário"
-        className="max-w-md"
-        items={MOCK_CLIENT_USERS.map((user) => ({
-          key: user.id,
-          label: `${user.fullName} · ${user.username}`,
-        }))}
-        selectedKeys={
-          copyFromUserId ? new Set([copyFromUserId]) : new Set<string>()
-        }
-        onSelectionChange={(key) => setCopyFromUserId(key)}
-      />
+      <NucleusDropdownTextButton
+        label={copyPermissionsLabel}
+        ariaLabel={copyPermissionsLabel}
+        onAction={(key) => {
+          setCopyFromUserId(String(key));
+          addToast({
+            title: "Permissões copiadas",
+            color: "success",
+            timeout: 3000,
+            shouldShowTimeoutProgress: true,
+          });
+        }}
+      >
+        {MOCK_CLIENT_USERS.map((user) => (
+          <DropdownItem
+            key={user.id}
+            textValue={`${user.fullName} · ${user.username}`}
+            className="text-xs"
+          >
+            <span className="block truncate">{user.fullName} · {user.username}</span>
+          </DropdownItem>
+        ))}
+      </NucleusDropdownTextButton>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h3 className="text-lg font-semibold text-default-800">
@@ -523,6 +535,9 @@ function ContractFranchiseGroupMock({
 }
 
 export function UserStepFranchisesMock() {
+  const [, setCopyFranchisesFromUserId] = useState<string | null>(null);
+  const copyFranchisesLabel = "Copiar franquias de outro usuário";
+
   const contracts = useMemo(
     () =>
       CONTRACTS_MOCK.filter((c) => c.ativo).map((c) => ({
@@ -549,6 +564,30 @@ export function UserStepFranchisesMock() {
 
   return (
     <div className="flex flex-col gap-8 pb-8">
+      <NucleusDropdownTextButton
+        label={copyFranchisesLabel}
+        ariaLabel={copyFranchisesLabel}
+        onAction={(key) => {
+          setCopyFranchisesFromUserId(String(key));
+          addToast({
+            title: "Franquias vinculadas",
+            color: "success",
+            timeout: 3000,
+            shouldShowTimeoutProgress: true,
+          });
+        }}
+      >
+        {MOCK_CLIENT_USERS.map((user) => (
+          <DropdownItem
+            key={user.id}
+            textValue={`${user.fullName} · ${user.username}`}
+            className="text-xs"
+          >
+            <span className="block truncate">{user.fullName} · {user.username}</span>
+          </DropdownItem>
+        ))}
+      </NucleusDropdownTextButton>
+
       <div className="flex flex-col gap-1.5 px-1">
         <h2 className="text-xl font-semibold text-default-800 tracking-tight">
           Selecione as franquias às quais este usuário tem acesso
