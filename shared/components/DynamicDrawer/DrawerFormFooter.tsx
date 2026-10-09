@@ -11,9 +11,10 @@ interface DrawerFormFooterProps {
   isCancelDisabled?: boolean;
   formId?: string;
   onSave?: () => void;
+  variant?: "default" | "providers";
 }
 
-/** Rodapé padrão de drawers com Cancelar e Salvar (Nucleus). */
+/** Rodapé padrão de drawers com botões Cancelar e Salvar. */
 export function DrawerFormFooter({
   onCancel,
   saveLabel = "Salvar",
@@ -23,14 +24,27 @@ export function DrawerFormFooter({
   isCancelDisabled = false,
   formId,
   onSave,
+  variant = "default",
 }: DrawerFormFooterProps) {
+  const isProviders = variant === "providers";
+
   return (
-    <div className="flex gap-2.5 w-full">
+    <div
+      className={
+        isProviders
+          ? "flex w-full justify-end gap-2.5 font-sans"
+          : "flex gap-2.5 w-full"
+      }
+    >
       <Button
         variant="light"
         onPress={onCancel}
         isDisabled={isCancelDisabled || isLoading}
-        className="border border-gray-400 flex-1 h-10"
+        className={
+          isProviders
+            ? "h-10 border border-gray-300 px-6"
+            : "border border-gray-400 flex-1 h-10"
+        }
       >
         {cancelLabel}
       </Button>
@@ -41,7 +55,11 @@ export function DrawerFormFooter({
         onPress={onSave}
         isLoading={isLoading}
         isDisabled={isSaveDisabled || isLoading}
-        className="flex-1 h-10"
+        className={
+          isProviders
+            ? "h-10 px-6 font-semibold text-white shadow-md"
+            : "flex-1 h-10"
+        }
       >
         {isLoading ? "" : saveLabel}
       </Button>

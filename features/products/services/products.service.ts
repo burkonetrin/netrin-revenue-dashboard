@@ -15,15 +15,18 @@ export interface ListProductsParams {
   page?: number;
   pageSize?: number;
   limit?: number;
+  sortBy?: string | null;
+  sortDirection?: "asc" | "desc" | null;
 }
 
 export async function getProducts(
   params?: ListProductsParams,
 ): Promise<PaginatedProductsResponse> {
   const data: ProductListItem[] = [
-    { id: "prod-setup", name: "Setup / Projeto", isActive: true },
+    { id: "0195694a-939a-7c9c-b169-2f22b8264779", name: "Nucleus", isActive: true },
     { id: "prod-api", name: "API", isActive: true },
     { id: "prod-bgc", name: "BGC", isActive: true },
+    { id: "0195694a-939a-7c9c-b169-2f22b8264770", name: "SafePartner", isActive: true },
   ];
 
   return {

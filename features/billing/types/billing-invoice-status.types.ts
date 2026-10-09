@@ -28,7 +28,7 @@ export const BILLING_INVOICE_STATUS_LABEL: Record<BillingInvoiceStatusKey, strin
   fatura_aberta: "Fatura aberta",
   fatura_fechada: "Fatura fechada",
   faturado: "Faturado",
-  pagamento_aberto: "Pagamento em aberto",
+  pagamento_aberto: "Pagamento aberto",
   pago_parcial: "Pago parcial",
   pago_total: "Pago totalmente",
   pago_excedente: "Pago excedente",

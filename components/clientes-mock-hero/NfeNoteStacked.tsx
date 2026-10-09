@@ -41,7 +41,7 @@ export function NfeNoteStacked({ note, className = "" }: NfeNoteStackedProps) {
           variant="flat"
           classNames={{
             base: `${statusChipClass(note.statusPagamento)} h-auto max-w-full shrink-0`,
-            content: "text-[10px] font-medium px-2 py-0.5 leading-snug",
+            content: "text-[10px] font-normal px-2 py-0.5 leading-snug",
           }}
         >
           {note.statusPagamento}

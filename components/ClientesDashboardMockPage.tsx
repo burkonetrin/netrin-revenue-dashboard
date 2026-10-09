@@ -11,7 +11,6 @@ import {
 } from "../clientesDashboardMockData";
 import { ChartCard } from "./charts/ChartCard";
 import { DashboardViewTabs } from "./CohortRetentionPanel";
-import { PrototypeBanner } from "./PrototypeBanner";
 import {
   ClientesFilterDrawer,
   type FilterDrawerStatus,
@@ -117,7 +116,6 @@ export function ClientesDashboardMockPage() {
 
   return (
     <div className="space-y-6">
-      <PrototypeBanner />
       <PageHead icon={<Users />} title="Clientes" />
       <DashboardViewTabs
         selectedKey={mainViewTab}

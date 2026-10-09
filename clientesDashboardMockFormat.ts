@@ -48,6 +48,16 @@ export function formatMetricVal(key: string, v: number): string {
   return fmt(v);
 }
 
+/** Ex.: `set/2025 - set/2025` → `Ref. set/2025`; intervalo → `Ref. mês/ano - mês/ano`. */
+export function formatBillingReferenceInterval(referencia: string): string {
+  const trimmed = referencia.trim();
+  const parts = trimmed.split(" - ").map((part) => part.trim());
+  if (parts.length === 2 && parts[0] === parts[1]) {
+    return `Ref. ${parts[0]}`;
+  }
+  return `Ref. ${trimmed}`;
+}
+
 export function nfeCountLabel(n: number): string {
   if (!n) return "—";
   return n === 1 ? "1 nota" : `${n} notas`;
@@ -60,7 +70,7 @@ export function clientInvoiceNotes(client: MockClient): MockNfeNote[] {
     tipo: "Franquia" as const,
     nome: produto,
     vencimento: client.vencimentoNF,
-    statusPagamento: i === 0 ? status : "Pagamento em aberto",
+    statusPagamento: i === 0 ? status : "Pagamento aberto",
   }));
   if (fromProdutos.length > 0) return fromProdutos;
   return [
@@ -73,13 +83,9 @@ export function clientInvoiceNotes(client: MockClient): MockNfeNote[] {
   ];
 }
 
-export function nfeNotesCountBadge(count: number): string {
-  return count === 1 ? "1 NOTA" : `${count} NOTAS`;
-}
-
 export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
   const count = clientInvoiceNotes(client).length;
-  const badge = nfeNotesCountBadge(count);
+  const badge = count > 0 ? nfeCountLabel(count) : undefined;
   const billing = useClientListInvoiceStatusStore.getState().getState(client.id);
   const closeToggleLabel =
     billing.status === "fatura_fechada" ? "Reabrir fatura" : "Fechar fatura";
@@ -88,7 +94,7 @@ export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
 
   return CLIENT_ROW_ACTIONS_MENU.flatMap((entry) => {
     if (entry.kind === "action" && entry.label === "Ver notas fiscais") {
-      return [{ ...entry, badge }];
+      return badge ? [{ ...entry, badge }] : [entry];
     }
     if (entry.kind === "action" && entry.label === "Fechar fatura") {
       if (!showCloseToggle) return [];
@@ -113,7 +119,7 @@ export function clientSidebarNotes(client: MockClient): MockNfeNote[] {
       tipo: "Franquia",
       nome: "Pacote monitoramento",
       vencimento: client.vencimentoNF,
-      statusPagamento: "Pagamento em aberto",
+      statusPagamento: "Pagamento aberto",
     },
     {
       tipo: "Franquia",

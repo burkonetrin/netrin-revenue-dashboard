@@ -3,6 +3,7 @@
 import { MoreHorizontal } from "lucide-react";
 import { useMemo } from "react";
 import {
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -113,9 +114,17 @@ export function RowActionsDropdown({
                 <span className="inline-flex items-center gap-2">
                   {item.label}
                   {"badge" in item && item.badge ? (
-                    <span className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      classNames={{
+                        base: "bg-zinc-100 text-zinc-600 h-auto shrink-0",
+                        content:
+                          "text-[10px] font-normal px-2 py-0.5 leading-snug",
+                      }}
+                    >
                       {item.badge}
-                    </span>
+                    </Chip>
                   ) : null}
                 </span>
               </DropdownItem>

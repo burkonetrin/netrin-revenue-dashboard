@@ -41,7 +41,7 @@ export function ClientStatusChip({ ativo }: { ativo: boolean }) {
         base: ativo
           ? "bg-green-100 text-green-800 h-auto"
           : "bg-zinc-100 text-zinc-600 h-auto",
-        content: "text-[11px] font-medium px-2.5 py-0.5",
+        content: "text-[11px] font-normal px-2.5 py-0.5",
       }}
     >
       {ativo ? "Ativo" : "Inativo"}
@@ -61,7 +61,7 @@ export function InvoiceStatusChip({ statusKey }: { statusKey: InvoiceStatusKey }
       variant="flat"
       classNames={{
         base: `${INVOICE_CHIP_CLASS[meta.chip] ?? INVOICE_CHIP_CLASS["inv-open"]} h-auto max-w-full`,
-        content: "text-[10px] font-medium px-2 py-0.5 leading-snug",
+        content: "text-[10px] font-normal px-2 py-0.5 leading-snug",
       }}
     >
       {label}
@@ -77,7 +77,7 @@ export function HealthChip({ health }: { health: ClientHealthKey }) {
       variant="flat"
       classNames={{
         base: `${HEALTH_CHIP_CLASS[variant] ?? ""} h-auto`,
-        content: "text-[11px] font-medium px-2.5 py-0.5",
+        content: "text-[11px] font-normal px-2.5 py-0.5",
       }}
     >
       {SL[health]}

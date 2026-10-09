@@ -1,30 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Button, Checkbox, Radio, RadioGroup } from "@heroui/react";
+import { Button, Radio, RadioGroup } from "@heroui/react";
 import { DynamicDrawer } from "@/shared/components/DynamicDrawer";
-import { FieldTextarea } from "@/design-system/ui";
 import type { MockClient } from "../../clientesDashboardMockData";
 import {
   clientSidebarNotes,
   excedenteDestinoLabel,
   fmtDetail,
-  nfeNoteAriaLabel,
 } from "../../clientesDashboardMockFormat";
-import { NfeNoteStacked } from "./NfeNoteStacked";
 import { NfeNotesListContent } from "./NfeNotesListContent";
 
 export type ClientWorkflowKind =
-  | "cancelar-nota"
-  | "vincular-pagamento"
-  | "baixa-contabil"
   | "pagamento-excedente"
   | "ver-notas-fiscais";
 
 const ACTION_TO_KIND: Record<string, ClientWorkflowKind> = {
-  "Cancelar nota": "cancelar-nota",
-  "Vincular pagamento não identificado": "vincular-pagamento",
-  "Baixa contábil": "baixa-contabil",
   "Ver pagamento excedente": "pagamento-excedente",
   "Ver notas fiscais": "ver-notas-fiscais",
 };
@@ -39,74 +30,6 @@ interface ClientWorkflowSidebarsProps {
   client: MockClient | null;
   kind: ClientWorkflowKind | null;
   onClose: () => void;
-}
-
-function NoteRadioGroup({
-  notes,
-  selectedIndex,
-  onSelect,
-}: {
-  notes: ReturnType<typeof clientSidebarNotes>;
-  selectedIndex: number;
-  onSelect: (index: number) => void;
-}) {
-  return (
-    <RadioGroup
-      value={String(selectedIndex)}
-      onValueChange={(v) => onSelect(Number(v))}
-      classNames={{ label: "text-sm", wrapper: "gap-4" }}
-    >
-      {notes.map((note, i) => (
-        <Radio
-          key={i}
-          value={String(i)}
-          classNames={{
-            base: "items-start max-w-full",
-            label: "text-sm w-full",
-          }}
-          aria-label={nfeNoteAriaLabel(note)}
-        >
-          <NfeNoteStacked note={note} />
-        </Radio>
-      ))}
-    </RadioGroup>
-  );
-}
-
-function NoteCheckboxList({
-  notes,
-  selected,
-  onToggle,
-}: {
-  notes: ReturnType<typeof clientSidebarNotes>;
-  selected: Set<number>;
-  onToggle: (index: number, checked: boolean) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      {notes.map((note, i) => (
-        <Checkbox
-          key={i}
-          size="sm"
-          isSelected={selected.has(i)}
-          onValueChange={(checked) => onToggle(i, checked)}
-          aria-label={nfeNoteAriaLabel(note)}
-          classNames={{
-            base: "items-start max-w-full",
-            label: "text-sm w-full",
-          }}
-        >
-          <NfeNoteStacked note={note} />
-        </Checkbox>
-      ))}
-    </div>
-  );
-}
-
-function WorkflowSectionTitle({ children }: { children: ReactNode }) {
-  return (
-    <p className="text-sm font-semibold text-zinc-900 m-0">{children}</p>
-  );
 }
 
 function WorkflowFooter({
@@ -141,17 +64,9 @@ export function ClientWorkflowSidebars({
   kind,
   onClose,
 }: ClientWorkflowSidebarsProps) {
-  const [selectedNote, setSelectedNote] = useState(0);
-  const [cancelReason, setCancelReason] = useState("");
   const [excedenteOption, setExcedenteOption] = useState<
     "reembolsado" | "abatido"
   >("reembolsado");
-  const [baixaLancarSelected, setBaixaLancarSelected] = useState<Set<number>>(
-    () => new Set(),
-  );
-  const [baixaRemoverSelected, setBaixaRemoverSelected] = useState<
-    Set<number>
-  >(() => new Set());
 
   const open = Boolean(client && kind);
   const notes = useMemo(
@@ -161,17 +76,10 @@ export function ClientWorkflowSidebars({
 
   useEffect(() => {
     if (open) {
-      setSelectedNote(0);
-      setCancelReason("");
-      setExcedenteOption(
-        client?.pagamentoExcedente?.destino ?? "reembolsado",
-      );
-      setBaixaLancarSelected(new Set());
-      setBaixaRemoverSelected(new Set());
+      setExcedenteOption(client?.pagamentoExcedente?.destino ?? "reembolsado");
     }
   }, [open, kind, client?.id, client?.pagamentoExcedente?.destino]);
 
-  const pagamentoNaoId = client?.pagamentoNaoIdentificadoValor ?? 4_520;
   const excedente = client?.pagamentoExcedente ?? {
     valor: 3_280,
     notaDescricao: notes[0]?.nome ?? "—",
@@ -187,88 +95,6 @@ export function ClientWorkflowSidebars({
   let confirmLabel = "Salvar";
 
   switch (kind) {
-    case "cancelar-nota":
-      title = "Cancelar nota";
-      cancelLabel = "Voltar";
-      confirmLabel = "Solicitar cancelamento";
-      body = (
-        <>
-          <NoteRadioGroup
-            notes={notes}
-            selectedIndex={selectedNote}
-            onSelect={setSelectedNote}
-          />
-          <FieldTextarea
-            label="Motivo de cancelamento"
-            value={cancelReason}
-            onValueChange={setCancelReason}
-            minRows={4}
-            className="mt-4"
-          />
-        </>
-      );
-      break;
-    case "vincular-pagamento":
-      title = "Vincular pagamento não identificado";
-      cancelLabel = "Cancelar";
-      confirmLabel = "Vincular pagamento";
-      body = (
-        <>
-          <WorkflowSectionTitle>Valor do pagamento</WorkflowSectionTitle>
-          <p className="text-sm text-zinc-700 mt-1 mb-6">
-            {fmtDetail(pagamentoNaoId)}
-          </p>
-          <WorkflowSectionTitle>
-            Vincular pagamento a uma nota disponível
-          </WorkflowSectionTitle>
-          <div className="mt-3">
-            <NoteRadioGroup
-              notes={notes}
-              selectedIndex={selectedNote}
-              onSelect={setSelectedNote}
-            />
-          </div>
-        </>
-      );
-      break;
-    case "baixa-contabil":
-      title = "Baixa contábil";
-      confirmLabel = "Salvar";
-      body = (
-        <>
-          <WorkflowSectionTitle>Lançar baixa contábil</WorkflowSectionTitle>
-          <div className="mt-3 mb-6">
-            <NoteCheckboxList
-              notes={notes}
-              selected={baixaLancarSelected}
-              onToggle={(index, checked) => {
-                setBaixaLancarSelected((prev) => {
-                  const next = new Set(prev);
-                  if (checked) next.add(index);
-                  else next.delete(index);
-                  return next;
-                });
-              }}
-            />
-          </div>
-          <WorkflowSectionTitle>Remover da baixa contábil</WorkflowSectionTitle>
-          <div className="mt-3">
-            <NoteCheckboxList
-              notes={notes}
-              selected={baixaRemoverSelected}
-              onToggle={(index, checked) => {
-                setBaixaRemoverSelected((prev) => {
-                  const next = new Set(prev);
-                  if (checked) next.add(index);
-                  else next.delete(index);
-                  return next;
-                });
-              }}
-            />
-          </div>
-        </>
-      );
-      break;
     case "pagamento-excedente":
       title = "Ver pagamento excedente";
       body = (

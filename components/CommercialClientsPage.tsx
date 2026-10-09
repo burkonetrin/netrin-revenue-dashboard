@@ -8,8 +8,6 @@ import type { ClientsFiltersState } from "../types";
 import { filterAndSortClients } from "../utils/filtering";
 import { ClientHierarchyCard } from "./ClientHierarchyCard";
 import { ClientsFiltersBar } from "./ClientsFiltersBar";
-import { PrototypeBanner } from "./PrototypeBanner";
-
 const defaultFilters: ClientsFiltersState = {
   search: "",
   health: ["todos"],
@@ -34,7 +32,6 @@ export function CommercialClientsPage() {
 
   return (
     <div className="space-y-6">
-      <PrototypeBanner />
       <PageHead icon={<Users />} title="Clientes" />
 
       <ClientsFiltersBar filters={filters} onChange={setFilters} />

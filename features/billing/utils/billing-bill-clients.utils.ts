@@ -6,6 +6,8 @@ import { mergeStatusIntoRecord } from "./billing-invoice-status.utils";
 export interface BillClientsBatchPreview {
   /** Clientes distintos com fatura fechada na competência (elegíveis ao lote). */
   closedClientCount: number;
+  /** Clientes distintos com fatura aberta na competência. */
+  openClientCount: number;
   /** Linhas com fatura aberta na competência (não entram no lote). */
   openInvoiceCount: number;
 }
@@ -24,11 +26,13 @@ export function getBillClientsBatchPreview(competence: string): BillClientsBatch
   );
 
   const closedClientIds = new Set<string>();
+  const openClientIds = new Set<string>();
   let openInvoiceCount = 0;
 
   for (const row of rows) {
     if (row.billingStatus === "fatura_aberta") {
       openInvoiceCount += 1;
+      openClientIds.add(row.clientId);
       continue;
     }
     if (row.billingStatus === "fatura_fechada") {
@@ -38,6 +42,7 @@ export function getBillClientsBatchPreview(competence: string): BillClientsBatch
 
   return {
     closedClientCount: closedClientIds.size,
+    openClientCount: openClientIds.size,
     openInvoiceCount,
   };
 }

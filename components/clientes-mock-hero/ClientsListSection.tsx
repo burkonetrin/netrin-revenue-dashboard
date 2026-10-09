@@ -5,12 +5,8 @@ import { Fragment, useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@heroui/react";
 import { PROTOTYPE_BASE_PATH } from "@/constants";
-import {
-  FieldInput,
-  OutlineButton,
-  PrimaryButton,
-  ToggleSwitch,
-} from "@/design-system/ui";
+import { FieldInput, OutlineButton, PrimaryButton } from "@/design-system/ui";
+import { ClientsListToolbarOverflow } from "./ClientsListToolbarOverflow";
 import {
   CLIENTS,
   LIST_COLSPAN,
@@ -30,11 +26,13 @@ import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { RowActionsDropdown } from "./RowActionsDropdown";
 import { CompetenceWithActiveClients } from "./CompetenceWithActiveClients";
 import {
-  nucleusNativeTableClassName,
-  nucleusSortableTableHeadCellClass,
-  nucleusTableHeadCellCenterClass,
-  nucleusTableHeadCellClass,
+  clientHierarchySortableTableHeadCellClass,
+  clientHierarchySublineClassName,
+  clientHierarchyTableClassName,
+  clientHierarchyTableHeadCellCenterClass,
+  clientHierarchyTableHeadCellClass,
 } from "@/shared/styles/tableClassNames";
+import { TableExpandButton } from "./TableExpandButton";
 import {
   ClientWorkflowSidebars,
   clientActionToWorkflowKind,
@@ -275,7 +273,7 @@ export function ClientsListSection({
           competenceLabel={competenceLabel}
           activeClientCount={activeClientsDisplayed}
         />
-        <div className="flex flex-wrap gap-3 items-center w-full">
+        <div className="flex flex-wrap gap-2.5 items-center w-full">
           <FieldInput
             type="search"
             placeholder="Pesquise por cliente, nome fantasia ou CNPJ"
@@ -284,35 +282,31 @@ export function ClientsListSection({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <PrimaryButton className="shrink-0">Cadastrar cliente</PrimaryButton>
-          <div className="flex flex-wrap items-center gap-2.5 ms-auto shrink-0">
-            {selectedCount > 0 ? (
-              <PrimaryButton onClick={() => setIsBulkCloseModalOpen(true)}>
-                Fechar faturas selecionadas ({selectedCount})
-              </PrimaryButton>
-            ) : null}
-            <OutlineButton onClick={onOpenFilters}>
-              <SlidersHorizontal />
-              Filtros
-            </OutlineButton>
-            <OutlineButton onClick={() => setIsBillClientsModalOpen(true)}>
-              Faturar clientes
-            </OutlineButton>
-            <ToggleSwitch
-              label="Exibir itens inativos"
-              checked={showInactiveItems}
-              onChange={(next) => {
-                if (next !== showInactiveItems) onToggleShowInactive();
-              }}
-            />
-          </div>
+          <OutlineButton onClick={onOpenFilters}>
+            <SlidersHorizontal />
+            Filtros
+          </OutlineButton>
+          <ClientsListToolbarOverflow
+            showInactiveItems={showInactiveItems}
+            openInvoiceClientCount={billClientsPreview.openClientCount}
+            onBillClients={() => setIsBillClientsModalOpen(true)}
+            onToggleShowInactive={onToggleShowInactive}
+          />
+          {selectedCount > 0 ? (
+            <PrimaryButton
+              className="ms-auto shrink-0"
+              onClick={() => setIsBulkCloseModalOpen(true)}
+            >
+              Fechar faturas selecionadas ({selectedCount})
+            </PrimaryButton>
+          ) : null}
         </div>
       </div>
       <div className="overflow-x-auto overflow-y-visible">
-        <table className={`${nucleusNativeTableClassName} text-[13px]`}>
+        <table className={clientHierarchyTableClassName}>
           <thead>
             <tr>
-              <th className={`${nucleusTableHeadCellClass} w-12`}>
+              <th className={`${clientHierarchyTableHeadCellClass} w-12`}>
                 <Checkbox
                   radius="sm"
                   isSelected={headerChecked}
@@ -322,12 +316,12 @@ export function ClientsListSection({
                   aria-label="Selecionar todas as faturas elegíveis"
                 />
               </th>
-              <th className={nucleusTableHeadCellClass}>Status</th>
-              <th className={nucleusTableHeadCellClass}>Razão social</th>
-              <th className={nucleusTableHeadCellClass}>Produtos</th>
-              <th className={nucleusTableHeadCellClass}>Referência</th>
+              <th className={clientHierarchyTableHeadCellClass}>Status</th>
+              <th className={clientHierarchyTableHeadCellClass}>Razão social</th>
+              <th className={clientHierarchyTableHeadCellClass}>Produtos</th>
+              <th className={clientHierarchyTableHeadCellClass}>Referência</th>
               <th
-                className={nucleusSortableTableHeadCellClass(
+                className={clientHierarchySortableTableHeadCellClass(
                   tableSort.key === "fat",
                 )}
                 onClick={() => toggleSort("fat")}
@@ -338,7 +332,7 @@ export function ClientsListSection({
                 </span>
               </th>
               <th
-                className={nucleusSortableTableHeadCellClass(
+                className={clientHierarchySortableTableHeadCellClass(
                   tableSort.key === "cons",
                 )}
                 onClick={() => toggleSort("cons")}
@@ -349,11 +343,11 @@ export function ClientsListSection({
                 </span>
               </th>
               <th
-                className={`${nucleusTableHeadCellCenterClass} w-[72px]`}
+                className={`${clientHierarchyTableHeadCellCenterClass} w-[72px]`}
               >
                 Detalhes
               </th>
-              <th className={`${nucleusTableHeadCellCenterClass} w-14`}>
+              <th className={`${clientHierarchyTableHeadCellCenterClass} w-14`}>
                 Ações
               </th>
             </tr>
@@ -389,16 +383,18 @@ export function ClientsListSection({
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
                       <Link
                         to={`${PROTOTYPE_BASE_PATH}/clientes/${c.id}`}
-                        className="font-medium text-primary block no-underline hover:underline"
+                        className="text-primary block no-underline hover:underline"
                       >
                         {c.nome}
                       </Link>
-                      <span className="block text-[11px] text-zinc-500 mt-0.5 font-normal">
+                      <span
+                        className={`block mt-0.5 font-normal ${clientHierarchySublineClassName}`}
+                      >
                         {c.cnpj}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-nowrap">
                         {c.prod}
                         <MockInfoTooltip
                           content={
@@ -428,28 +424,23 @@ export function ClientsListSection({
                       />
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{c.cons}%</span>
+                      <div className="flex items-center gap-2 flex-nowrap">
+                        <span>{c.cons}%</span>
                         <HealthChip health={c.s} />
                       </div>
-                      <div className="text-[11px] text-zinc-500 mt-1">
+                      <div className={`mt-1 ${clientHierarchySublineClassName}`}>
                         {c.usado.toLocaleString("pt-BR")} de{" "}
                         {c.lim.toLocaleString("pt-BR")}
                       </div>
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top text-center">
-                      <button
-                        type="button"
-                        className="border-none bg-transparent cursor-pointer p-1 text-zinc-600"
-                        aria-label="Detalhes"
+                      <TableExpandButton
+                        expanded={open}
+                        ariaLabel="Detalhes"
                         onClick={() =>
-                          setExpandedListClientId(
-                            open ? null : c.id,
-                          )
+                          setExpandedListClientId(open ? null : c.id)
                         }
-                      >
-                        {open ? "▴" : "▾"}
-                      </button>
+                      />
                     </td>
                     <td
                       className="px-4 py-3.5 border-b border-zinc-100 align-top text-center"
@@ -467,11 +458,12 @@ export function ClientsListSection({
                   {open ? (
                     <tr className="client-detail-row">
                       <td colSpan={LIST_COLSPAN} className="p-0 border-b border-zinc-100 align-top">
-                        <div className="px-4 py-4 bg-zinc-50">
+                        <div className="border-l border-primary-100 px-4 py-4 bg-gray-50/50">
                           <DetailKpiGrid />
                           <div className="mt-4 overflow-x-auto">
                             <ContractsTableMock
                               contextKey={c.id}
+                              billingReference={c.referencia}
                               expandedContractId={
                                 expandedContractByClient[c.id] ?? null
                               }

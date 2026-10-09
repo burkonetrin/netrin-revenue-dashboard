@@ -204,7 +204,7 @@ export const INVOICE_STATUS: Record<
   fatura_fechada: { label: "Fatura fechada", chip: "inv-closed" },
   enviada_faturar: { label: "Enviada para faturar", chip: "inv-sent" },
   faturado_aberto: {
-    label: "Pagamento em aberto",
+    label: "Pagamento aberto",
     chip: "inv-due",
   },
   pago_parcial: { label: "Pago parcial", chip: "inv-partial" },
@@ -253,10 +253,7 @@ export const CLIENT_ROW_ACTIONS_MENU: ClientRowMenuEntry[] = [
   { kind: "divider" },
   { kind: "heading", label: "Nota fiscal" },
   { kind: "action", label: "Ver notas fiscais" },
-  { kind: "action", label: "Vincular pagamento não identificado" },
   { kind: "action", label: "Ver pagamento excedente" },
-  { kind: "action", label: "Baixa contábil" },
-  { kind: "action", label: "Cancelar nota" },
 ];
 
 /** @deprecated Use `CLIENT_ROW_ACTIONS_MENU`. */
@@ -560,13 +557,13 @@ const CLIENT_PROFILES_BY_STATUS: Record<
         tipo: "Franquia",
         nome: "Franquia de BGC",
         vencimento: "12/12/2026",
-        statusPagamento: "Pagamento em aberto",
+        statusPagamento: "Pagamento aberto",
       },
       {
         tipo: "Franquia",
         nome: "Franquia de IDV",
         vencimento: "15/01/2027",
-        statusPagamento: "Pagamento em aberto",
+        statusPagamento: "Pagamento aberto",
       },
       {
         tipo: "Franquia",
@@ -603,7 +600,7 @@ const CLIENT_PROFILES_BY_STATUS: Record<
         tipo: "Franquia",
         nome: "Monitoramento lojas",
         vencimento: "25/09/2026",
-        statusPagamento: "Pagamento em aberto",
+        statusPagamento: "Pagamento aberto",
       },
       {
         tipo: "Contrato",
@@ -722,7 +719,7 @@ const CLIENT_PROFILES_BY_STATUS: Record<
         tipo: "Franquia",
         nome: "ID Validation",
         vencimento: "10/10/2026",
-        statusPagamento: "Pagamento em aberto",
+        statusPagamento: "Pagamento aberto",
       },
       {
         tipo: "Contrato",
@@ -764,7 +761,7 @@ const CLIENT_PROFILES_BY_STATUS: Record<
         tipo: "Franquia",
         nome: "Consultas avulsas",
         vencimento: "15/08/2026",
-        statusPagamento: "Pagamento em aberto",
+        statusPagamento: "Pagamento aberto",
       },
     ],
   },

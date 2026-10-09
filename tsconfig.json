@@ -36,6 +36,12 @@
     "prototypeMenuItems.tsx",
     "design-system"
   ],
-  "exclude": ["vite.config.ts", "dist", "node_modules"]
+  "exclude": [
+    "vite.config.ts",
+    "dist",
+    "node_modules",
+    "features/permissions-rbac/components/**/*",
+    "features/permissions-rbac/index.ts"
+  ]
 }
 

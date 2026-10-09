@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import { BillingDueDateDownloadLinks } from "@/features/billing/components/BillingDueDateDownloadLinks";
 import type { MockNfeNote } from "../../clientesDashboardMockData";
 import { NfeNoteStacked } from "./NfeNoteStacked";
 
@@ -16,14 +16,7 @@ export function NfeNotesListContent({ notes }: NfeNotesListContentProps) {
           {i > 0 ? <hr className="border-default-200 my-2" /> : null}
           <div className="py-1">
             <NfeNoteStacked note={note} />
-            <Button
-              size="sm"
-              radius="sm"
-              variant="bordered"
-              className="mt-2 font-semibold"
-            >
-              Baixar nota
-            </Button>
+            <BillingDueDateDownloadLinks className="mt-2" />
           </div>
         </div>
       ))}

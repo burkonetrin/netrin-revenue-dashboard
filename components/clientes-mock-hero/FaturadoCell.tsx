@@ -53,7 +53,7 @@ function StatusWithExtras({
     statusKey === "pago_duplicidade" && valorPagoExcedente != null;
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
+    <span className="inline-flex flex-nowrap items-center gap-1.5">
       <InvoiceStatusChip statusKey={statusKey} />
       {showPagoParcial ? (
         <MockInfoTooltip
@@ -120,8 +120,8 @@ export function FaturadoWithBadge({
 
   if (layout === "badge-right") {
     return (
-      <span className="inline-flex flex-wrap items-center gap-1.5">
-        <span className="font-semibold">{val}</span>
+      <span className="inline-flex flex-nowrap items-center gap-1.5">
+        <span>{val}</span>
         <StatusWithExtras
           statusKey={statusKey}
           faturadoAmount={amount}
@@ -136,7 +136,7 @@ export function FaturadoWithBadge({
 
   return (
     <div>
-      <span className="font-semibold block">{val}</span>
+      <span className="block">{val}</span>
       <div className="mt-1">
         <StatusWithExtras
           statusKey={statusKey}

@@ -9,6 +9,12 @@ export const BILLING_BASE_PATH = `${PROTOTYPE_BASE_PATH}/faturamento`;
 /** Ferramentas de suporte (consulta de requisições + task ID) — rota legada `/faturamento/tasks`. */
 export const BILLING_TASKS_BASE_PATH = `${BILLING_BASE_PATH}/tasks`;
 
+/** Fontes e fornecedores (espelho do menu `/providers` do Nucleus). */
+export const PROVIDERS_BASE_PATH = `${PROTOTYPE_BASE_PATH}/fontes-fornecedores`;
+
+/** Prévia isolada de modelos Background Check. */
+export const PROVIDERS_BGC_PREVIEW_PATH = `${PROVIDERS_BASE_PATH}/modelos-background-check-preview`;
+
 export const PROFIT_CENTERS: ProfitCenter[] = [
   "Junior",
   "Camila",

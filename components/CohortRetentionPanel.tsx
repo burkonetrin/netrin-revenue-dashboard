@@ -3,6 +3,7 @@
 import { Select, SelectItem, Tab, Tabs } from "@heroui/react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { nucleusSelectProps } from "@/shared/styles/inputClassNames";
+import { nucleusPageTabsClassNames } from "@/shared/styles/nucleusTabsClassNames";
 import {
   nucleusNativeTableClassName,
   nucleusTableHeadCellCenterClass,
@@ -149,8 +150,6 @@ export function DashboardViewTabs({
   return (
     <Tabs
       aria-label="Visões do painel de clientes"
-      color="primary"
-      variant="underlined"
       selectedKey={selectedKey}
       onSelectionChange={(key) => {
         const k = String(key);
@@ -158,12 +157,7 @@ export function DashboardViewTabs({
           onSelectedKeyChange?.(k);
         }
       }}
-      classNames={{
-        tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-        cursor: "w-full bg-primary",
-        tab: "max-w-fit px-0 h-12",
-        tabContent: "group-data-[selected=true]:text-primary font-medium",
-      }}
+      classNames={nucleusPageTabsClassNames}
     >
       <Tab key="dashboard" title="Dashboard">
         {dashboard}
