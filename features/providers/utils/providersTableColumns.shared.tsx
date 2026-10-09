@@ -96,6 +96,22 @@ export const providerDrawerSecondaryButtonClass = "h-10 border border-gray-300 p
 export const providerDrawerPrimaryButtonClass =
   "h-10 px-6 font-semibold text-white shadow-md";
 
+/** Drawer de formulário com rodapé fixo na base (ferramentas de suporte / filtros). */
+export const providerFormDrawerClassNames = {
+  base: "flex flex-col",
+  content: "flex h-full flex-col",
+  body: "flex-1! mb-0 min-h-0 overflow-y-auto",
+  footer: "border-t-0 pb-0!",
+} as const;
+
+/** Rodapé em linha com botões de largura igual (filtros de suporte). */
+export const providerDrawerFooterStretchClass = "flex w-full gap-2.5";
+
+export const providerDrawerSecondaryStretchButtonClass =
+  "h-10 flex-1 border border-gray-300";
+
+export const providerDrawerPrimaryStretchButtonClass = "h-10 flex-1";
+
 /** Totalizador compacto (mesmo visual do painel comercial / faturamento, menor). */
 export const providerCompactTotalizerCardClass = "rounded-sm bg-sky-50 px-3 py-2.5";
 export const providerCompactTotalizerLabelClass = "text-xs text-gray-500";

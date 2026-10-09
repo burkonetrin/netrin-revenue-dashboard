@@ -41,7 +41,10 @@ export function DynamicDrawer({
         closeButton: `text-2xl ${classNames?.closeButton || ""}`,
       }}
     >
-      <DrawerContent data-testid={dataTestId}>
+      <DrawerContent
+        data-testid={dataTestId}
+        className={classNames?.content}
+      >
         <DrawerHeader className={`text-[30px] ${classNames?.header || ""}`}>
           <div className="flex flex-col gap-1">
             <span>{title}</span>

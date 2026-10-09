@@ -26,9 +26,10 @@ import {
   buildProviderDescriptionColumn,
   buildProviderNameColumn,
   buildProviderStatusColumn,
-  providerDrawerFooterClass,
-  providerDrawerPrimaryButtonClass,
-  providerDrawerSecondaryButtonClass,
+  providerDrawerFooterStretchClass,
+  providerDrawerPrimaryStretchButtonClass,
+  providerDrawerSecondaryStretchButtonClass,
+  providerFormDrawerClassNames,
   providerTableClassNames,
 } from "@/features/providers/utils/providersTableColumns.shared";
 import { toSourceGroupFormSourceFromDataSource } from "@/features/providers/utils/sourceGroupFormSource.utils";
@@ -632,13 +633,10 @@ export function BackgroundCheckTemplatesManagementTab() {
           if (!open) resetModelDrawer();
           else setIsModelDrawerOpen(true);
         }}
-        classNames={{
-          body: "flex-1! mb-0",
-          footer: "border-t-0",
-        }}
+        classNames={providerFormDrawerClassNames}
         component={
-          <div className="flex min-h-[520px] flex-col font-sans">
-            <div className="flex-1 space-y-5 overflow-y-auto px-1 pr-4">
+          <div className="flex flex-col gap-6 font-sans">
+            <div className="space-y-5 px-1 pr-4">
               {modelDrawerStep === 1 ? (
                 <>
                   <div className="mb-8 flex flex-col gap-1">
@@ -712,11 +710,11 @@ export function BackgroundCheckTemplatesManagementTab() {
           </div>
         }
         footer={
-          <div className={`${providerDrawerFooterClass} font-sans`}>
+          <div className={`${providerDrawerFooterStretchClass} font-sans`}>
             {modelDrawerStep === 2 && (
               <Button
                 variant="light"
-                className={providerDrawerSecondaryButtonClass}
+                className={providerDrawerSecondaryStretchButtonClass}
                 onPress={() => setModelDrawerStep(1)}
                 isDisabled={
                   createTemplate.isPending ||
@@ -730,7 +728,7 @@ export function BackgroundCheckTemplatesManagementTab() {
             {modelDrawerStep === 1 && (
               <Button
                 variant="light"
-                className={providerDrawerSecondaryButtonClass}
+                className={providerDrawerSecondaryStretchButtonClass}
                 onPress={resetModelDrawer}
                 isDisabled={
                   createTemplate.isPending ||
@@ -743,7 +741,7 @@ export function BackgroundCheckTemplatesManagementTab() {
             )}
             <Button
               color="primary"
-              className={providerDrawerPrimaryButtonClass}
+              className={providerDrawerPrimaryStretchButtonClass}
               isLoading={
                 createTemplate.isPending ||
                 updateTemplate.isPending ||

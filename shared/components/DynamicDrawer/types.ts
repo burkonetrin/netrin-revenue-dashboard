@@ -27,6 +27,7 @@ export interface DynamicDrawerProps {
     wrapper?: string;
     base?: string;
     backdrop?: string;
+    content?: string;
     header?: string;
     body?: string;
     footer?: string;

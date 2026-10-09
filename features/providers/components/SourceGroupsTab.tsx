@@ -38,9 +38,10 @@ import { diffIds } from "../utils/bundleFormDiff.utils";
 import {
   buildProviderNameColumn,
   buildProviderStatusColumn,
-  providerDrawerFooterClass,
-  providerDrawerPrimaryButtonClass,
-  providerDrawerSecondaryButtonClass,
+  providerDrawerFooterStretchClass,
+  providerDrawerPrimaryStretchButtonClass,
+  providerDrawerSecondaryStretchButtonClass,
+  providerFormDrawerClassNames,
   providerTableClassNames,
 } from "../utils/providersTableColumns.shared";
 import { BundleLinkedClientsSidebar } from "./BundleLinkedClientsSidebar";
@@ -678,10 +679,7 @@ export function SourceGroupsTab() {
         onOpenChange={(open) => {
           if (!open) handleCloseDrawer();
         }}
-        classNames={{
-          body: "flex-1! mb-0",
-          footer: "border-t-0",
-        }}
+        classNames={providerFormDrawerClassNames}
         component={
           drawerMode === "edit" && isBundleLoading ? (
             <div className="flex justify-center py-16">
@@ -703,13 +701,13 @@ export function SourceGroupsTab() {
           )
         }
         footer={
-          <div className={`${providerDrawerFooterClass} font-sans`}>
+          <div className={`${providerDrawerFooterStretchClass} font-sans`}>
             {drawerStep === 2 && (
               <Button
                 variant="light"
                 onPress={() => setDrawerStep(1)}
                 isDisabled={isSaving}
-                className={providerDrawerSecondaryButtonClass}
+                className={providerDrawerSecondaryStretchButtonClass}
               >
                 Voltar
               </Button>
@@ -719,7 +717,7 @@ export function SourceGroupsTab() {
                 variant="light"
                 onPress={handleCloseDrawer}
                 isDisabled={isSaving}
-                className={providerDrawerSecondaryButtonClass}
+                className={providerDrawerSecondaryStretchButtonClass}
               >
                 Cancelar
               </Button>
@@ -730,7 +728,7 @@ export function SourceGroupsTab() {
                 onPress={() => handleSave(false)}
                 isLoading={isSaving}
                 isDisabled={!isFormReady || isSaving}
-                className={providerDrawerSecondaryButtonClass}
+                className={providerDrawerSecondaryStretchButtonClass}
               >
                 Salvar e sair
               </Button>
@@ -740,7 +738,7 @@ export function SourceGroupsTab() {
               onPress={drawerStep === 1 ? handleProceed : () => handleSave(true)}
               isLoading={isSaving}
               isDisabled={!isFormReady || isSaving}
-              className={providerDrawerPrimaryButtonClass}
+              className={providerDrawerPrimaryStretchButtonClass}
             >
               {drawerStep === 1 ? "Prosseguir" : "Salvar grupo"}
             </Button>
