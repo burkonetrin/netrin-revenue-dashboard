@@ -272,7 +272,7 @@ export function ClientDetailView({ clientId }: ClientDetailViewProps) {
 
           <Tab key="contatos" title="Contatos do cliente">
 
-            <ClientDetailContactsPanel />
+            <ClientDetailContactsPanel clientId={client.id} />
 
           </Tab>
 

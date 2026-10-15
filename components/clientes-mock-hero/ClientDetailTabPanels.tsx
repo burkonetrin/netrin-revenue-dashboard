@@ -35,9 +35,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ClientContactsTab } from "@/features/clients/components/ClientContactsTab";
 import {
   CONTRACTS_MOCK,
-  MOCK_CLIENT_CONTACTS,
   MOCK_CLIENT_INVOICES,
   MOCK_CLIENT_USERS,
   type MockClient,
@@ -56,17 +56,6 @@ const BILLING_TH = "bg-default-100 text-gray-500 font-semibold text-xs h-11";
 function splitVigencia(vigencia: string): { start: string; end: string } {
   const parts = vigencia.split(" - ").map((p) => p.trim());
   return { start: parts[0] ?? "—", end: parts[1] ?? "—" };
-}
-
-function maskBrazilianPhone(phone: string): string {
-  const d = phone.replace(/\D/g, "");
-  if (d.length === 11) {
-    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  }
-  if (d.length === 10) {
-    return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  }
-  return phone;
 }
 
 function formatCepMask(cep: string): string {
@@ -656,76 +645,8 @@ export function ClientDetailUsersPanel({
   );
 }
 
-export function ClientDetailContactsPanel() {
-  const [page, setPage] = useState(1);
-  const columns: ColumnConfig<(typeof MOCK_CLIENT_CONTACTS)[0]>[] = [
-    { id: "name", label: "Nome", sortable: true },
-    { id: "email", label: "E-mail", sortable: true },
-    {
-      id: "phone",
-      label: "Telefone",
-      sortable: true,
-      render: (value) =>
-        value ? maskBrazilianPhone(String(value)) : "—",
-    },
-    { id: "contactType", label: "Tipo de contato", sortable: true },
-    {
-      id: "actions",
-      label: "Ações",
-      width: 90,
-      align: "center",
-      render: () => (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            type="button"
-            className="text-primary hover:text-primary-600 cursor-pointer"
-            aria-label="Editar contato"
-          >
-            <Pencil size={20} />
-          </button>
-          <button
-            type="button"
-            className="text-red-500 hover:text-red-700 cursor-pointer"
-            aria-label="Excluir contato"
-          >
-            <Trash2 size={20} />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  return (
-    <div className="mt-4">
-      <div className="mb-5">
-        <Button
-          startContent={<CirclePlus size={20} className="shrink-0" />}
-          radius="sm"
-          color="primary"
-          className="px-8"
-        >
-          Novo Contato
-        </Button>
-      </div>
-      <DynamicTable
-        columns={columns}
-        data={MOCK_CLIENT_CONTACTS}
-        keyExtractor={(row) => row.id}
-        emptyMessage="Nenhum contato encontrado"
-        classNames={{ th: TABLE_TH, td: TABLE_TD }}
-      />
-      <ClientPaginatedTableFooter
-        visibleCount={MOCK_CLIENT_CONTACTS.length}
-        pagination={{
-          totalRecords: MOCK_CLIENT_CONTACTS.length,
-          totalPages: 1,
-        }}
-        entityLabel="contatos"
-        page={page}
-        onPageChange={setPage}
-      />
-    </div>
-  );
+export function ClientDetailContactsPanel({ clientId }: { clientId: string }) {
+  return <ClientContactsTab clientId={clientId} />;
 }
 
 export function ClientDetailInvoicesPanel() {

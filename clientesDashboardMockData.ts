@@ -1020,6 +1020,52 @@ export const BAR_PROD: BarRow[] = [
   { l: "API", v: 410e3, p: 430e3 },
 ];
 
+/** Representante comercial → centros de lucro (filtro drill-down do drawer de clientes). */
+export interface ProfitCenterFilterRep {
+  id: string;
+  label: string;
+  profitCenters: { id: string; label: string }[];
+}
+
+export const PROFIT_CENTER_FILTER_BY_SALES_REP: ProfitCenterFilterRep[] = [
+  {
+    id: "cl_Juliana",
+    label: "Juliana",
+    profitCenters: [
+      { id: "cl_pc_juliana_acv", label: "ACV - Juliana" },
+      { id: "cl_pc_juliana_novos", label: "Novos negócios - Juliana" },
+      { id: "cl_pc_juliana_renov", label: "Renovação - Juliana" },
+    ],
+  },
+  {
+    id: "cl_Matheus",
+    label: "Matheus",
+    profitCenters: [
+      { id: "cl_pc_matheus_acv", label: "ACV - Matheus" },
+      { id: "cl_pc_matheus_novos", label: "Novos negócios - Matheus" },
+      { id: "cl_pc_matheus_renov", label: "Renovação - Matheus" },
+    ],
+  },
+  {
+    id: "cl_Junior Duraes",
+    label: "Junior Duraes",
+    profitCenters: [
+      { id: "cl_pc_junior_acv", label: "ACV - Junior Duraes" },
+      { id: "cl_pc_junior_novos", label: "Novos negócios - Junior Duraes" },
+      { id: "cl_pc_junior_renov", label: "Renovação - Junior Duraes" },
+    ],
+  },
+  {
+    id: "cl_Maria Luiza",
+    label: "Maria Luiza",
+    profitCenters: [
+      { id: "cl_pc_maria_acv", label: "ACV - Maria Luiza" },
+      { id: "cl_pc_maria_novos", label: "Novos negócios - Maria Luiza" },
+      { id: "cl_pc_maria_renov", label: "Renovação - Maria Luiza" },
+    ],
+  },
+];
+
 export const BAR_CTR: BarRow[] = [
   { l: "Juliana", v: 1.12e6, p: 1.05e6 },
   { l: "Matheus", v: 890e3, p: 860e3 },

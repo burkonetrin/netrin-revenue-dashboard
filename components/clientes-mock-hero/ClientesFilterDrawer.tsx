@@ -8,6 +8,7 @@ import {
   INVOICE_STATUS_FILTER_OPTIONS,
   MOCK_COMPETENCE_MONTHS,
 } from "../../clientesDashboardMockData";
+import { ProfitCenterFilterSection } from "./ProfitCenterFilterSection";
 
 export interface FilterDrawerStatus {
   ativo: boolean;
@@ -65,6 +66,9 @@ export function ClientesFilterDrawer({
   onApply,
 }: ClientesFilterDrawerProps) {
   const [checkboxIds, setCheckboxIds] = useState<Record<string, boolean>>({});
+  const [expandedProfitCenterReps, setExpandedProfitCenterReps] = useState<
+    Record<string, boolean>
+  >({});
   const competenceItems = useMemo(() => MOCK_COMPETENCE_MONTHS, []);
   const competenceOptions = useMemo(
     () => competenceItems.map((m) => ({ key: m.key, label: m.label })),
@@ -73,11 +77,16 @@ export function ClientesFilterDrawer({
 
   const clearAll = () => {
     setCheckboxIds({});
+    setExpandedProfitCenterReps({});
     onStatusFilterChange({ ativo: false, inativo: false });
   };
 
   const toggleCheck = (id: string, checked: boolean) => {
     setCheckboxIds((prev) => ({ ...prev, [id]: checked }));
+  };
+
+  const toggleChecks = (updates: Record<string, boolean>) => {
+    setCheckboxIds((prev) => ({ ...prev, ...updates }));
   };
 
   const handleClose = () => onOpenChange(false);
@@ -129,13 +138,12 @@ export function ClientesFilterDrawer({
           </FieldCheckbox>
         </div>
       </section>
-      <FilterCheckGroup
-        title="Centros de lucro"
+      <ProfitCenterFilterSection
         checked={checkboxIds}
-        onToggle={toggleCheck}
-        items={["Juliana", "Matheus", "Junior Duraes", "Maria Luiza"].map(
-          (name) => ({ id: `cl_${name}`, label: name }),
-        )}
+        expandedReps={expandedProfitCenterReps}
+        onToggleCheck={toggleCheck}
+        onToggleChecks={toggleChecks}
+        onExpandedRepsChange={setExpandedProfitCenterReps}
       />
       <FilterCheckGroup
         title="Produtos"

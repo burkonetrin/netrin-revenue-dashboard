@@ -10,7 +10,7 @@ import {
   formatPixKeyTypeLabel,
 } from "../utils/billing-bank-transaction.utils";
 
-const MICRO_DEPOSIT_VALIDATED_TOOLTIP = "Microdepósito validado com sucesso.";
+const MICRO_DEPOSIT_ERROR_FALLBACK = "Erro na validação do microdepósito.";
 
 const SUBLINE_CLASS = "text-xs text-gray-500";
 
@@ -55,15 +55,18 @@ export function BillingBankCell({ row }: { row: BillingBankTransactionRow }) {
 export function BillingBankMicroDepositCell({ row }: { row: BillingBankTransactionRow }) {
   const status = row.microDepositStatus ?? "Validado";
 
-  if (status === "Invalidado") {
+  if (status === "Validado") {
     return <span className="whitespace-nowrap text-gray-900">{status}</span>;
   }
+
+  const errorMessage =
+    row.microDepositErrorMessage?.trim() || MICRO_DEPOSIT_ERROR_FALLBACK;
 
   return (
     <SupportToolsLabelInfoTooltip
       label={status}
-      tooltipContent={MICRO_DEPOSIT_VALIDATED_TOOLTIP}
-      ariaLabel={`Detalhes do microdepósito: ${status}`}
+      tooltipContent={errorMessage}
+      ariaLabel={`Erro do microdepósito: ${errorMessage}`}
     />
   );
 }
