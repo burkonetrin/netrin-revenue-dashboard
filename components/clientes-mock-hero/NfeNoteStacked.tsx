@@ -2,7 +2,10 @@
 
 import { Chip } from "@heroui/react";
 import type { MockNfeNote } from "../../clientesDashboardMockData";
-import { nfeNoteTitleLabel } from "../../clientesDashboardMockFormat";
+import {
+  nfeNoteDescription,
+  nfeNoteTitleLabel,
+} from "../../clientesDashboardMockFormat";
 
 function statusChipClass(status: string): string {
   const s = status.toLowerCase();
@@ -30,9 +33,11 @@ interface NfeNoteStackedProps {
 }
 
 export function NfeNoteStacked({ note, className = "" }: NfeNoteStackedProps) {
+  const referencia = note.referencia?.trim();
+
   return (
-    <span className={`flex flex-col gap-1 w-full min-w-0 ${className}`.trim()}>
-      <span className="flex flex-wrap items-center gap-2">
+    <span className={`flex flex-col gap-1.5 w-full min-w-0 ${className}`.trim()}>
+      <span className="flex flex-wrap items-center gap-3">
         <span className="text-sm font-medium text-zinc-900">
           {nfeNoteTitleLabel(note)}
         </span>
@@ -47,9 +52,20 @@ export function NfeNoteStacked({ note, className = "" }: NfeNoteStackedProps) {
           {note.statusPagamento}
         </Chip>
       </span>
-      <span className="text-zinc-500 text-[12px]">
-        Vencimento: {note.vencimento}
+      <span className="flex flex-wrap items-center gap-x-5 text-[12px] text-zinc-500">
+        {referencia ? (
+          <span>
+            <span className="font-semibold text-zinc-700">Ref.</span> {referencia}
+          </span>
+        ) : null}
+        <span>
+          <span className="font-semibold text-zinc-700">Vencimento:</span>{" "}
+          {note.vencimento}
+        </span>
       </span>
+      <p className="text-[12px] leading-snug text-zinc-600 line-clamp-2">
+        {nfeNoteDescription(note)}
+      </p>
     </span>
   );
 }

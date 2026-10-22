@@ -9,7 +9,7 @@ import {
 } from "@/shared/styles/tableClassNames";
 import { TableExpandButton } from "./TableExpandButton";
 import { Button } from "@heroui/react";
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useMemo, useState, type ReactNode } from "react";
 import {
   hierarchySortIcon,
   sortHierarchyRows,
@@ -18,9 +18,12 @@ import {
 } from "./hierarchyTableSort.utils";
 import {
   CONTRACTS_MOCK,
+  productNumbersRowForFranchise,
   type MockContract,
   type MockFranchise,
 } from "../../clientesDashboardMockData";
+import { parseCompetenceMonthYear } from "../../clientesDashboardMockFormat";
+import { ProductNumbersDailyChart } from "./ProductNumbersDailyChart";
 import {
   fmt,
   fmtDetail,
@@ -33,14 +36,13 @@ import { FranchisePopover } from "./FranchisePopover";
 import { MockInfoTooltip } from "./MockInfoTooltip";
 import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 
-const CONTRACT_COLSPAN = 9;
+const CONTRACT_COLSPAN = 8;
 
 type ContractSortKey =
   | "minimo"
   | "media"
   | "total12"
   | "mrr"
-  | "cons"
   | "faturado";
 
 type FranchiseSortKey = "valor" | "consVal" | "excVal" | "faturado";
@@ -55,6 +57,8 @@ const FRANCHISE_SORT_INITIAL: HierarchySortState<FranchiseSortKey> = {
   dir: "desc",
 };
 
+const FRANCHISE_TABLE_COLSPAN = 8;
+
 function contractSortValue(ct: MockContract, key: ContractSortKey): number {
   switch (key) {
     case "minimo":
@@ -65,8 +69,6 @@ function contractSortValue(ct: MockContract, key: ContractSortKey): number {
       return ct.total12;
     case "mrr":
       return ct.mrr;
-    case "cons":
-      return ct.cons;
     case "faturado":
       return ct.faturado;
     default:
@@ -134,13 +136,30 @@ function FranchiseNestedTable({
   franchises,
   listMode,
   billingReference,
+  competenceLabel,
 }: {
   franchises: MockFranchise[];
   listMode: boolean;
   billingReference?: string;
+  competenceLabel: string;
 }) {
   const [franchiseSort, setFranchiseSort] =
     useState<HierarchySortState<FranchiseSortKey>>(FRANCHISE_SORT_INITIAL);
+  const [dailyOpenByFranchiseId, setDailyOpenByFranchiseId] = useState<
+    Record<string, boolean>
+  >({});
+
+  const { year, month } = useMemo(
+    () => parseCompetenceMonthYear(competenceLabel),
+    [competenceLabel],
+  );
+
+  const toggleFranchiseDaily = useCallback((franchiseId: string) => {
+    setDailyOpenByFranchiseId((prev) => ({
+      ...prev,
+      [franchiseId]: !prev[franchiseId],
+    }));
+  }, []);
 
   const referenceSubline =
     billingReference?.trim()
@@ -203,14 +222,20 @@ function FranchiseNestedTable({
               onToggle={toggleFranchiseSort}
               className={clientHierarchyFranchiseTableHeadCellClass}
             />
-            <th className={`${clientHierarchyFranchiseTableHeadCellClass} w-10`} />
+            <th
+              className={`${clientHierarchyFranchiseTableHeadCellClass} w-[4.5rem]`}
+            />
           </tr>
         </thead>
         <tbody>
           {sortedFranchises.map((f) => {
             const billingTooltip = franchiseBillingModelTooltipContent(f);
+            const productNumbersRow = productNumbersRowForFranchise(f);
+            const isDailyOpen = Boolean(dailyOpenByFranchiseId[f.id]);
+
             return (
-            <tr key={f.id} className="bg-white">
+            <Fragment key={f.id}>
+            <tr className="bg-white">
               <td className={franchiseCell}>
                 <a href="#" className="block text-primary no-underline">
                   {f.name}
@@ -295,9 +320,35 @@ function FranchiseNestedTable({
                 </span>
               </td>
               <td className={franchiseCellCenter}>
-                <FranchisePopover franchise={f} noRenew={listMode} />
+                <div className="flex items-center justify-center gap-5">
+                  {productNumbersRow ? (
+                    <TableExpandButton
+                      expanded={isDailyOpen}
+                      ariaLabel={`${isDailyOpen ? "Ocultar" : "Exibir"} gráfico diário de ${f.name}`}
+                      onClick={() => toggleFranchiseDaily(f.id)}
+                    />
+                  ) : null}
+                  <FranchisePopover franchise={f} noRenew={listMode} />
+                </div>
               </td>
             </tr>
+            {isDailyOpen && productNumbersRow ? (
+              <tr className="bg-white">
+                <td
+                  colSpan={FRANCHISE_TABLE_COLSPAN}
+                  className="border-b border-zinc-100 bg-white px-4 pb-4 pt-1"
+                >
+                  <div className="mt-4">
+                    <ProductNumbersDailyChart
+                      row={productNumbersRow}
+                      year={year}
+                      month={month}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ) : null}
+            </Fragment>
             );
           })}
         </tbody>
@@ -309,6 +360,7 @@ function FranchiseNestedTable({
 interface ContractsTableMockProps {
   contextKey: string;
   billingReference?: string;
+  competenceLabel: string;
   expandedContractId: string | null;
   onToggleContract: (contractId: string) => void;
   showInactiveItems: boolean;
@@ -318,6 +370,7 @@ interface ContractsTableMockProps {
 
 export function ContractsTableMock({
   billingReference,
+  competenceLabel,
   expandedContractId,
   onToggleContract,
   showInactiveItems,
@@ -378,13 +431,6 @@ export function ContractsTableMock({
             className={headCell}
           />
           <SortableHeadCell
-            label="Consumo médio"
-            sortKey="cons"
-            sort={contractSort}
-            onToggle={toggleContractSort}
-            className={headCell}
-          />
-          <SortableHeadCell
             label="Faturado"
             sortKey="faturado"
             sort={contractSort}
@@ -426,7 +472,6 @@ export function ContractsTableMock({
                 <td className={contractCell}>{fmt(ct.media)}</td>
                 <td className={contractCell}>{fmt(ct.total12)}</td>
                 <td className={contractCell}>{fmt(ct.mrr)}</td>
-                <td className={contractCell}>{ct.cons}%</td>
                 <td className={contractCell}>
                   <FaturadoWithBadge
                     amount={ct.faturado}
@@ -453,6 +498,7 @@ export function ContractsTableMock({
                       franchises={franchises}
                       listMode={listMode}
                       billingReference={billingReference}
+                      competenceLabel={competenceLabel}
                     />
                   </td>
                 </tr>

@@ -10,16 +10,16 @@ interface NfeNotesListContentProps {
 
 export function NfeNotesListContent({ notes }: NfeNotesListContentProps) {
   return (
-    <>
+    <div className="flex flex-col gap-3">
       {notes.map((note, i) => (
-        <div key={i}>
-          {i > 0 ? <hr className="border-default-200 my-2" /> : null}
-          <div className="py-1">
-            <NfeNoteStacked note={note} />
-            <BillingDueDateDownloadLinks className="mt-2" />
-          </div>
+        <div
+          key={i}
+          className="rounded-lg bg-zinc-50 px-4 py-3"
+        >
+          <NfeNoteStacked note={note} />
+          <BillingDueDateDownloadLinks className="mt-2.5" />
         </div>
       ))}
-    </>
+    </div>
   );
 }

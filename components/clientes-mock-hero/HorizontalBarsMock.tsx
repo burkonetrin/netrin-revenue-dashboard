@@ -15,6 +15,75 @@ interface HorizontalBarsMockProps {
   color: string;
   money?: boolean;
   health?: boolean;
+  /** Valor compacto + Share + variação mensal (produto / centro de lucro). */
+  showRevenueBreakdown?: boolean;
+}
+
+function MetricsDivider() {
+  return <span className="h-3 w-px shrink-0 bg-default-200" aria-hidden />;
+}
+
+function RevenueBarRows({
+  rows,
+  color,
+  tooltip,
+  setTooltip,
+}: {
+  rows: BarRow[];
+  color: string;
+  tooltip: ChartTooltipState | null;
+  setTooltip: (value: ChartTooltipState | null) => void;
+}) {
+  const max = Math.max(...rows.map((r) => r.v), 1);
+  const total = rows.reduce((sum, row) => sum + row.v, 0);
+
+  return (
+    <div className="flex flex-col gap-2 py-1" onMouseLeave={() => setTooltip(null)}>
+      {rows.map((row) => {
+        const share = total > 0 ? Math.round((row.v / total) * 100) : 0;
+        const widthPct = (row.v / max) * 100;
+
+        return (
+          <div key={row.l} className="grid grid-cols-[minmax(0,7.5rem)_1fr_auto] items-center gap-2">
+            <span className="truncate text-[10px] text-zinc-600">{row.l}</span>
+            <div className="min-w-0">
+              <div
+                className="h-4 cursor-default rounded-[3px]"
+                style={{ width: `${widthPct}%`, minWidth: row.v > 0 ? 4 : 0, backgroundColor: color }}
+                onMouseMove={(e) => {
+                  setTooltip({
+                    x: e.clientX,
+                    y: e.clientY,
+                    content: (
+                      <>
+                        <span className={TOOLTIP_TITLE_CLASS}>{row.l}</span>
+                        <div className="mt-1.5 flex items-baseline gap-1.5 font-semibold">
+                          {fmt(row.v)}
+                          <CmpRight cur={row.v} prev={row.p} />
+                        </div>
+                      </>
+                    ),
+                  });
+                }}
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 text-[10px] text-zinc-500">
+              <span className="whitespace-nowrap tabular-nums">{fc(row.v)}</span>
+              <MetricsDivider />
+              <span className="whitespace-nowrap tabular-nums">{share}%</span>
+              <MetricsDivider />
+              <CmpRight
+                cur={row.v}
+                prev={row.p}
+                className="text-[10px] font-normal"
+              />
+            </div>
+          </div>
+        );
+      })}
+      <ChartTooltipPortal tooltip={tooltip} />
+    </div>
+  );
 }
 
 export function HorizontalBarsMock({
@@ -22,8 +91,21 @@ export function HorizontalBarsMock({
   color,
   money = true,
   health = false,
+  showRevenueBreakdown = false,
 }: HorizontalBarsMockProps) {
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
+
+  if (showRevenueBreakdown && money && !health) {
+    return (
+      <RevenueBarRows
+        rows={rows as BarRow[]}
+        color={color}
+        tooltip={tooltip}
+        setTooltip={setTooltip}
+      />
+    );
+  }
+
   const max = Math.max(...rows.map((r) => r.v), 1);
   const rowH = health ? 44 : 36;
   const labelW = health ? 100 : 120;

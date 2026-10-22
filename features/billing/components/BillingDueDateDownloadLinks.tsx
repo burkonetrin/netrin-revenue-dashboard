@@ -20,7 +20,7 @@ export function shouldShowBillingDownloadLinks(status: BillingInvoiceStatusKey):
 export function BillingDueDateDownloadLinks({ className = "" }: BillingDueDateDownloadLinksProps) {
   return (
     <div
-      className={`flex flex-wrap items-center gap-3 ${className}`.trim()}
+      className={`flex flex-wrap items-center gap-4 ${className}`.trim()}
       onClick={(event) => event.stopPropagation()}
     >
       <button type="button" className={linkClassName}>

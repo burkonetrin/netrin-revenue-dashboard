@@ -20,6 +20,13 @@ export const fmt = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
+/** LTV mock para listagem de clientes (valores na casa do milhão). */
+export function mockClientLtv(client: MockClient): number {
+  const profileSeed = client.id.length * 17 + client.fat;
+  const millions = 0.95 + (profileSeed % 11) * 0.22 + client.fat / 500_000;
+  return Math.round(millions * 1_000_000);
+}
+
 export const fmtN = (n: number) => n.toLocaleString("pt-BR");
 
 export const fmtMil = (n: number) =>
@@ -42,6 +49,33 @@ export const fmtDetail = (n: number) =>
 export const pctDelta = (c: number, p: number) =>
   p === 0 ? (c ? 100 : 0) : ((c - p) / p) * 100;
 
+const PT_COMPETENCE_MONTH: Record<string, number> = {
+  jan: 1,
+  fev: 2,
+  mar: 3,
+  abr: 4,
+  mai: 5,
+  jun: 6,
+  jul: 7,
+  ago: 8,
+  set: 9,
+  out: 10,
+  nov: 11,
+  dez: 12,
+};
+
+/** Competência exibida no dashboard mock (`set/2025`). */
+export function parseCompetenceMonthYear(label: string): {
+  year: number;
+  month: number;
+} {
+  const [monPart, yearPart] = label.trim().toLowerCase().split("/");
+  const monthKey = (monPart ?? "set").slice(0, 3);
+  const month = PT_COMPETENCE_MONTH[monthKey] ?? 9;
+  const year = Number.parseInt(yearPart ?? "", 10) || new Date().getFullYear();
+  return { year, month };
+}
+
 export function formatMetricVal(key: string, v: number): string {
   if (key === "cl" || key === "ct" || key === "fr") return fmtN(v);
   if (key === "proj") return fmt(v);
@@ -63,12 +97,25 @@ export function nfeCountLabel(n: number): string {
   return n === 1 ? "1 nota" : `${n} notas`;
 }
 
+function withClientReferencia(
+  notes: MockNfeNote[],
+  referencia: string,
+): MockNfeNote[] {
+  return notes.map((note) => ({
+    ...note,
+    referencia: note.referencia ?? referencia,
+  }));
+}
+
 export function clientInvoiceNotes(client: MockClient): MockNfeNote[] {
-  if (client.nfe.length > 0) return client.nfe;
+  if (client.nfe.length > 0) {
+    return withClientReferencia(client.nfe, client.referencia);
+  }
   const status = invoiceStatusLabel(client.faturaStatus);
   const fromProdutos = client.produtos.slice(0, 3).map((produto, i) => ({
     tipo: "Franquia" as const,
     nome: produto,
+    referencia: client.referencia,
     vencimento: client.vencimentoNF,
     statusPagamento: i === 0 ? status : "Pagamento aberto",
   }));
@@ -77,6 +124,7 @@ export function clientInvoiceNotes(client: MockClient): MockNfeNote[] {
     {
       tipo: "Franquia",
       nome: "Franquia principal",
+      referencia: client.referencia,
       vencimento: client.vencimentoNF,
       statusPagamento: status,
     },
@@ -118,18 +166,21 @@ export function clientSidebarNotes(client: MockClient): MockNfeNote[] {
     {
       tipo: "Franquia",
       nome: "Pacote monitoramento",
+      referencia: client.referencia,
       vencimento: client.vencimentoNF,
       statusPagamento: "Pagamento aberto",
     },
     {
       tipo: "Franquia",
       nome: "Consultas API",
+      referencia: client.referencia,
       vencimento: client.vencimentoNF,
       statusPagamento: invoiceStatusLabel(client.faturaStatus),
     },
     {
       tipo: "Contrato",
       nome: "Contrato complementar",
+      referencia: client.referencia,
       vencimento: client.vencimentoNF,
       statusPagamento: "Fatura aberta",
     },
@@ -145,8 +196,24 @@ export function clientSidebarNotes(client: MockClient): MockNfeNote[] {
 }
 
 /** Rótulo acessível para radios e leitores de tela. */
+export function nfeNoteConsumptionReferenceLabel(note: MockNfeNote): string | null {
+  const referencia = note.referencia?.trim();
+  if (!referencia) return null;
+  return `Ref. ${referencia}`;
+}
+
+export function nfeNoteDescription(note: MockNfeNote): string {
+  const custom = note.descricao?.trim();
+  if (custom) return custom;
+  return `Faturamento do período vinculado à ${note.nome}. Emissão na modalidade ${note.tipo}, conforme contrato vigente do cliente.`;
+}
+
 export function nfeNoteAriaLabel(note: MockNfeNote): string {
-  return `${nfeNoteTitleLabel(note)}, Vencimento: ${note.vencimento}, ${note.statusPagamento}`;
+  const reference = nfeNoteConsumptionReferenceLabel(note);
+  const parts = [nfeNoteTitleLabel(note)];
+  if (reference) parts.push(reference);
+  parts.push(`Vencimento: ${note.vencimento}`, nfeNoteDescription(note), note.statusPagamento);
+  return parts.join(", ");
 }
 
 /** @deprecated Use `NfeNoteStacked` ou `nfeNoteAriaLabel`. */

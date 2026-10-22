@@ -49,9 +49,13 @@ export function DynamicDrawer({
           <div className="flex flex-col gap-1">
             <span>{title}</span>
             {subtitle ? (
-              <span className="text-sm font-normal text-zinc-500 leading-snug">
-                {subtitle}
-              </span>
+              typeof subtitle === "string" ? (
+                <span className="text-sm font-normal text-zinc-500 leading-snug">
+                  {subtitle}
+                </span>
+              ) : (
+                subtitle
+              )
             ) : null}
           </div>
         </DrawerHeader>

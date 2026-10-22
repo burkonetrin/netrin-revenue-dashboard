@@ -17,8 +17,12 @@ export type InvoiceStatusKey =
 export interface MockNfeNote {
   tipo: string;
   nome: string;
+  /** Período de consumo, ex.: `set/2025 - set/2025`. */
+  referencia?: string;
   vencimento: string;
   statusPagamento: string;
+  /** Texto descritivo exibido na sidebar (até duas linhas). */
+  descricao?: string;
 }
 
 export interface MockParcelaAtrasada {
@@ -119,7 +123,8 @@ export interface MockKpi {
   l: string;
   c: number;
   p: number;
-  ico: "trend" | "wallet";
+  /** Meta da competência (ex.: total faturado, MRR). */
+  meta?: number;
 }
 
 export interface MockDiscountBreakdownLine {
@@ -186,6 +191,67 @@ export interface HealthBarRow {
   p: number;
 }
 
+export type ProductNumbersSegmentTone = "green" | "red" | "yellow" | "grey";
+
+export interface ProductNumbersSegment {
+  label: string;
+  value: number;
+  sharePct: number;
+  tone: ProductNumbersSegmentTone;
+  growthPct: number;
+}
+
+export interface ProductNumbersRow {
+  productCode: string;
+  faturamento: number;
+  faturamentoGrowthPct: number;
+  totalLabel: string;
+  total: number;
+  growthPct: number;
+  segments: ProductNumbersSegment[];
+}
+
+export interface ProductNumbersDailyPoint {
+  day: number;
+  values: Record<string, number>;
+}
+
+function productNumbersDailySeed(a: string, b: number): number {
+  const x = Math.sin((a.length * 13 + b) * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/** Série diária mock por segmento do produto (quantidade). */
+export function buildProductNumbersDailySeries(
+  row: ProductNumbersRow,
+  year: number,
+  month: number,
+): ProductNumbersDailyPoint[] {
+  const days = new Date(year, month, 0).getDate();
+  const weights = Array.from({ length: days }, (_, index) => {
+    const day = index + 1;
+    const weekday = new Date(year, month - 1, day).getDay();
+    const weekend = weekday === 0 || weekday === 6 ? 0.65 : 1;
+    const seed = productNumbersDailySeed(row.productCode, day);
+    return weekend * (0.75 + seed * 0.5);
+  });
+  const weightSum = weights.reduce((sum, w) => sum + w, 0) || 1;
+
+  return Array.from({ length: days }, (_, index) => {
+    const day = index + 1;
+    const values: Record<string, number> = {};
+    row.segments.forEach((segment, segmentIndex) => {
+      const shareOfDay = weights[index] / weightSum;
+      const seed = productNumbersDailySeed(segment.label, day * 17 + segmentIndex);
+      values[segment.label] = Math.max(
+        0,
+        Math.round(segment.value * shareOfDay * (0.85 + seed * 0.3)),
+      );
+    });
+    return { day, values };
+  });
+}
+
 export interface CohortRow {
   label: string;
   n: number;
@@ -194,7 +260,7 @@ export interface CohortRow {
 }
 
 export const DETAIL_CONTEXT = "__detail__";
-export const LIST_COLSPAN = 9;
+export const LIST_COLSPAN = 10;
 
 export const INVOICE_STATUS: Record<
   InvoiceStatusKey,
@@ -268,12 +334,17 @@ export const CLIENT_ROW_ACTIONS = [
   ...CLIENT_ROW_ACTIONS_SECONDARY,
 ];
 
-export const INVOICE_STATUS_FILTER_OPTIONS = INVOICE_STATUS_ORDER.map(
-  (key) => ({
-    key,
-    label: INVOICE_STATUS[key].label,
-  }),
-);
+const INVOICE_STATUS_FILTER_EXCLUDED = new Set<InvoiceStatusKey>([
+  "divida_parcelada",
+  "baixa_contabil",
+]);
+
+export const INVOICE_STATUS_FILTER_OPTIONS = INVOICE_STATUS_ORDER.filter(
+  (key) => !INVOICE_STATUS_FILTER_EXCLUDED.has(key),
+).map((key) => ({
+  key,
+  label: INVOICE_STATUS[key].label,
+}));
 
 export const MOCK_COMPETENCE_MONTHS = [
   { key: "2025-01", label: "jan/2025" },
@@ -294,14 +365,14 @@ export const MOCK_COMPETENCE_MONTHS = [
 ];
 
 export const KPIS: MockKpi[] = [
-  { l: "Total faturado", c: 312333, p: 298400, ico: "trend" },
-  { l: "ACV", c: 245800, p: 238200, ico: "trend" },
-  { l: "Spot", c: 66533, p: 60200, ico: "wallet" },
-  { l: "Excedente", c: 442960, p: 410500, ico: "trend" },
-  { l: "MRR", c: 203000, p: 198500, ico: "trend" },
-  { l: "Descontos", c: 189840, p: 195200, ico: "wallet" },
-  { l: "Total últimos 12 meses", c: 3164000, p: 3020000, ico: "wallet" },
-  { l: "Média últimos 3 meses", c: 312333, p: 298400, ico: "trend" },
+  { l: "Total faturado", c: 312333, p: 298400, meta: 2_000_000 },
+  { l: "ACV", c: 245800, p: 238200 },
+  { l: "Spot", c: 66533, p: 60200 },
+  { l: "Excedente", c: 442960, p: 410500 },
+  { l: "MRR", c: 203000, p: 198500, meta: 280_000 },
+  { l: "Descontos", c: 189840, p: 195200 },
+  { l: "Total últimos 12 meses", c: 3164000, p: 3020000 },
+  { l: "Média últimos 3 meses", c: 312333, p: 298400 },
 ];
 
 export const EVO_LABELS = [
@@ -343,9 +414,9 @@ export const EVO: EvoPoint[] = [
     exc: 36e3,
     desc: 12500,
     mrr: 165e3,
-    cl: 120,
-    ct: 182,
-    fr: 135,
+    cl: 119,
+    ct: 181,
+    fr: 134,
   },
   {
     total: 275e3,
@@ -354,9 +425,9 @@ export const EVO: EvoPoint[] = [
     exc: 37e3,
     desc: 13e3,
     mrr: 168e3,
-    cl: 122,
-    ct: 185,
-    fr: 138,
+    cl: 120,
+    ct: 184,
+    fr: 136,
   },
   {
     total: 272e3,
@@ -366,8 +437,8 @@ export const EVO: EvoPoint[] = [
     desc: 13200,
     mrr: 167e3,
     cl: 121,
-    ct: 184,
-    fr: 137,
+    ct: 187,
+    fr: 138,
   },
   {
     total: 278e3,
@@ -376,9 +447,9 @@ export const EVO: EvoPoint[] = [
     exc: 38e3,
     desc: 12800,
     mrr: 170e3,
-    cl: 123,
-    ct: 186,
-    fr: 139,
+    cl: 122,
+    ct: 190,
+    fr: 140,
   },
   {
     total: 285e3,
@@ -387,9 +458,9 @@ export const EVO: EvoPoint[] = [
     exc: 39e3,
     desc: 13500,
     mrr: 172e3,
-    cl: 124,
-    ct: 188,
-    fr: 141,
+    cl: 123,
+    ct: 193,
+    fr: 142,
   },
   {
     total: 290e3,
@@ -398,9 +469,9 @@ export const EVO: EvoPoint[] = [
     exc: 40e3,
     desc: 14e3,
     mrr: 175e3,
-    cl: 125,
-    ct: 190,
-    fr: 142,
+    cl: 124,
+    ct: 196,
+    fr: 144,
   },
   {
     total: 288e3,
@@ -410,8 +481,8 @@ export const EVO: EvoPoint[] = [
     desc: 14200,
     mrr: 174e3,
     cl: 125,
-    ct: 189,
-    fr: 142,
+    ct: 199,
+    fr: 146,
   },
   {
     total: 295e3,
@@ -421,8 +492,8 @@ export const EVO: EvoPoint[] = [
     desc: 14500,
     mrr: 178e3,
     cl: 126,
-    ct: 192,
-    fr: 144,
+    ct: 202,
+    fr: 148,
   },
   {
     total: 302e3,
@@ -432,8 +503,8 @@ export const EVO: EvoPoint[] = [
     desc: 15e3,
     mrr: 181e3,
     cl: 127,
-    ct: 194,
-    fr: 146,
+    ct: 205,
+    fr: 150,
   },
   {
     total: 308e3,
@@ -443,8 +514,8 @@ export const EVO: EvoPoint[] = [
     desc: 15200,
     mrr: 184e3,
     cl: 128,
-    ct: 196,
-    fr: 148,
+    ct: 208,
+    fr: 152,
   },
   {
     total: 312333,
@@ -453,9 +524,9 @@ export const EVO: EvoPoint[] = [
     exc: 442960 / 12,
     desc: 15820,
     mrr: 203e3,
-    cl: 128,
-    ct: 214,
-    fr: 386,
+    cl: 129,
+    ct: 211,
+    fr: 154,
   },
   { projTotal: 318e3, cl: 0, ct: 0, fr: 0 },
   { projTotal: 325e3, cl: 0, ct: 0, fr: 0 },
@@ -463,16 +534,16 @@ export const EVO: EvoPoint[] = [
 ];
 
 export const LEGEND: LegendItem[] = [
-  { id: "total", l: "Total faturado", c: "#652cdd", type: "line" },
-  { id: "acv", l: "ACV", c: "#2563eb", type: "line" },
-  { id: "spot", l: "Spot", c: "#0891b2", type: "line" },
-  { id: "exc", l: "Excedente", c: "#ea580c", type: "line" },
-  { id: "mrr", l: "MRR", c: "#7c3aed", type: "line" },
+  { id: "total", l: "Total faturado", c: "#a78bfa", type: "bar" },
+  { id: "acv", l: "ACV", c: "#60a5fa", type: "bar" },
+  { id: "spot", l: "Spot", c: "#38bdf8", type: "bar" },
+  { id: "exc", l: "Excedente", c: "#fb923c", type: "bar" },
+  { id: "mrr", l: "MRR", c: "#c084fc", type: "bar" },
+  { id: "proj", l: "Projeção", c: "#fb7185", type: "bar" },
   { id: "desc", l: "Descontos", c: "#dc2626", type: "line" },
-  { id: "proj", l: "Projeção", c: "#ef4444", type: "dash" },
-  { id: "cl", l: "Clientes ativos", c: "#652cdd", type: "bar" },
-  { id: "ct", l: "Contratos ativos", c: "#8456e4", type: "bar" },
-  { id: "fr", l: "Franquias ativas", c: "#22c55e", type: "bar" },
+  { id: "cl", l: "Clientes ativos", c: "#652cdd", type: "line" },
+  { id: "ct", l: "Contratos ativos", c: "#8456e4", type: "line" },
+  { id: "fr", l: "Franquias ativas", c: "#22c55e", type: "line" },
 ];
 
 const CLIENT_PROFILES_BY_STATUS: Record<
@@ -558,18 +629,24 @@ const CLIENT_PROFILES_BY_STATUS: Record<
         nome: "Franquia de BGC",
         vencimento: "12/12/2026",
         statusPagamento: "Pagamento aberto",
+        descricao:
+          "Consumo de Background Check no trimestre, com pacote contratado e excedente apurado no fechamento.",
       },
       {
         tipo: "Franquia",
         nome: "Franquia de IDV",
         vencimento: "15/01/2027",
         statusPagamento: "Pagamento aberto",
+        descricao:
+          "Validações de identidade do período, faturadas em nota separada conforme regra de unificação do cliente.",
       },
       {
         tipo: "Franquia",
         nome: "Workflow enterprise",
         vencimento: "20/01/2027",
         statusPagamento: "Fatura aberta",
+        descricao:
+          "Licenciamento e execuções de fluxos automatizados. Aguardando confirmação de pagamento para baixa.",
       },
     ],
   },
@@ -998,6 +1075,56 @@ export const CONTRACTS_MOCK: MockContract[] = [
   },
 ];
 
+export interface MockClientFranchiseConsumo {
+  name: string;
+  cons: number;
+  usado: number;
+  lim: number;
+  health: ClientHealthKey;
+}
+
+export function consumptionHealthFromPct(consPct: number): ClientHealthKey {
+  if (consPct <= 50) return "danger";
+  if (consPct <= 90) return "warning";
+  if (consPct <= 100) return "sucesso";
+  return "oportunidade";
+}
+
+function franchiseToConsumo(f: MockFranchise): MockClientFranchiseConsumo {
+  const cons =
+    f.consLim > 0
+      ? Math.min(999, Math.round((f.consUsed / f.consLim) * 100))
+      : 0;
+  return {
+    name: f.name,
+    cons,
+    usado: f.consUsed,
+    lim: f.consLim,
+    health: consumptionHealthFromPct(cons),
+  };
+}
+
+const DEMO_CONTRACT_FRANCHISE_CONSUMOS: MockClientFranchiseConsumo[] =
+  CONTRACTS_MOCK[0].franchises.filter((f) => f.ativo).map(franchiseToConsumo);
+
+/** Consumo por franquia na listagem de clientes (mock). */
+export function getClientFranchiseConsumptions(
+  client: MockClient,
+): MockClientFranchiseConsumo[] {
+  if (client.prod < 2) {
+    return [
+      {
+        name: client.nome,
+        cons: client.cons,
+        usado: client.usado,
+        lim: client.lim,
+        health: client.s,
+      },
+    ];
+  }
+  return DEMO_CONTRACT_FRANCHISE_CONSUMOS;
+}
+
 export const SL: Record<ClientHealthKey, string> = {
   sucesso: "Sucesso",
   warning: "Risco médio",
@@ -1066,12 +1193,220 @@ export const PROFIT_CENTER_FILTER_BY_SALES_REP: ProfitCenterFilterRep[] = [
   },
 ];
 
+/** Representantes comerciais para metas (drawer Configurar meta). */
+export const CLIENT_GOAL_SALES_REPS = PROFIT_CENTER_FILTER_BY_SALES_REP.map(
+  (rep) => ({
+    id: rep.id,
+    label: rep.label,
+  }),
+);
+
+type ProductNumbersRowSeed = Omit<ProductNumbersRow, "segments"> & {
+  segments: Omit<ProductNumbersSegment, "growthPct">[];
+};
+
+const PRODUCT_NUMBERS_ROWS_SEED: ProductNumbersRowSeed[] = [
+  {
+    productCode: "API",
+    faturamento: 1_350_000,
+    faturamentoGrowthPct: 14,
+    totalLabel: "Req. Totais",
+    total: 6_379_161,
+    growthPct: 17,
+    segments: [
+      { label: "Req. Bilhetadas", value: 6_110_635, sharePct: 96, tone: "green" },
+      { label: "Req. N Bilhe.", value: 268_526, sharePct: 4, tone: "red" },
+    ],
+  },
+  {
+    productCode: "BGC",
+    faturamento: 420_000,
+    faturamentoGrowthPct: 5,
+    totalLabel: "Rel. Totais",
+    total: 33_524,
+    growthPct: 3,
+    segments: [
+      { label: "Rel. Regular", value: 16_946, sharePct: 50, tone: "green" },
+      { label: "Rel. Irregular", value: 6_509, sharePct: 19, tone: "red" },
+      { label: "Rel. Alerta", value: 8_914, sharePct: 26, tone: "yellow" },
+      { label: "Rel. Parcial", value: 1_015, sharePct: 3, tone: "grey" },
+    ],
+  },
+  {
+    productCode: "BDV",
+    faturamento: 280_000,
+    faturamentoGrowthPct: 2,
+    totalLabel: "Req. Totais",
+    total: 141_477,
+    growthPct: 1,
+    segments: [
+      { label: "Req. Bilhetadas", value: 140_220, sharePct: 99, tone: "green" },
+      { label: "Transações Efetivadas", value: 120_052, sharePct: 90, tone: "green" },
+      { label: "Contas Inválidas", value: 12_168, sharePct: 9, tone: "yellow" },
+      { label: "Chave N Pertence", value: 1_283, sharePct: 1, tone: "red" },
+    ],
+  },
+  {
+    productCode: "PLD",
+    faturamento: 2_100_000,
+    faturamentoGrowthPct: 9,
+    totalLabel: "Tra. Totais",
+    total: 162_289_193,
+    growthPct: 8,
+    segments: [
+      { label: "Transações Regular", value: 987_258, sharePct: 90, tone: "green" },
+      { label: "Trans. Atípicas", value: 75_828, sharePct: 7, tone: "yellow" },
+      { label: "Suspeita Fraude", value: 12_561, sharePct: 2, tone: "red" },
+    ],
+  },
+  {
+    productCode: "IDV",
+    faturamento: 195_000,
+    faturamentoGrowthPct: 6,
+    totalLabel: "Val. Totais",
+    total: 6_495,
+    growthPct: 4,
+    segments: [
+      { label: "Val. Regular", value: 3_883, sharePct: 59, tone: "green" },
+      { label: "Val. Irregular", value: 515, sharePct: 8, tone: "red" },
+      { label: "Val. Abandono", value: 2_020, sharePct: 33, tone: "grey" },
+    ],
+  },
+  {
+    productCode: "WKF",
+    faturamento: 310_000,
+    faturamentoGrowthPct: 3,
+    totalLabel: "Pro. Totais",
+    total: 8_208,
+    growthPct: 4,
+    segments: [
+      { label: "Pro. Aprovados", value: 5_836, sharePct: 71, tone: "green" },
+      { label: "Pro. Reprovado", value: 652, sharePct: 8, tone: "red" },
+      { label: "Pro. Abandonado", value: 1_804, sharePct: 21, tone: "grey" },
+    ],
+  },
+  {
+    productCode: "MON",
+    faturamento: 88_000,
+    faturamentoGrowthPct: 28,
+    totalLabel: "Par. Totais",
+    total: 138,
+    growthPct: 32,
+    segments: [
+      { label: "Par. Regulr", value: 84, sharePct: 61, tone: "green" },
+      { label: "Par. Alerta", value: 42, sharePct: 31, tone: "yellow" },
+      { label: "Par. Irregular", value: 12, sharePct: 9, tone: "red" },
+    ],
+  },
+];
+
+export const PRODUCT_NUMBERS_ROWS: ProductNumbersRow[] =
+  PRODUCT_NUMBERS_ROWS_SEED.map((row) => ({
+    ...row,
+    segments: row.segments.map((segment, index) => ({
+      ...segment,
+      growthPct: row.growthPct + ((index % 4) * 2 - 3),
+    })),
+  }));
+
+const FRANCHISE_PRODUCT_LABEL_TO_CODE: Record<string, string> = {
+  "Background Check": "BGC",
+  "ID Validation": "IDV",
+  Monitoramento: "MON",
+  Workflow: "WKF",
+  "API Netrin": "API",
+};
+
+/** Linha de Números de Produto correspondente à franquia (protótipo). */
+export function productNumbersRowForFranchise(
+  franchise: MockFranchise,
+): ProductNumbersRow | null {
+  for (const row of PRODUCT_NUMBERS_ROWS) {
+    if (franchise.name.toUpperCase().includes(row.productCode)) {
+      return row;
+    }
+  }
+
+  const fromLabel = FRANCHISE_PRODUCT_LABEL_TO_CODE[franchise.product];
+  if (fromLabel) {
+    return (
+      PRODUCT_NUMBERS_ROWS.find((row) => row.productCode === fromLabel) ?? null
+    );
+  }
+
+  return (
+    PRODUCT_NUMBERS_ROWS.find((row) =>
+      franchise.product.toUpperCase().includes(row.productCode),
+    ) ?? null
+  );
+}
+
 export const BAR_CTR: BarRow[] = [
   { l: "Juliana", v: 1.12e6, p: 1.05e6 },
   { l: "Matheus", v: 890e3, p: 860e3 },
   { l: "Junior Duraes", v: 760e3, p: 780e3 },
   { l: "Maria Luiza", v: 650e3, p: 620e3 },
 ];
+
+export interface SalesRepNumbersRow {
+  repId: string;
+  repLabel: string;
+  faturamento: number;
+  faturamentoGrowthPct: number;
+  mrr: number;
+  mrrGrowthPct: number;
+  receitaGeral: number;
+  receitaGeralGrowthPct: number;
+  receitaGeralMeta: number;
+  mrrMeta: number;
+  segments: ProductNumbersSegment[];
+}
+
+function salesRepBarGrowthPct(bar: BarRow): number {
+  if (!bar.p) return 0;
+  return Math.round(((bar.v - bar.p) / bar.p) * 100);
+}
+
+/** Dashboard — bloco "Faturamento por centro de lucro" (protótipo). */
+export const SALES_REP_NUMBERS_ROWS: SalesRepNumbersRow[] =
+  PROFIT_CENTER_FILTER_BY_SALES_REP.map((rep) => {
+    const bar =
+      BAR_CTR.find((row) => row.l === rep.label) ?? {
+        l: rep.label,
+        v: 600_000,
+        p: 580_000,
+      };
+    const faturamento = bar.v;
+    const faturamentoGrowthPct = salesRepBarGrowthPct(bar);
+    const mrr = Math.round(faturamento * 0.82);
+    const receitaGeral = Math.round(faturamento * 1.08);
+    const segmentShares = [52, 33, 15];
+    const segmentTones: ProductNumbersSegmentTone[] = ["green", "yellow", "grey"];
+    const segments = rep.profitCenters.map((pc, index) => {
+      const sharePct = segmentShares[index] ?? 10;
+      return {
+        label: pc.label,
+        sharePct,
+        value: Math.round(faturamento * (sharePct / 100)),
+        tone: segmentTones[index] ?? "grey",
+        growthPct: faturamentoGrowthPct + index - 1,
+      };
+    });
+
+    return {
+      repId: rep.id,
+      repLabel: rep.label,
+      faturamento,
+      faturamentoGrowthPct,
+      mrr,
+      mrrGrowthPct: faturamentoGrowthPct - 2,
+      receitaGeral,
+      receitaGeralGrowthPct: faturamentoGrowthPct + 1,
+      receitaGeralMeta: Math.round(receitaGeral * 1.35),
+      mrrMeta: Math.round(mrr * 1.28),
+      segments,
+    };
+  });
 
 export const BAR_HEALTH: HealthBarRow[] = [
   { title: "Risco médio", sub: "entre 51% a 90%", v: 3, p: 2 },

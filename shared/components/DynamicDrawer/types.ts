@@ -17,7 +17,7 @@ export interface DynamicDrawerProps {
   size?: DrawerSize;
   component: React.ReactNode;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   placement?: DrawerPlacement;

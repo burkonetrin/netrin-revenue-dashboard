@@ -1,18 +1,18 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@heroui/react";
 import { PROTOTYPE_BASE_PATH } from "@/constants";
-import { FieldInput, OutlineButton, PrimaryButton } from "@/design-system/ui";
+import { FieldInput, PrimaryButton } from "@/design-system/ui";
 import { ClientsListToolbarOverflow } from "./ClientsListToolbarOverflow";
 import {
   CLIENTS,
+  getClientFranchiseConsumptions,
   LIST_COLSPAN,
   type MockClient,
 } from "../../clientesDashboardMockData";
-import { clientRowActionsMenu } from "../../clientesDashboardMockFormat";
+import { clientRowActionsMenu, fmt, mockClientLtv } from "../../clientesDashboardMockFormat";
 import type { FilterDrawerStatus } from "./ClientesFilterDrawer";
 import { ContractsTableMock } from "./ContractsTableMock";
 import { DetailKpiGrid } from "./DetailKpiGrid";
@@ -55,9 +55,78 @@ import {
 } from "@/features/clients/store/client-list-invoice-status.store";
 import { resolveClientListInvoiceStatus } from "@/features/clients/utils/client-list-invoice-display.utils";
 
-export type TableSort = { key: "fat" | "cons" | null; dir: "asc" | "desc" };
+export type TableSort = { key: "ltv" | "fat" | "cons" | null; dir: "asc" | "desc" };
 
-function clientsMatchingSearch(list: MockClient[], query: string) {
+function ClientConsumptionCell({ client }: { client: MockClient }) {
+  const franchises = getClientFranchiseConsumptions(client);
+  const multi = franchises.length > 1;
+
+  if (!multi) {
+    return (
+      <>
+        <div className="flex items-center gap-2 flex-nowrap">
+          <span>{client.cons}%</span>
+          <HealthChip health={client.s} />
+        </div>
+        <div className={`mt-1 ${clientHierarchySublineClassName}`}>
+          {client.usado.toLocaleString("pt-BR")} de{" "}
+          {client.lim.toLocaleString("pt-BR")}
+        </div>
+      </>
+    );
+  }
+
+  const totalUsado = franchises.reduce((sum, f) => sum + f.usado, 0);
+  const totalLim = franchises.reduce((sum, f) => sum + f.lim, 0);
+  const totalCons =
+    totalLim > 0
+      ? Math.min(999, Math.round((totalUsado / totalLim) * 100))
+      : 0;
+  const franchiseTooltipLabelClass = "m-0 text-xs font-medium text-zinc-800";
+
+  const consumoLine = (
+    usado: number,
+    lim: number,
+    cons: number,
+    health?: MockClient["s"],
+  ) => (
+    <div className="flex items-center gap-2 flex-nowrap mt-0.5 text-xs text-zinc-700">
+      <span>
+        {usado.toLocaleString("pt-BR")} de {lim.toLocaleString("pt-BR")}
+      </span>
+      <span>{cons}%</span>
+      {health != null ? <HealthChip health={health} /> : null}
+    </div>
+  );
+
+  return (
+    <div className="flex items-center gap-1.5 flex-nowrap">
+      <span>{franchises.length} Franquias</span>
+      <MockInfoTooltip
+        content={
+          <div>
+            <p className={franchiseTooltipLabelClass}>Total de consumo</p>
+            {consumoLine(totalUsado, totalLim, totalCons)}
+            <div
+              className="my-3 border-t border-zinc-200"
+              role="separator"
+            />
+            <div className="flex flex-col gap-3">
+              {franchises.map((f) => (
+                <div key={f.name}>
+                  <p className={franchiseTooltipLabelClass}>{f.name}</p>
+                  {consumoLine(f.usado, f.lim, f.cons, f.health)}
+                </div>
+              ))}
+            </div>
+          </div>
+        }
+      />
+    </div>
+  );
+}
+
+export function clientsMatchingSearch(list: MockClient[], query: string) {
   const q = query.trim().toLowerCase();
   if (!q) return list;
   const qDigits = q.replace(/\D/g, "");
@@ -91,6 +160,12 @@ function sortedClients(
     search,
   );
   if (!showInactive) list = list.filter((c) => c.ativo);
+  if (sort.key === "ltv") {
+    list.sort((a, b) => {
+      const diff = mockClientLtv(a) - mockClientLtv(b);
+      return sort.dir === "asc" ? diff : -diff;
+    });
+  }
   if (sort.key === "fat") {
     list.sort((a, b) =>
       sort.dir === "asc" ? a.fat - b.fat : b.fat - a.fat,
@@ -107,19 +182,21 @@ function sortedClients(
 interface ClientsListSectionProps {
   statusFilter: FilterDrawerStatus;
   showInactiveItems: boolean;
-  onOpenFilters: () => void;
   onToggleShowInactive: () => void;
   competenceLabel: string;
+  clientSearch: string;
+  onClientSearchChange: (value: string) => void;
 }
 
 export function ClientsListSection({
   statusFilter,
   showInactiveItems,
-  onOpenFilters,
   onToggleShowInactive,
   competenceLabel,
+  clientSearch,
+  onClientSearchChange,
 }: ClientsListSectionProps) {
-  const [search, setSearch] = useState("");
+  const search = clientSearch;
   const [expandedListClientId, setExpandedListClientId] = useState<string | null>(
     null,
   );
@@ -236,7 +313,7 @@ export function ClientsListSection({
       ? expandedListClientId
       : null;
 
-  const toggleSort = (key: "fat" | "cons") => {
+  const toggleSort = (key: "ltv" | "fat" | "cons") => {
     setTableSort((prev) => {
       if (prev.key === key) {
         return { key, dir: prev.dir === "asc" ? "desc" : "asc" };
@@ -245,7 +322,7 @@ export function ClientsListSection({
     });
   };
 
-  const sortIcon = (key: "fat" | "cons") => {
+  const sortIcon = (key: "ltv" | "fat" | "cons") => {
     if (tableSort.key !== key) return "↕";
     return tableSort.dir === "asc" ? "↑" : "↓";
   };
@@ -280,12 +357,8 @@ export function ClientsListSection({
             autoComplete="off"
             className="flex-1 min-w-[220px] max-w-[360px]"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => onClientSearchChange(e.target.value)}
           />
-          <OutlineButton onClick={onOpenFilters}>
-            <SlidersHorizontal />
-            Filtros
-          </OutlineButton>
           <ClientsListToolbarOverflow
             showInactiveItems={showInactiveItems}
             openInvoiceClientCount={billClientsPreview.openClientCount}
@@ -317,7 +390,18 @@ export function ClientsListSection({
                 />
               </th>
               <th className={clientHierarchyTableHeadCellClass}>Status</th>
-              <th className={clientHierarchyTableHeadCellClass}>Razão social</th>
+              <th className={clientHierarchyTableHeadCellClass}>Cliente</th>
+              <th
+                className={clientHierarchySortableTableHeadCellClass(
+                  tableSort.key === "ltv",
+                )}
+                onClick={() => toggleSort("ltv")}
+              >
+                LTV{" "}
+                <span className="inline-flex align-middle ml-1 opacity-70">
+                  {sortIcon("ltv")}
+                </span>
+              </th>
               <th className={clientHierarchyTableHeadCellClass}>Produtos</th>
               <th className={clientHierarchyTableHeadCellClass}>Referência</th>
               <th
@@ -394,6 +478,16 @@ export function ClientsListSection({
                       </span>
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
+                      <span className="block whitespace-nowrap text-zinc-900">
+                        {fmt(mockClientLtv(c))}
+                      </span>
+                      <span
+                        className={`mt-0.5 block whitespace-nowrap font-normal ${clientHierarchySublineClassName}`}
+                      >
+                        Início em {c.inicio}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
                       <div className="flex items-center gap-1.5 flex-nowrap">
                         {c.prod}
                         <MockInfoTooltip
@@ -410,7 +504,7 @@ export function ClientsListSection({
                         />
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top text-zinc-700">
+                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top whitespace-nowrap text-zinc-700">
                       {c.referencia}
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
@@ -424,14 +518,7 @@ export function ClientsListSection({
                       />
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      <div className="flex items-center gap-2 flex-nowrap">
-                        <span>{c.cons}%</span>
-                        <HealthChip health={c.s} />
-                      </div>
-                      <div className={`mt-1 ${clientHierarchySublineClassName}`}>
-                        {c.usado.toLocaleString("pt-BR")} de{" "}
-                        {c.lim.toLocaleString("pt-BR")}
-                      </div>
+                      <ClientConsumptionCell client={c} />
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top text-center">
                       <TableExpandButton
@@ -464,6 +551,7 @@ export function ClientsListSection({
                             <ContractsTableMock
                               contextKey={c.id}
                               billingReference={c.referencia}
+                              competenceLabel={competenceLabel}
                               expandedContractId={
                                 expandedContractByClient[c.id] ?? null
                               }

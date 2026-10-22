@@ -136,6 +136,12 @@ export function ClientesFilterDrawer({
           >
             Inativo
           </FieldCheckbox>
+          <FieldCheckbox
+            isSelected={Boolean(checkboxIds.statusTeste)}
+            onValueChange={(value) => toggleCheck("statusTeste", value)}
+          >
+            Teste
+          </FieldCheckbox>
         </div>
       </section>
       <ProfitCenterFilterSection

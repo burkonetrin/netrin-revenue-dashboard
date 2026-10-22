@@ -18,6 +18,24 @@ import {
 import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { CmpRight } from "./CmpRight";
 
+const REVENUE_STACK_KEYS = ["acv", "spot", "exc", "mrr"] as const;
+const COUNT_LINE_KEYS = ["cl", "ct", "fr"] as const;
+
+/** Pesos visuais distintos por fatia (normalizados entre as séries visíveis). */
+const REVENUE_STACK_VISUAL_WEIGHTS: Record<
+  (typeof REVENUE_STACK_KEYS)[number],
+  number
+> = {
+  acv: 0.4,
+  spot: 0.18,
+  exc: 0.1,
+  mrr: 0.32,
+};
+
+function legendColor(id: string) {
+  return LEGEND.find((item) => item.id === id)?.c ?? "#652cdd";
+}
+
 function TooltipRow({
   label,
   color,
@@ -71,15 +89,14 @@ export function EvolutionChartMock() {
         ...slice.flatMap((p) => {
           if (!isEvoReal(p)) return [];
           return [
-            p.total,
-            p.acv,
-            p.spot,
-            p.exc,
-            p.mrr,
+            Math.max(0, p.total - p.desc),
             p.desc,
             p.projTotal,
           ].filter((x): x is number => x !== undefined);
         }),
+        ...EVO.slice(LAST_REAL + 1).flatMap((p) =>
+          !isEvoReal(p) ? [p.projTotal] : [],
+        ),
       ) * 1.05;
     const maxCntVal =
       Math.max(
@@ -90,7 +107,62 @@ export function EvolutionChartMock() {
 
   const tx = (i: number) => pl + (i / (n - 1)) * iw;
   const tyR = (v: number) => pt + ih - (v / maxR) * ih;
-  const bw = Math.max(6, (iw / n) * 0.28);
+  const tyCnt = (v: number) => pt + ih - (v / maxCnt) * ih * 0.35;
+  const bw = Math.max(10, (iw / n) * 0.42);
+
+  const renderRevenueStack = (i: number, point: EvoPointReal) => {
+    const cx = tx(i);
+    const x = cx - bw / 2;
+    const netTotal = Math.max(0, point.total - point.desc);
+    const componentKeys = REVENUE_STACK_KEYS.filter((key) => legendVis[key]);
+    const segments: { key: string; value: number; color: string }[] = [];
+
+    if (componentKeys.length > 0) {
+      const partSum = componentKeys.reduce((sum, key) => sum + point[key], 0);
+      const visualWeightSum = componentKeys.reduce(
+        (sum, key) => sum + REVENUE_STACK_VISUAL_WEIGHTS[key],
+        0,
+      );
+      const blendShares = componentKeys.map((key) => {
+        const dataShare = partSum > 0 ? point[key] / partSum : 0;
+        const visualShare =
+          visualWeightSum > 0
+            ? REVENUE_STACK_VISUAL_WEIGHTS[key] / visualWeightSum
+            : 0;
+        return 0.5 * visualShare + 0.5 * dataShare;
+      });
+      const blendTotal = blendShares.reduce((sum, share) => sum + share, 0);
+      componentKeys.forEach((key, index) => {
+        const share =
+          blendTotal > 0 ? blendShares[index] / blendTotal : 0;
+        segments.push({
+          key,
+          value: netTotal * share,
+          color: legendColor(key),
+        });
+      });
+    } else if (legendVis.total) {
+      segments.push({ key: "total", value: netTotal, color: legendColor("total") });
+    }
+
+    let y = pt + ih;
+    return segments.map((segment) => {
+      const height = (segment.value / maxR) * ih;
+      y -= height;
+      return (
+        <rect
+          key={`${i}-${segment.key}`}
+          x={x}
+          y={y}
+          width={bw}
+          height={Math.max(0, height)}
+          fill={segment.color}
+          opacity={0.97}
+          rx={2}
+        />
+      );
+    });
+  };
 
   const showEvoTip = useCallback(
     (clientX: number, clientY: number, i: number) => {
@@ -219,38 +291,31 @@ export function EvolutionChartMock() {
     [legendVis],
   );
 
-  const linePaths = ["total", "acv", "spot", "exc", "mrr", "desc"].map(
-    (key) => {
-      if (!legendVis[key]) return null;
-      const meta = LEGEND.find((l) => l.id === key);
-      let d = "";
-      for (let i = 0; i <= LAST_REAL; i++) {
-        const pt = EVO[i] as EvoPointReal;
-        const v = pt[key as keyof EvoPointReal] as number;
-        d += `${i ? "L" : "M"} ${tx(i)} ${tyR(v)} `;
-      }
-      return (
-        <path
-          key={key}
-          d={d}
-          fill="none"
-          stroke={meta?.c}
-          strokeWidth={2}
-          data-series={key}
-        />
-      );
-    },
-  );
+  const countLinePaths = COUNT_LINE_KEYS.map((key) => {
+    if (!legendVis[key]) return null;
+    let d = "";
+    for (let i = 0; i <= LAST_REAL; i++) {
+      const point = EVO[i] as EvoPointReal;
+      const v = point[key];
+      d += `${i ? "L" : "M"} ${tx(i)} ${tyCnt(v)} `;
+    }
+    return (
+      <path
+        key={key}
+        d={d}
+        fill="none"
+        stroke={legendColor(key)}
+        strokeWidth={2}
+        data-series={key}
+      />
+    );
+  });
 
-  let projPath = "";
-  if (legendVis.proj) {
-    const last = EVO[LAST_REAL] as EvoPointReal;
-    projPath = `M ${tx(LAST_REAL)} ${tyR(last.total)}`;
-    for (let i = LAST_REAL + 1; i < n; i++) {
-      const pt = EVO[i];
-      if (!isEvoReal(pt)) {
-        projPath += ` L ${tx(i)} ${tyR(pt.projTotal)}`;
-      }
+  let descPath = "";
+  if (legendVis.desc) {
+    for (let i = 0; i <= LAST_REAL; i++) {
+      const point = EVO[i] as EvoPointReal;
+      descPath += `${i ? "L" : "M"} ${tx(i)} ${tyR(point.desc)} `;
     }
   }
 
@@ -289,72 +354,46 @@ export function EvolutionChartMock() {
           })}
 
           {Array.from({ length: LAST_REAL + 1 }, (_, i) => {
-            const p = EVO[i] as EvoPointReal;
-            const cx = tx(i);
-            if (!legendVis.fr && !legendVis.ct && !legendVis.cl) return null;
-            let y = pt + ih;
-            const bars: React.ReactNode[] = [];
-            if (legendVis.fr) {
-              const h = (p.fr / maxCnt) * ih * 0.35;
-              y -= h;
-              bars.push(
-                <rect
-                  key="fr"
-                  x={cx - bw / 2}
-                  y={y}
-                  width={bw}
-                  height={h}
-                  fill="#22c55e"
-                  opacity={0.9}
-                  rx={2}
-                />,
-              );
-            }
-            if (legendVis.ct) {
-              const h = (p.ct / maxCnt) * ih * 0.35;
-              y -= h;
-              bars.push(
-                <rect
-                  key="ct"
-                  x={cx - bw / 2}
-                  y={y}
-                  width={bw}
-                  height={h}
-                  fill="#8456e4"
-                  opacity={0.9}
-                  rx={2}
-                />,
-              );
-            }
-            if (legendVis.cl) {
-              const h = (p.cl / maxCnt) * ih * 0.35;
-              y -= h;
-              bars.push(
-                <rect
-                  key="cl"
-                  x={cx - bw / 2}
-                  y={y}
-                  width={bw}
-                  height={h}
-                  fill="#652cdd"
-                  opacity={0.9}
-                  rx={2}
-                />,
-              );
-            }
-            return <g key={i}>{bars}</g>;
+            const point = EVO[i] as EvoPointReal;
+            const showStack =
+              legendVis.total ||
+              REVENUE_STACK_KEYS.some((key) => legendVis[key]);
+            if (!showStack) return null;
+            return <g key={`stack-${i}`}>{renderRevenueStack(i, point)}</g>;
           })}
 
-          {linePaths}
-          {legendVis.proj && projPath ? (
+          {legendVis.proj
+            ? Array.from({ length: n - LAST_REAL - 1 }, (_, offset) => {
+                const i = LAST_REAL + 1 + offset;
+                const point = EVO[i];
+                if (isEvoReal(point)) return null;
+                const cx = tx(i);
+                const height = (point.projTotal / maxR) * ih;
+                const y = pt + ih - height;
+                return (
+                  <rect
+                    key={`proj-${i}`}
+                    x={cx - bw / 2}
+                    y={y}
+                    width={bw}
+                    height={Math.max(0, height)}
+                    fill={legendColor("proj")}
+                    opacity={0.97}
+                    rx={2}
+                  />
+                );
+              })
+            : null}
+
+          {descPath ? (
             <path
-              d={projPath}
+              d={descPath}
               fill="none"
-              stroke="#ef4444"
+              stroke={legendColor("desc")}
               strokeWidth={2}
-              strokeDasharray="6 4"
             />
           ) : null}
+          {countLinePaths}
 
           {Array.from({ length: n }, (_, i) => (
             <g key={`hit-${i}`}>
@@ -397,14 +436,14 @@ export function EvolutionChartMock() {
                 setLegendVis((v) => ({ ...v, [leg.id]: !v[leg.id] }))
               }
             >
-              {leg.type === "dash" ? (
+              {leg.type === "line" ? (
                 <span
-                  className="w-3.5 h-0 border-t-2 border-dashed"
+                  className="w-3.5 h-0 border-t-2"
                   style={{ borderColor: leg.c }}
                 />
               ) : (
                 <span
-                  className="size-2 rounded-full shrink-0"
+                  className="size-2 rounded-sm shrink-0"
                   style={{ background: leg.c }}
                 />
               )}
