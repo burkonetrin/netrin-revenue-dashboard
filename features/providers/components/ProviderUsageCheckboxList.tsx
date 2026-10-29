@@ -1,6 +1,8 @@
 "use client";
 
 import { Checkbox } from "@heroui/react";
+import type { IndirectProviderKind } from "../utils/providerType.utils";
+import { getIndirectProviderBadgeLabel } from "../utils/providerType.utils";
 
 export type UsageSourceOption = {
   id: string;
@@ -11,6 +13,8 @@ export type UsageProviderOption = {
   id: string;
   name: string;
   sources: UsageSourceOption[];
+  /** Tipo do indireto (Captcha / Proxy) para exibir badge ao lado do nome. */
+  indirectKind?: IndirectProviderKind;
   /** True enquanto o GET das fontes do provider ainda não resolveu. */
   isSourcesLoading?: boolean;
 };
@@ -69,6 +73,9 @@ export function ProviderUsageCheckboxList({
         const hasSources = provider.sources.length > 0;
         const allSelected = hasSources && allSourceIds.every((id) => selectedSet.has(id));
         const isIndeterminate = isProviderSelected && hasSources && !allSelected;
+        const kindBadgeLabel = provider.indirectKind
+          ? getIndirectProviderBadgeLabel(provider.indirectKind)
+          : null;
 
         return (
           <li key={provider.id} className="px-4 py-3">
@@ -83,7 +90,14 @@ export function ProviderUsageCheckboxList({
                 label: "text-sm font-medium text-default-800",
               }}
             >
-              {provider.name}
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <span>{provider.name}</span>
+                {kindBadgeLabel ? (
+                  <span className="whitespace-nowrap rounded-full bg-default-200 px-2 py-0.5 text-xs font-normal text-default-600">
+                    {kindBadgeLabel}
+                  </span>
+                ) : null}
+              </span>
             </Checkbox>
 
             {isProviderSelected && (

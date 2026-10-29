@@ -1,7 +1,7 @@
 import type { PaginationInfo } from "@/shared/types/pagination.types";
 
-/** Tipo de fornecedor alinhado ao OpenAPI (`direct` | `indirect`). */
-export type ProviderType = "direct" | "indirect";
+/** Tipo de fornecedor alinhado ao Administrator (`direct` | `indirect_captcha` | `indirect_proxy`). */
+export type ProviderType = "direct" | "indirect_captcha" | "indirect_proxy";
 
 /** Opção tipada retornada pela API em listagens/detalhe. */
 export interface ProviderTypeOption {
@@ -103,7 +103,7 @@ export interface ProvidersQueryParams {
   sortDirection?: "asc" | "desc";
   search?: string | null;
   name?: string | null;
-  providerType?: ProviderType | null;
+  providerType?: ProviderType | "indirect" | null;
   isActive?: boolean | null;
   dataSourceId?: string | null;
 }

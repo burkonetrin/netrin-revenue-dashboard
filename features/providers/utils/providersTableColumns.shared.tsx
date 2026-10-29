@@ -76,7 +76,7 @@ export function buildProviderInternalNameColumn<T>(): ColumnConfig<T> {
   };
 }
 
-/** classNames compartilhados das tabelas de providers (espelha staging Nucleus). */
+/** classNames compartilhados das tabelas da página Fontes e Fornecedores (aba Fontes). */
 export const providerTableClassNames = {
   th: "bg-default-100 text-gray-500 font-semibold text-xs h-11",
   td: "text-gray-900 border-b border-gray-200 h-12 text-xs",
@@ -84,7 +84,7 @@ export const providerTableClassNames = {
 
 /** Cabeçalho de `<table>` nativa (mesmo visual do `providerTableClassNames.th`). */
 export const providerNativeTableHeadCellClass =
-  "bg-default-100 text-gray-500 font-semibold text-xs h-11 px-4 text-left align-middle border-b border-gray-200";
+  "bg-default-100 text-gray-500 font-semibold text-xs h-11 px-3 text-left align-middle";
 
 /** Layout do rodapé de drawers (alinhado ao billing / demais telas). */
 export const providerDrawerFooterClass = "flex w-full justify-end gap-2.5";

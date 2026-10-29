@@ -4,6 +4,7 @@ import { Checkbox } from "@heroui/react";
 import { useMemo } from "react";
 import { useProviders } from "../hooks/useProviders";
 import type { ProviderType } from "../types/providers.types";
+import { isDirectProviderType, isIndirectProviderType } from "../utils/providerType.utils";
 import type { LinkedSourceRow } from "./ProviderLinkedSourcesTable";
 import { ProviderUsageCheckboxList, type UsageProviderOption } from "./ProviderUsageCheckboxList";
 
@@ -30,7 +31,7 @@ export function ProviderIndirectUsagesSection({
   usagesByProviderId,
   onUsagesByProviderIdChange,
 }: ProviderIndirectUsagesSectionProps) {
-  const isDirect = providerType === "direct";
+  const isDirect = isDirectProviderType(providerType);
 
   const { data: providersResponse, isLoading } = useProviders(
     {
@@ -47,11 +48,15 @@ export function ProviderIndirectUsagesSection({
   );
 
   const indirectProviders = useMemo<UsageProviderOption[]>(() => {
-    return (providersResponse?.data ?? []).map((provider) => ({
-      id: provider.id,
-      name: provider.name,
-      sources: availableSources,
-    }));
+    return (providersResponse?.data ?? []).map((provider) => {
+      const kind = provider.providerType.value;
+      return {
+        id: provider.id,
+        name: provider.name,
+        sources: availableSources,
+        indirectKind: isIndirectProviderType(kind) ? kind : undefined,
+      };
+    });
   }, [providersResponse?.data, availableSources]);
 
   if (!isDirect) {

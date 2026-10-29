@@ -6,6 +6,10 @@ import type {
   ProviderUsageItemRequest,
   UpdateProviderRequest,
 } from "../types/providers.types";
+import {
+  isDirectProviderType,
+  isIndirectProviderType,
+} from "./providerType.utils";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
 
@@ -76,7 +80,7 @@ export function mapProviderDetailToFormState(detail: ProviderDetail): ProviderFo
   return {
     name: detail.name,
     isPrepaid: detail.isPrepaid,
-    providerType: "indirect",
+    providerType: detail.providerType.value,
     service: detail.description ?? "",
     linkedSources: [],
     usesIndirectProviders: false,
@@ -89,7 +93,7 @@ export function mapProviderDetailToFormState(detail: ProviderDetail): ProviderFo
  * Mapeia form → CreateProviderRequest (dataSourceIds só UUIDs; sem defaultCost).
  */
 export function mapFormToCreateRequest(form: ProviderFormState): CreateProviderRequest {
-  if (form.providerType !== "direct" && form.providerType !== "indirect") {
+  if (!isDirectProviderType(form.providerType) && !isIndirectProviderType(form.providerType)) {
     throw new Error("providerType is required to create a provider");
   }
 
@@ -99,7 +103,7 @@ export function mapFormToCreateRequest(form: ProviderFormState): CreateProviderR
     isPrepaid: form.isPrepaid,
   };
 
-  if (form.providerType === "direct") {
+  if (isDirectProviderType(form.providerType)) {
     return {
       ...base,
       dataSourceIds: form.linkedSources.map((s) => s.id),
@@ -120,7 +124,7 @@ export function mapFormToCreateRequest(form: ProviderFormState): CreateProviderR
  * Mapeia form → UpdateProviderRequest (omite providerType/isPrepaid).
  */
 export function mapFormToUpdateRequest(form: ProviderFormState): UpdateProviderRequest {
-  if (form.providerType === "direct") {
+  if (isDirectProviderType(form.providerType)) {
     return {
       name: form.name.trim(),
       description: null,
@@ -148,19 +152,19 @@ export function validateProviderForm(form: ProviderFormState): ProviderFormError
     errors.name = REQUIRED_FIELD_MESSAGE;
   }
 
-  if (form.providerType !== "direct" && form.providerType !== "indirect") {
+  if (!isDirectProviderType(form.providerType) && !isIndirectProviderType(form.providerType)) {
     errors.providerType = REQUIRED_FIELD_MESSAGE;
   }
 
-  if (form.providerType === "direct" && form.linkedSources.length < 1) {
+  if (isDirectProviderType(form.providerType) && form.linkedSources.length < 1) {
     errors.linkedSources = REQUIRED_FIELD_MESSAGE;
   }
 
-  if (form.providerType === "indirect" && !form.service.trim()) {
+  if (isIndirectProviderType(form.providerType) && !form.service.trim()) {
     errors.service = REQUIRED_FIELD_MESSAGE;
   }
 
-  if (form.providerType === "direct" && form.usesIndirectProviders) {
+  if (isDirectProviderType(form.providerType) && form.usesIndirectProviders) {
     const linkedIds = new Set(form.linkedSources.map((s) => s.id));
     const invalidUsage = Object.values(form.usagesByProviderId).some((ids) =>
       ids.some((id) => !linkedIds.has(id)),

@@ -4,6 +4,10 @@ import { Spinner } from "@heroui/react";
 import { useEffect, useState } from "react";
 import type { ProviderFormState, ProviderType } from "../types/providers.types";
 import {
+  isDirectProviderType,
+  isIndirectProviderType,
+} from "../utils/providerType.utils";
+import {
   type ProviderFormErrors,
   createEmptyProviderFormState,
   validateProviderForm,
@@ -29,7 +33,7 @@ function clearOppositeTypeSections(
   state: ProviderFormState,
   nextType: ProviderType,
 ): ProviderFormState {
-  if (nextType === "direct") {
+  if (isDirectProviderType(nextType)) {
     return {
       ...state,
       providerType: "direct",
@@ -39,13 +43,17 @@ function clearOppositeTypeSections(
     };
   }
 
-  return {
-    ...state,
-    providerType: "indirect",
-    linkedSources: [],
-    usesIndirectProviders: false,
-    usagesByProviderId: {},
-  };
+  if (isIndirectProviderType(nextType)) {
+    return {
+      ...state,
+      providerType: nextType,
+      linkedSources: [],
+      usesIndirectProviders: false,
+      usagesByProviderId: {},
+    };
+  }
+
+  return { ...state, providerType: nextType };
 }
 
 /**

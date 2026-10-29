@@ -1,16 +1,15 @@
-import type { Provider, ProviderType } from "../types/providers.types";
-
-const TYPE_LABELS: Record<ProviderType, string> = {
-  direct: "Direto",
-  indirect: "Indireto",
-};
+import type { Provider } from "../types/providers.types";
+import { buildProviderTypeOption } from "./providerType.utils";
 
 /**
  * Label da coluna Tipo (SUP-02).
  */
 export function getProviderTypeLabel(provider: Provider): string {
   if (provider.providerType?.label) return provider.providerType.label;
-  if (provider.providerType?.value) return TYPE_LABELS[provider.providerType.value];
+  const value = provider.providerType?.value;
+  if (value === "direct" || value === "indirect_captcha" || value === "indirect_proxy") {
+    return buildProviderTypeOption(value).label;
+  }
   return "—";
 }
 

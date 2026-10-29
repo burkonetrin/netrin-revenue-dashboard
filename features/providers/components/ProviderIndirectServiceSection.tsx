@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useProvider } from "../hooks/useProvider";
 import { useProviders } from "../hooks/useProviders";
 import type { GetDirectProviderResponse, ProviderType } from "../types/providers.types";
+import { isIndirectProviderType } from "../utils/providerType.utils";
 import {
   ProviderUsageCheckboxList,
   SELECT_SOURCES_HEADING_INDIRECT,
@@ -83,7 +84,7 @@ export function ProviderIndirectServiceSection({
   onUsagesByProviderIdChange,
   serviceError,
 }: ProviderIndirectServiceSectionProps) {
-  const isIndirect = providerType === "indirect";
+  const isIndirect = isIndirectProviderType(providerType);
   const [sourcesByProviderId, setSourcesByProviderId] = useState<
     Record<string, UsageSourceOption[]>
   >({});

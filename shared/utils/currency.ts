@@ -93,6 +93,35 @@ export const maskCurrency4 = (value: string | number): string => {
   return new Intl.NumberFormat("pt-BR", CURRENCY_4_FORMAT_OPTIONS).format(amount);
 };
 
+/** Placeholder de custo ausente. A máscara de 4 casas só entra quando há dígito. */
+export const EMPTY_CURRENCY_PLACEHOLDER = "—";
+
+function currency4TypedDigits(displayed: string): string {
+  if (!displayed.trim()) return "";
+  const amount = unmaskCurrency4(displayed);
+  if (amount === 0) return "0";
+  return String(Math.round(amount * 10000));
+}
+
+/**
+ * Próximo valor do input de 4 casas.
+ * Sem dígito → vazio (placeholder `—`). Com dígito, inclusive zero → máscara.
+ * Backspace remove um dígito informado, não um zero de preenchimento da máscara.
+ */
+export function editCurrency4Mask(displayed: string, incoming: string): string {
+  const incomingDigits = incoming.replace(/\D/g, "");
+  if (!incomingDigits) return "";
+
+  const deletingFormattedZeroPad =
+    displayed.includes("R$") && incoming.length < displayed.length && incoming.includes("R$");
+  if (deletingFormattedZeroPad) {
+    const nextDigits = currency4TypedDigits(displayed).slice(0, -1);
+    return nextDigits ? maskCurrency4(nextDigits) : "";
+  }
+
+  return maskCurrency4(incomingDigits);
+}
+
 /**
  * Remove a máscara de moeda de 4 casas e retorna o valor numérico.
  */

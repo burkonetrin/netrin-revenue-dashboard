@@ -3,6 +3,7 @@
 import { defaultInputClassNames, defaultSelectClassNames } from "@/shared/styles/inputClassNames";
 import { Checkbox, Input, Select, SelectItem, type SharedSelection } from "@heroui/react";
 import type { ProviderFormState, ProviderType } from "../types/providers.types";
+import { buildProviderTypeOption } from "../utils/providerType.utils";
 
 export type ProviderFormBasicFieldsChange = Partial<
   Pick<ProviderFormState, "name" | "isPrepaid" | "providerType">
@@ -79,8 +80,13 @@ export function ProviderFormBasicFields({
         onSelectionChange={handleTypeChange}
         classNames={defaultSelectClassNames}
       >
-        <SelectItem key="direct">Direto</SelectItem>
-        <SelectItem key="indirect">Indireto</SelectItem>
+        <SelectItem key="direct">{buildProviderTypeOption("direct").label}</SelectItem>
+        <SelectItem key="indirect_captcha">
+          {buildProviderTypeOption("indirect_captcha").label}
+        </SelectItem>
+        <SelectItem key="indirect_proxy">
+          {buildProviderTypeOption("indirect_proxy").label}
+        </SelectItem>
       </Select>
     </div>
   );

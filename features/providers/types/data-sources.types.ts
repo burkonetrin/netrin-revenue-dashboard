@@ -18,7 +18,6 @@ export interface DataSource {
   internalName: string;
   pathName: string[];
   consultationTypes?: Array<string | DataSourceConsultationType>;
-  defaultCost?: number;
   referenceCost?: number | string | null;
   averageRealCost?: number | string | null;
   directProviders?: {
@@ -97,6 +96,9 @@ export interface UpdateDataSourceRequest {
   description: string;
   internalName: string;
   pathName: string[];
+  referenceCost: string | null;
+  providerContractCosts: { providerId: string; contractCost: string | null }[];
+  defaultProviderId: string;
 }
 
 /**
@@ -111,8 +113,15 @@ export interface PatchDataSourceActiveRequest {
  */
 export interface EditSourceFormData {
   isActive: boolean;
+  shortName: string;
+  longName: string;
   name: string;
   description: string;
+  shortDescription: string;
+  longDescription: string;
   internalName: string;
   pathDisplay: string;
+  referenceCost: string;
+  contractCostsByProviderId: Record<string, string>;
+  defaultProviderId: string;
 }

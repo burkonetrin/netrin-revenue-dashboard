@@ -1,36 +1,47 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Spinner } from "@heroui/react";
-import { Pencil } from "lucide-react";
-import { DynamicTable } from "@/shared/components/DynamicTable";
-import type { ColumnConfig } from "@/shared/components/DynamicTable/types";
+import { providersSourceDetailPath } from "@/constants";
 import { DynamicDrawer } from "@/shared/components/DynamicDrawer";
 import { DrawerFormFooter } from "@/shared/components/DynamicDrawer/DrawerFormFooter";
+import { DynamicTable } from "@/shared/components/DynamicTable";
+import type { ColumnConfig } from "@/shared/components/DynamicTable/types";
 import { TableListFooter } from "@/shared/components/table/TableListFooter";
-import { useDataSources } from "../hooks/useDataSources";
+import { defaultInputClassNames } from "@/shared/styles/inputClassNames";
+import { maskCurrency4, toApiDecimalString4, unmaskCurrency4 } from "@/shared/utils/currency";
+import { Chip, Input, Spinner } from "@heroui/react";
+import { Link as LinkIcon, Pencil, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useDataSource } from "../hooks/useDataSource";
-import { useUpdateDataSource } from "../hooks/useUpdateDataSource";
+import { useDataSources } from "../hooks/useDataSources";
 import { usePatchDataSourceActive } from "../hooks/usePatchDataSourceActive";
 import { useProviders } from "../hooks/useProviders";
-import { EditSourceForm } from "./EditSourceForm";
+import { useUpdateDataSource } from "../hooks/useUpdateDataSource";
 import type { DataSource, EditSourceFormData } from "../types/data-sources.types";
-import { pathNameToDisplay, displayToPathName } from "../utils/pathName.utils";
+import { displayToPathName, pathNameToDisplay } from "../utils/pathName.utils";
 import {
   buildProviderDescriptionColumn,
   buildProviderIdColumn,
   buildProviderInternalNameColumn,
-  buildProviderNameColumn,
-  buildProviderStatusColumn,
   providerTableClassNames,
 } from "../utils/providersTableColumns.shared";
+import { formatSourceCurrency } from "../utils/sourceCurrency.utils";
+import { DataSourceLinkedTemplatesSidebar } from "./DataSourceLinkedTemplatesSidebar";
+import { EditSourceForm } from "./EditSourceForm";
 
 const INITIAL_FORM_DATA: EditSourceFormData = {
   isActive: true,
+  shortName: "",
+  longName: "",
   name: "",
   description: "",
+  shortDescription: "",
+  longDescription: "",
   internalName: "",
   pathDisplay: "",
+  referenceCost: "",
+  contractCostsByProviderId: {},
+  defaultProviderId: "",
 };
 
 /**
@@ -39,27 +50,27 @@ const INITIAL_FORM_DATA: EditSourceFormData = {
 export function SourcesTab() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([
-    "id",
-    "isActive",
-    "name",
-    "description",
-    "internalName",
-    "edit",
-  ]);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
+  const [linkedSource, setLinkedSource] = useState<DataSource | null>(null);
   const [formData, setFormData] = useState<EditSourceFormData>(INITIAL_FORM_DATA);
   const initialIsActiveRef = useRef(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => window.clearTimeout(timeoutId);
+  }, [search]);
+
   const { data: sourcesResponse, isLoading } = useDataSources({
     page,
     pageSize,
+    search: debouncedSearch || undefined,
   });
 
-  const { data: sourceDetail, isLoading: isSourceLoading } =
-    useDataSource(editingSourceId);
+  const { data: sourceDetail, isLoading: isSourceLoading } = useDataSource(editingSourceId);
 
   const { data: providersResponse, isLoading: isProvidersLoading } = useProviders(
     {
@@ -80,12 +91,27 @@ export function SourcesTab() {
     if (!sourceDetail || !isDrawerOpen) return;
 
     initialIsActiveRef.current = sourceDetail.isActive;
+    const persistedDefaultDirectId =
+      sourceDetail.directProviders?.find(({ isDefault }) => isDefault)?.provider.value ?? "";
     setFormData({
       isActive: sourceDetail.isActive,
+      shortName: sourceDetail.name,
+      longName: "",
       name: sourceDetail.name,
       description: sourceDetail.description ?? "",
+      shortDescription: sourceDetail.description ?? "",
+      longDescription: "",
       internalName: sourceDetail.internalName,
       pathDisplay: pathNameToDisplay(sourceDetail.pathName),
+      referenceCost:
+        sourceDetail.referenceCost == null ? "" : maskCurrency4(sourceDetail.referenceCost),
+      contractCostsByProviderId: Object.fromEntries(
+        (sourceDetail.directProviders ?? []).map(({ provider, contractCost }) => [
+          provider.value,
+          contractCost == null ? "" : maskCurrency4(contractCost),
+        ]),
+      ),
+      defaultProviderId: persistedDefaultDirectId,
     });
   }, [sourceDetail, isDrawerOpen]);
 
@@ -114,10 +140,21 @@ export function SourcesTab() {
       await updateDataSource.mutateAsync({
         id: editingSourceId,
         data: {
-          name: formData.name,
-          description: formData.description,
+          name: formData.shortName,
+          description: formData.shortDescription,
           internalName: formData.internalName,
           pathName: displayToPathName(formData.pathDisplay),
+          referenceCost: formData.referenceCost
+            ? toApiDecimalString4(unmaskCurrency4(formData.referenceCost))
+            : null,
+          providerContractCosts: (sourceDetail?.directProviders ?? []).map(({ provider }) => {
+            const value = formData.contractCostsByProviderId[provider.value] ?? "";
+            return {
+              providerId: provider.value,
+              contractCost: value ? toApiDecimalString4(unmaskCurrency4(value)) : null,
+            };
+          }),
+          defaultProviderId: formData.defaultProviderId,
         },
       });
 
@@ -138,52 +175,118 @@ export function SourcesTab() {
   }, [
     editingSourceId,
     formData,
+    sourceDetail?.directProviders,
     updateDataSource,
     patchDataSourceActive,
     resetDrawer,
   ]);
 
-  const allColumns = useMemo<ColumnConfig<DataSource & { edit?: never }>[]>(
-    () => [
-      buildProviderIdColumn<DataSource & { edit?: never }>(),
-      buildProviderStatusColumn<DataSource & { edit?: never }>(),
-      buildProviderNameColumn<DataSource & { edit?: never }>(),
-      buildProviderDescriptionColumn<DataSource & { edit?: never }>(),
-      buildProviderInternalNameColumn<DataSource & { edit?: never }>(),
-      {
-        id: "edit",
-        label: "Editar",
-        align: "center",
-        width: 40,
-        render: (_, row) => (
+  const columns: ColumnConfig<DataSource & { actions?: never }>[] = [
+    buildProviderIdColumn<DataSource & { actions?: never }>(),
+    {
+      id: "isActive",
+      label: "Status",
+      width: 72,
+      render: (value) => (
+        <Chip
+          size="sm"
+          variant="flat"
+          color={value ? "success" : "danger"}
+          className={
+            value
+              ? "h-7 rounded-full bg-[#17c964]/20 text-[#22c55e]"
+              : "h-7 rounded-full bg-danger-50 text-danger-700"
+          }
+        >
+          {value ? "Ativo" : "Inativo"}
+        </Chip>
+      ),
+    },
+    {
+      id: "name",
+      label: "Nome",
+      render: (value, row) => (
+        <Link
+          to={providersSourceDetailPath(row.id)}
+          className="text-primary hover:underline font-medium text-left"
+        >
+          {String(value)}
+        </Link>
+      ),
+    },
+    buildProviderInternalNameColumn<DataSource & { actions?: never }>(),
+    buildProviderDescriptionColumn<DataSource & { actions?: never }>(),
+    {
+      id: "referenceCost",
+      label: "Custo de referência (R$)",
+      align: "end",
+      render: (value) => (
+        <span>{formatSourceCurrency(value as number | string | null | undefined)}</span>
+      ),
+    },
+    {
+      id: "averageRealCost",
+      label: "Custo real médio (R$)",
+      align: "end",
+      render: (value) => (
+        <span>{formatSourceCurrency(value as number | string | null | undefined)}</span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Ações",
+      align: "center",
+      width: 100,
+      render: (_, row) => (
+        <div className="flex items-center justify-center gap-1">
           <button
             type="button"
-            onClick={() => handleEditSource(row)}
-            className="text-primary hover:text-primary-700 p-2 rounded-full hover:bg-primary-50 transition-all cursor-pointer"
+            title="Ver vínculos"
+            aria-label="Ver vínculos"
+            onClick={() => setLinkedSource(row)}
+            className="rounded-full p-2 text-primary transition-all hover:bg-primary-50 hover:text-primary-700"
           >
-            <Pencil size={18} />
+            <LinkIcon size={18} aria-hidden="true" />
           </button>
-        ),
-      },
-    ],
-    [handleEditSource],
-  );
-
-  const displayedColumns = useMemo(() => {
-    return allColumns.filter((col) => visibleColumns.includes(col.id as string));
-  }, [allColumns, visibleColumns]);
+          <button
+            type="button"
+            title="Editar fonte"
+            aria-label="Editar fonte"
+            onClick={() => handleEditSource(row)}
+            className="rounded-full p-2 text-primary transition-all hover:bg-primary-50 hover:text-primary-700"
+          >
+            <Pencil size={18} aria-hidden="true" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   const isFormReady = !isSourceLoading && Boolean(sourceDetail);
+  const persistedDefaultDirectId =
+    sourceDetail?.directProviders?.find(({ isDefault }) => isDefault)?.provider.value ?? "";
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      <Input
+        aria-label="Buscar fontes"
+        placeholder="Pesquise por fonte"
+        value={search}
+        onValueChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        className="max-w-md"
+        classNames={defaultInputClassNames}
+        startContent={<Search className="text-gray-400" size={20} />}
+      />
       <div className="relative">
         <DynamicTable
-          columns={displayedColumns}
+          columns={columns}
           data={sources}
           isLoading={isLoading}
           keyExtractor={(row) => row.id}
-          emptyMessage="Nenhuma fonte de dados encontrada"
+          emptyMessage="Nenhuma fonte encontrada"
           classNames={providerTableClassNames}
         />
       </div>
@@ -195,27 +298,35 @@ export function SourcesTab() {
         page={page}
         totalPages={pagination?.totalPages}
         onPageChange={setPage}
-        availableColumns={allColumns}
-        selectedColumns={visibleColumns}
-        onColumnsChange={setVisibleColumns}
         variant="providers"
       />
 
+      <DataSourceLinkedTemplatesSidebar
+        source={linkedSource}
+        onClose={() => setLinkedSource(null)}
+      />
+
       <DynamicDrawer
-        size="lg"
+        size="2xl"
         title="Editar fonte"
         isOpen={isDrawerOpen}
         onOpenChange={(open) => {
           if (!open) handleCloseDrawer();
+        }}
+        classNames={{
+          body: "flex-1! min-h-0 mb-0 overflow-y-auto",
+          footer: "mt-auto",
         }}
         component={
           isSourceLoading ? (
             <div className="flex justify-center py-16">
               <Spinner size="lg" color="primary" />
             </div>
-          ) : isFormReady ? (
+          ) : isFormReady && sourceDetail ? (
             <EditSourceForm
+              sourceId={editingSourceId ?? ""}
               formData={formData}
+              persistedDefaultProviderId={persistedDefaultDirectId}
               onFormDataChange={setFormData}
               providers={linkedProviders}
               isProvidersLoading={isProvidersLoading}

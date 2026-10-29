@@ -16,15 +16,27 @@ export const DATA_SOURCES_ENDPOINTS = {
    * GET /v1/data-sources/{data_source_id}
    * Retorna uma fonte de dados pelo ID
    */
-  GET_BY_ID: (dataSourceId: string) =>
-    `${BASE_URL}v1/data-sources/${dataSourceId}`,
+  GET_BY_ID: (dataSourceId: string) => `${BASE_URL}v1/data-sources/${dataSourceId}`,
+
+  /**
+   * GET /v1/data-sources/{data_source_id}/background-check-templates
+   * Modelos atuais de Background Check que usam a fonte
+   */
+  BACKGROUND_CHECK_TEMPLATES: (dataSourceId: string) =>
+    `${BASE_URL}v1/data-sources/${dataSourceId}/background-check-templates`,
+
+  /**
+   * GET /v1/data-sources/{data_source_id}/monthly-financials
+   * Indicadores financeiros mensais agregados por fonte
+   */
+  MONTHLY_FINANCIALS: (dataSourceId: string) =>
+    `${BASE_URL}v1/data-sources/${dataSourceId}/monthly-financials`,
 
   /**
    * PUT /v1/data-sources/{data_source_id}
    * Atualiza uma fonte de dados pelo ID
    */
-  UPDATE: (dataSourceId: string) =>
-    `${BASE_URL}v1/data-sources/${dataSourceId}`,
+  UPDATE: (dataSourceId: string) => `${BASE_URL}v1/data-sources/${dataSourceId}`,
 
   /**
    * PATCH /v1/data-sources/{data_source_id}/active

@@ -15,6 +15,11 @@ export const PROVIDERS_BASE_PATH = `${PROTOTYPE_BASE_PATH}/fontes-fornecedores`;
 /** Prévia isolada de modelos Background Check. */
 export const PROVIDERS_BGC_PREVIEW_PATH = `${PROVIDERS_BASE_PATH}/modelos-background-check-preview`;
 
+/** Detalhe analítico de uma fonte (espelho `/providers/sources/[id]`). */
+export function providersSourceDetailPath(sourceId: string): string {
+  return `${PROVIDERS_BASE_PATH}/fontes/${sourceId}`;
+}
+
 export const PROFIT_CENTERS: ProfitCenter[] = [
   "Junior",
   "Camila",

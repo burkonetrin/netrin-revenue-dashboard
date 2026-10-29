@@ -3,10 +3,10 @@ import type { SourceGroupFormSource } from "../types/data-source-bundles.types";
 import type { DataSource } from "../types/data-sources.types";
 
 export function toSourceGroupFormSourceFromDataSource(
-  source: Pick<DataSource, "id" | "name" | "referenceCost" | "defaultCost">,
+  source: Pick<DataSource, "id" | "name" | "referenceCost">,
 ): SourceGroupFormSource {
   const parsed = parseReferenceCost(source.referenceCost);
-  const referenceCost = parsed ?? source.defaultCost ?? 0;
+  const referenceCost = parsed ?? 0;
   return {
     id: source.id,
     name: source.name,

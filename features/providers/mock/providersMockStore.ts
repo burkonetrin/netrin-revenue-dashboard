@@ -16,7 +16,9 @@ import type {
 } from "../types/data-source-bundles.types";
 import type {
   DataSource,
+  DataSourceMonthFinancialsResponse,
   DataSourceQueryParams,
+  DataSourceTemplatesListResponse,
   PatchDataSourceActiveRequest,
   UpdateDataSourceRequest,
 } from "../types/data-sources.types";
@@ -40,7 +42,13 @@ import type {
   ProviderDetail,
   ProvidersQueryParams,
   UpdateProviderRequest,
+  ProviderType,
 } from "../types/providers.types";
+import {
+  buildProviderTypeOption,
+  isDirectProviderType,
+  matchesProviderTypeFilter,
+} from "../utils/providerType.utils";
 
 const now = () => new Date().toISOString();
 
@@ -66,10 +74,7 @@ function newId(prefix: string) {
   return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-const typeOption = (value: "direct" | "indirect") => ({
-  label: value === "direct" ? "Direto" : "Indireto",
-  value,
-});
+const typeOption = (value: ProviderType) => buildProviderTypeOption(value);
 
 let dataSources: DataSource[] = [
   {
@@ -79,8 +84,8 @@ let dataSources: DataSource[] = [
     internalName: "receita_cnpj",
     pathName: ["Brasil", "Receita"],
     consultationTypes: [{ label: "Pessoa jurídica", value: "br-entity" }],
-    defaultCost: 0.42,
     referenceCost: 0.42,
+    averageRealCost: 0.38,
     hasQsaBackgroundCheck: true,
     isActive: true,
     isArchived: false,
@@ -94,8 +99,8 @@ let dataSources: DataSource[] = [
     internalName: "serasa_score_pf",
     pathName: ["Brasil", "Bureau"],
     consultationTypes: [{ label: "Pessoa física", value: "br-person" }],
-    defaultCost: 1.15,
     referenceCost: 1.15,
+    averageRealCost: 1.08,
     isActive: true,
     isArchived: false,
     createdAt: now(),
@@ -108,8 +113,8 @@ let dataSources: DataSource[] = [
     internalName: "worldcheck_entity",
     pathName: ["Internacional"],
     consultationTypes: [{ label: "Entidade internacional", value: "intl-entity" }],
-    defaultCost: 2.8,
     referenceCost: 2.8,
+    averageRealCost: 2.65,
     isActive: true,
     isArchived: false,
     createdAt: now(),
@@ -139,8 +144,27 @@ let providers: ProviderDetail[] = [
   } as GetDirectProviderResponse,
   {
     id: "prov-receita-direct",
-    name: "Receita Federal (API)",
-    description: "Fontes governamentais",
+    name: "Infosimples",
+    description: "Integração Infosimples",
+    isPrepaid: true,
+    isActive: true,
+    providerType: typeOption("direct"),
+    dataSources: [
+      {
+        id: "ds-receita",
+        name: "Receita Federal — CNPJ",
+        internalName: "receita_cnpj",
+        defaultCost: "0.42",
+      },
+    ],
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetDirectProviderResponse,
+  {
+    id: "prov-receita-mirror",
+    name: "Netrin",
+    description: "Canal Netrin",
     isPrepaid: true,
     isActive: true,
     providerType: typeOption("direct"),
@@ -156,7 +180,72 @@ let providers: ProviderDetail[] = [
       {
         id: "prov-aggregator",
         name: "Agregador Netrin",
-        providerType: typeOption("indirect"),
+        providerType: typeOption("indirect_captcha"),
+        dataSources: [
+          {
+            id: "ds-receita",
+            name: "Receita Federal — CNPJ",
+            internalName: "receita_cnpj",
+            defaultCost: "0.42",
+          },
+        ],
+      },
+      {
+        id: "prov-captcha-alt",
+        name: "2Captcha Brasil",
+        providerType: typeOption("indirect_captcha"),
+        dataSources: [
+          {
+            id: "ds-receita",
+            name: "Receita Federal — CNPJ",
+            internalName: "receita_cnpj",
+            defaultCost: "0.42",
+          },
+        ],
+      },
+      {
+        id: "prov-captcha-solver",
+        name: "AntiCaptcha Netrin",
+        providerType: typeOption("indirect_captcha"),
+        dataSources: [
+          {
+            id: "ds-receita",
+            name: "Receita Federal — CNPJ",
+            internalName: "receita_cnpj",
+            defaultCost: "0.42",
+          },
+        ],
+      },
+      {
+        id: "prov-proxy-bridge",
+        name: "Proxy Gateway BR",
+        providerType: typeOption("indirect_proxy"),
+        dataSources: [
+          {
+            id: "ds-receita",
+            name: "Receita Federal — CNPJ",
+            internalName: "receita_cnpj",
+            defaultCost: "0.42",
+          },
+        ],
+      },
+      {
+        id: "prov-proxy-residential",
+        name: "Proxy Residencial SP",
+        providerType: typeOption("indirect_proxy"),
+        dataSources: [
+          {
+            id: "ds-receita",
+            name: "Receita Federal — CNPJ",
+            internalName: "receita_cnpj",
+            defaultCost: "0.42",
+          },
+        ],
+      },
+      {
+        id: "prov-proxy-datacenter",
+        name: "Proxy Datacenter SA",
+        providerType: typeOption("indirect_proxy"),
         dataSources: [
           {
             id: "ds-receita",
@@ -171,12 +260,86 @@ let providers: ProviderDetail[] = [
     updatedAt: now(),
   } as GetDirectProviderResponse,
   {
-    id: "prov-aggregator",
-    name: "Agregador Netrin",
-    description: "Serviço indireto de enriquecimento",
+    id: "prov-receita-legacy",
+    name: "Quod",
+    description: "Integração Quod",
     isPrepaid: false,
     isActive: true,
-    providerType: typeOption("indirect"),
+    providerType: typeOption("direct"),
+    dataSources: [
+      {
+        id: "ds-receita",
+        name: "Receita Federal — CNPJ",
+        internalName: "receita_cnpj",
+        defaultCost: "0.42",
+      },
+    ],
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetDirectProviderResponse,
+  {
+    id: "prov-aggregator",
+    name: "Agregador Netrin",
+    description: "Serviço indireto de enriquecimento (Captcha)",
+    isPrepaid: false,
+    isActive: true,
+    providerType: typeOption("indirect_captcha"),
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetIndirectProviderResponse,
+  {
+    id: "prov-captcha-alt",
+    name: "2Captcha Brasil",
+    description: "Resolução de captcha terceirizada",
+    isPrepaid: false,
+    isActive: true,
+    providerType: typeOption("indirect_captcha"),
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetIndirectProviderResponse,
+  {
+    id: "prov-captcha-solver",
+    name: "AntiCaptcha Netrin",
+    description: "Captcha interno Netrin",
+    isPrepaid: false,
+    isActive: true,
+    providerType: typeOption("indirect_captcha"),
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetIndirectProviderResponse,
+  {
+    id: "prov-proxy-bridge",
+    name: "Proxy Gateway BR",
+    description: "Serviço indireto via proxy residencial",
+    isPrepaid: false,
+    isActive: true,
+    providerType: typeOption("indirect_proxy"),
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetIndirectProviderResponse,
+  {
+    id: "prov-proxy-residential",
+    name: "Proxy Residencial SP",
+    description: "Proxy residencial São Paulo",
+    isPrepaid: false,
+    isActive: true,
+    providerType: typeOption("indirect_proxy"),
+    providerUsages: [],
+    createdAt: now(),
+    updatedAt: now(),
+  } as GetIndirectProviderResponse,
+  {
+    id: "prov-proxy-datacenter",
+    name: "Proxy Datacenter SA",
+    description: "Proxy datacenter Sul",
+    isPrepaid: false,
+    isActive: true,
+    providerType: typeOption("indirect_proxy"),
     providerUsages: [],
     createdAt: now(),
     updatedAt: now(),
@@ -208,6 +371,35 @@ function providersForSource(sourceId: string) {
       "dataSources" in provider &&
       provider.dataSources.some((dataSource) => dataSource.id === sourceId),
   );
+}
+
+const sourceDefaultProviderId: Record<string, string> = {
+  "ds-receita": "prov-receita-direct",
+  "ds-serasa": "prov-serasa-direct",
+};
+
+const sourceContractCosts: Record<string, Record<string, string | null>> = {
+  "ds-receita": { "prov-receita-direct": "0.4200" },
+  "ds-serasa": { "prov-serasa-direct": "1.1500" },
+};
+
+function enrichDataSource(record: DataSource): DataSource {
+  const directProvidersList = providersForSource(record.id);
+  const defaultProviderId =
+    sourceDefaultProviderId[record.id] ?? directProvidersList[0]?.id ?? "";
+  const contractCostsForSource = sourceContractCosts[record.id] ?? {};
+
+  const directProviders = directProvidersList.map((provider) => {
+    const link = provider.dataSources.find((item) => item.id === record.id);
+    const fallbackCost = link?.defaultCost ?? null;
+    return {
+      provider: { value: provider.id, label: provider.name },
+      contractCost: contractCostsForSource[provider.id] ?? fallbackCost,
+      isDefault: provider.id === defaultProviderId,
+    };
+  });
+
+  return { ...record, directProviders };
 }
 
 function providerRef(provider: GetDirectProviderResponse) {
@@ -248,7 +440,7 @@ function bundleToResponse(bundle: BundleRecord): DataSourceBundleResponse {
     const reference =
       typeof dataSource?.referenceCost === "number"
         ? dataSource.referenceCost
-        : dataSource?.defaultCost ?? 0;
+        : Number(dataSource?.referenceCost) || 0;
     standardCost += Number(reference) || 0;
 
     const providerId = bundle.sourceProviders[sourceId];
@@ -440,10 +632,20 @@ export function mockListProviders(params: ProvidersQueryParams = {}) {
     list = list.filter((p) => p.name.toLowerCase().includes(q));
   }
   if (params.providerType) {
-    list = list.filter((p) => p.providerType.value === params.providerType);
+    list = list.filter((p) =>
+      matchesProviderTypeFilter(p.providerType.value, params.providerType!),
+    );
   }
   if (params.isActive !== undefined && params.isActive !== null) {
     list = list.filter((p) => p.isActive === params.isActive);
+  }
+  if (params.dataSourceId) {
+    const sourceId = params.dataSourceId;
+    list = list.filter(
+      (p) =>
+        "dataSources" in p &&
+        p.dataSources.some((dataSource) => dataSource.id === sourceId),
+    );
   }
   const { data, pagination } = paginate(list as Provider[], page, pageSize);
   return { data, pagination };
@@ -469,7 +671,7 @@ export function mockCreateProvider(data: CreateProviderRequest): ProviderDetail 
     updatedAt: now(),
   };
   const detail: ProviderDetail =
-    data.providerType === "direct"
+    isDirectProviderType(data.providerType)
       ? {
           ...base,
           dataSources: (data.dataSourceIds ?? []).map((dsId) => {
@@ -478,7 +680,7 @@ export function mockCreateProvider(data: CreateProviderRequest): ProviderDetail 
               id: dsId,
               name: ds?.name ?? dsId,
               internalName: ds?.internalName ?? dsId,
-              defaultCost: String(ds?.defaultCost ?? "0"),
+              defaultCost: String(ds?.referenceCost ?? "0"),
             };
           }),
         }
@@ -504,7 +706,7 @@ export function mockUpdateProvider(id: string, data: UpdateProviderRequest): Pro
         id: dsId,
         name: ds?.name ?? dsId,
         internalName: ds?.internalName ?? dsId,
-        defaultCost: String(ds?.defaultCost ?? "0"),
+        defaultCost: String(ds?.referenceCost ?? "0"),
       };
     });
   }
@@ -521,7 +723,8 @@ export function mockDeleteProvider(id: string): void {
 export function mockListDataSources(params: DataSourceQueryParams = {}) {
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 10;
-  let list = dataSources.filter((d) => !d.isArchived);
+  let list = dataSources.filter((d) => !d.isArchived).map(enrichDataSource);
+  list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   if (params.search) {
     const q = params.search.toLowerCase();
     list = list.filter(
@@ -538,14 +741,120 @@ export function mockListDataSources(params: DataSourceQueryParams = {}) {
 export function mockGetDataSourceById(id: string): DataSource {
   const found = dataSources.find((d) => d.id === id);
   if (!found) notFound("Fonte não encontrada");
-  return { ...found };
+  return enrichDataSource({ ...found });
+}
+
+export function mockGetDataSourceTemplates(
+  dataSourceId: string,
+): DataSourceTemplatesListResponse {
+  const source = dataSources.find((item) => item.id === dataSourceId);
+  if (!source) notFound("Fonte não encontrada");
+
+  const templates =
+    dataSourceId === "ds-receita" || dataSourceId === "ds-serasa"
+      ? [
+          {
+            id: "bgc-template-core",
+            name: "BGC Padrão Netrin",
+            clients: [
+              {
+                id: "client-demo-1",
+                name: "Cliente Demo Alpha",
+                deductibles: [
+                  { id: "franquia-1", name: "Franquia Principal" },
+                  { id: "franquia-2", name: "Franquia Secundária" },
+                ],
+              },
+            ],
+          },
+        ]
+      : [];
+
+  return {
+    data: templates,
+    pagination: {
+      hasNext: false,
+      hasPrevious: false,
+      page: 1,
+      pageSize: 100,
+      totalPages: 1,
+      totalRecords: templates.length,
+    },
+  };
+}
+
+function monthRangeValues(from: string, to: string): string[] {
+  const months: string[] = [];
+  const start = new Date(`${from}-01T00:00:00`);
+  const end = new Date(`${to}-01T00:00:00`);
+  for (const cursor = new Date(start); cursor <= end; cursor.setMonth(cursor.getMonth() + 1)) {
+    months.push(
+      `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`,
+    );
+  }
+  return months;
+}
+
+export function mockGetDataSourceMonthlyFinancials(
+  dataSourceId: string,
+  dateFrom: string,
+  dateTo: string,
+) {
+  const source = mockGetDataSourceById(dataSourceId);
+  const reference = Number(source.referenceCost ?? 0.4);
+  const real = Number(source.averageRealCost ?? reference * 0.92);
+  const months: DataSourceMonthFinancialsResponse[] = monthRangeValues(dateFrom, dateTo).map(
+    (month, index) => {
+      const drift = 1 + (index % 5) * 0.02;
+      const averageRealCost = (real * drift).toFixed(4);
+      const averageRevenue = (real * drift * 1.35).toFixed(4);
+      const markup = (Number(averageRevenue) / Number(averageRealCost)).toFixed(4);
+      return {
+        month,
+        referenceCost: reference.toFixed(4),
+        averageRealCost,
+        averageRevenue,
+        markup,
+      };
+    },
+  );
+
+  return {
+    dataSource: { value: source.id, label: source.name },
+    dateFrom,
+    dateTo,
+    months,
+  };
 }
 
 export function mockUpdateDataSource(id: string, data: UpdateDataSourceRequest): DataSource {
   const idx = dataSources.findIndex((d) => d.id === id);
   if (idx < 0) notFound("Fonte não encontrada");
-  dataSources[idx] = { ...dataSources[idx], ...data, updatedAt: now() };
-  return dataSources[idx];
+
+  const parsedReference =
+    data.referenceCost != null && data.referenceCost !== ""
+      ? Number.parseFloat(data.referenceCost)
+      : null;
+
+  dataSources[idx] = {
+    ...dataSources[idx],
+    name: data.name,
+    description: data.description,
+    internalName: data.internalName,
+    pathName: data.pathName,
+    referenceCost: parsedReference ?? dataSources[idx].referenceCost,
+    updatedAt: now(),
+  };
+
+  sourceDefaultProviderId[id] = data.defaultProviderId;
+  if (!sourceContractCosts[id]) {
+    sourceContractCosts[id] = {};
+  }
+  for (const item of data.providerContractCosts) {
+    sourceContractCosts[id][item.providerId] = item.contractCost;
+  }
+
+  return enrichDataSource(dataSources[idx]);
 }
 
 export function mockPatchDataSourceActive(
@@ -901,11 +1210,13 @@ function enrichBackgroundCheckTemplate(template: BackgroundCheckTemplate): Backg
   const linkedDataSources = ids.map((sourceId) => {
     const ds = dataSources.find((item) => item.id === sourceId);
     const reference =
-      typeof ds?.referenceCost === "number" ? ds.referenceCost : ds?.defaultCost ?? 0;
+      typeof ds?.referenceCost === "number"
+        ? ds.referenceCost
+        : Number(ds?.referenceCost) || 0;
     const real =
-      typeof ds?.defaultCost === "number"
-        ? ds.defaultCost
-        : Number.parseFloat(String(ds?.defaultCost ?? reference)) || reference;
+      typeof ds?.averageRealCost === "number"
+        ? ds.averageRealCost
+        : Number(ds?.averageRealCost ?? reference) || reference;
     referenceCost += Number(reference) || 0;
     actualCost += Number.isFinite(real) ? real : 0;
     return {
@@ -952,6 +1263,7 @@ export function mockCreateBackgroundCheckTemplate(
       value: data.consultationType,
     },
     commercialName: data.commercialName,
+    modelReferenceCost: data.modelReferenceCost ?? null,
     isActive: data.isActive ?? true,
     sourcesCount: 0,
     clientsCount: 0,
@@ -972,6 +1284,10 @@ export function mockUpdateBackgroundCheckTemplate(
     name: data.name,
     description: data.description,
     commercialName: data.commercialName,
+    modelReferenceCost:
+      data.modelReferenceCost !== undefined
+        ? data.modelReferenceCost
+        : bgcTemplates[idx].modelReferenceCost,
     consultationType: { label: data.consultationType, value: data.consultationType },
     hasQsaBackgroundCheck: data.hasQsaBackgroundCheck,
   };

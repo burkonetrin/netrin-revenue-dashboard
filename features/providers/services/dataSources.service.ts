@@ -1,7 +1,9 @@
 import type {
   DataSource,
   DataSourceListResponse,
+  DataSourceMonthlyFinancialsResponse,
   DataSourceQueryParams,
+  DataSourceTemplatesListResponse,
   PatchDataSourceActiveRequest,
   UpdateDataSourceRequest,
 } from "../types/data-sources.types";
@@ -19,6 +21,22 @@ export async function getDataSources(
 export async function getDataSourceById(id: string): Promise<DataSource> {
   await delay();
   return mock.mockGetDataSourceById(id);
+}
+
+export async function getDataSourceTemplates(
+  dataSourceId: string,
+): Promise<DataSourceTemplatesListResponse> {
+  await delay();
+  return mock.mockGetDataSourceTemplates(dataSourceId);
+}
+
+export async function getDataSourceMonthlyFinancials(
+  dataSourceId: string,
+  dateFrom: string,
+  dateTo: string,
+): Promise<DataSourceMonthlyFinancialsResponse> {
+  await delay();
+  return mock.mockGetDataSourceMonthlyFinancials(dataSourceId, dateFrom, dateTo);
 }
 
 export async function updateDataSource(

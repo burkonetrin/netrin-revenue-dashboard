@@ -33,7 +33,7 @@ import {
   providerTableClassNames,
 } from "@/features/providers/utils/providersTableColumns.shared";
 import { toSourceGroupFormSourceFromDataSource } from "@/features/providers/utils/sourceGroupFormSource.utils";
-import { formatCurrency } from "@/shared/utils/currency";
+import { formatCurrency, maskCurrency4, unmaskCurrency4 } from "@/shared/utils/currency";
 import { DeleteConfirmModal } from "@/shared/components/DeleteConfirmModal";
 import { DynamicDrawer } from "@/shared/components/DynamicDrawer";
 import { DynamicTable } from "@/shared/components/DynamicTable";
@@ -204,6 +204,7 @@ export function BackgroundCheckTemplatesManagementTab() {
   const [modelName, setModelName] = useState("");
   const [modelDescription, setModelDescription] = useState("");
   const [modelCommercialUse, setModelCommercialUse] = useState("");
+  const [modelReferenceCost, setModelReferenceCost] = useState("");
   const [modelQueryType, setModelQueryType] = useState("br-person");
   const [dataSourcesQueryType, setDataSourcesQueryType] = useState("br-person");
   const [selectedSources, setSelectedSources] = useState<SourceGroupFormSource[]>([]);
@@ -254,6 +255,12 @@ export function BackgroundCheckTemplatesManagementTab() {
         setModelCommercialUse(
           getTemplateCommercialUse(template) === "-" ? "" : getTemplateCommercialUse(template),
         );
+        const storedModelReferenceCost = template.modelReferenceCost;
+        setModelReferenceCost(
+          storedModelReferenceCost != null
+            ? maskCurrency4(storedModelReferenceCost)
+            : "",
+        );
         setModelQueryType(queryType === "-" ? "br-person" : queryType);
         setDataSourcesQueryType(queryType === "-" ? "br-person" : queryType);
         setHasQsaBackgroundCheck(getTemplateHasQsaBackgroundCheck(template));
@@ -263,6 +270,7 @@ export function BackgroundCheckTemplatesManagementTab() {
         setModelName("");
         setModelDescription("");
         setModelCommercialUse("");
+        setModelReferenceCost("");
         setModelQueryType("br-person");
         setDataSourcesQueryType("br-person");
         setHasQsaBackgroundCheck(false);
@@ -454,6 +462,7 @@ export function BackgroundCheckTemplatesManagementTab() {
     setModelName("");
     setModelDescription("");
     setModelCommercialUse("");
+    setModelReferenceCost("");
     setModelQueryType("br-person");
     setDataSourcesQueryType("br-person");
     setSelectedSources([]);
@@ -474,6 +483,12 @@ export function BackgroundCheckTemplatesManagementTab() {
     [eligibleQsaSource],
   );
 
+  const resolveModelReferenceCostPayload = () => {
+    const trimmed = modelReferenceCost.trim();
+    if (!trimmed) return null;
+    return unmaskCurrency4(trimmed);
+  };
+
   const handleCreateTemplate = () => {
     if (!canCreateCompleteTemplate) return;
     const consultationType = modelQueryType as "br-person" | "br-entity" | "intl-entity";
@@ -484,6 +499,7 @@ export function BackgroundCheckTemplatesManagementTab() {
         name: modelName,
         description: modelDescription,
         commercialName: modelCommercialUse,
+        modelReferenceCost: resolveModelReferenceCostPayload(),
         consultationType,
         isActive: true,
       },
@@ -512,6 +528,7 @@ export function BackgroundCheckTemplatesManagementTab() {
           name: modelName,
           description: modelDescription,
           commercialName: modelCommercialUse.trim() || modelName.trim(),
+          modelReferenceCost: resolveModelReferenceCostPayload(),
           consultationType,
           hasQsaBackgroundCheck,
         },
@@ -549,6 +566,7 @@ export function BackgroundCheckTemplatesManagementTab() {
                 name: modelName,
                 description: modelDescription,
                 commercialName: modelCommercialUse.trim() || modelName.trim(),
+                modelReferenceCost: resolveModelReferenceCostPayload(),
                 consultationType,
                 hasQsaBackgroundCheck: qsaFlag,
               },
@@ -704,6 +722,9 @@ export function BackgroundCheckTemplatesManagementTab() {
                   selectedSources={selectedSources}
                   onSelectedSourcesChange={handleSelectedSourcesChange}
                   showSourceError={showSourceError}
+                  showReferenceCostTotalizer={false}
+                  modelReferenceCost={modelReferenceCost}
+                  onModelReferenceCostChange={setModelReferenceCost}
                 />
               )}
             </div>

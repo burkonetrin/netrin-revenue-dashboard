@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { type Key, useEffect, useMemo, useState } from "react";
 import { useDataSources } from "../hooks/useDataSources";
 import type { ProviderType } from "../types/providers.types";
+import { isDirectProviderType } from "../utils/providerType.utils";
 import {
   ProviderLinkedSourcesTable,
   type LinkedSourceRow,
@@ -28,7 +29,7 @@ export function ProviderDirectSourcesSection({
   onLinkedSourcesChange,
   showSourceError = false,
 }: ProviderDirectSourcesSectionProps) {
-  const isDirect = providerType === "direct";
+  const isDirect = isDirectProviderType(providerType);
   const [sourceSearchInput, setSourceSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 

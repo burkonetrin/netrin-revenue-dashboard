@@ -7,8 +7,8 @@ import {
   providerCompactTotalizerValueClass,
   providerNativeTableHeadCellClass,
 } from "@/features/providers/utils/providersTableColumns.shared";
-import { formatCurrency } from "@/shared/utils/currency";
-import { Autocomplete, AutocompleteItem } from "@heroui/react";
+import { formatCurrency, maskCurrency4 } from "@/shared/utils/currency";
+import { Autocomplete, AutocompleteItem, Input } from "@heroui/react";
 import { Search, Trash2 } from "lucide-react";
 import { type Key, useEffect, useMemo, useState } from "react";
 import { useDataSources } from "../hooks/useDataSources";
@@ -26,6 +26,11 @@ interface SourceGroupSourcesStepProps {
   entityLabel?: SourceSelectionEntityLabel;
   /** Filtra fontes pelo tipo de consulta do modelo BGC. */
   consultationType?: string;
+  /** Exibe o card de custo de referência total (desligado no passo de fontes do modelo BGC). */
+  showReferenceCostTotalizer?: boolean;
+  /** Custo de referência do modelo (passo de fontes do BGC). */
+  modelReferenceCost?: string;
+  onModelReferenceCostChange?: (value: string) => void;
 }
 
 export function SourceGroupSourcesStep({
@@ -34,6 +39,9 @@ export function SourceGroupSourcesStep({
   showSourceError = false,
   entityLabel = "grupo",
   consultationType,
+  showReferenceCostTotalizer = true,
+  modelReferenceCost = "",
+  onModelReferenceCostChange,
 }: SourceGroupSourcesStepProps) {
   const [sourceSearchInput, setSourceSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -181,13 +189,17 @@ export function SourceGroupSourcesStep({
         </table>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className={providerCompactTotalizerCardClass}>
-          <p className={providerCompactTotalizerLabelClass}>Custo de referência total</p>
-          <p className={providerCompactTotalizerValueClass}>
-            {formatCurrency(totalReferenceCost)}
-          </p>
-        </div>
+      <div
+        className={`grid grid-cols-1 gap-3 ${showReferenceCostTotalizer ? "sm:grid-cols-2" : ""}`}
+      >
+        {showReferenceCostTotalizer ? (
+          <div className={providerCompactTotalizerCardClass}>
+            <p className={providerCompactTotalizerLabelClass}>Custo de referência total</p>
+            <p className={providerCompactTotalizerValueClass}>
+              {formatCurrency(totalReferenceCost)}
+            </p>
+          </div>
+        ) : null}
         <div className={providerCompactTotalizerCardClass}>
           <p className={providerCompactTotalizerLabelClass}>Custo real total</p>
           <p className={providerCompactTotalizerValueClass}>
@@ -195,6 +207,18 @@ export function SourceGroupSourcesStep({
           </p>
         </div>
       </div>
+
+      {onModelReferenceCostChange ? (
+        <Input
+          label="Custo de referência do modelo"
+          labelPlacement="outside"
+          placeholder="—"
+          inputMode="decimal"
+          value={modelReferenceCost}
+          onValueChange={(next) => onModelReferenceCostChange(maskCurrency4(next))}
+          classNames={defaultInputClassNames}
+        />
+      ) : null}
     </div>
   );
 }

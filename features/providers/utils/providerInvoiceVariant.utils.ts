@@ -1,5 +1,3 @@
-import type { ProviderType } from "../types/providers.types";
-
 export type ProviderInvoiceVariant =
   | "indirect-postpaid"
   | "direct-postpaid"
@@ -28,7 +26,8 @@ export function resolveProviderInvoiceVariant(
     return { status: "invalid", reason: "missing-provider-type" };
   }
 
-  if (input.providerType.value !== "direct" && input.providerType.value !== "indirect") {
+  const raw = input.providerType.value;
+  if (raw !== "direct" && raw !== "indirect_captcha" && raw !== "indirect_proxy") {
     return { status: "invalid", reason: "unknown-provider-type" };
   }
 
@@ -36,9 +35,9 @@ export function resolveProviderInvoiceVariant(
     return { status: "invalid", reason: "missing-prepaid-state" };
   }
 
-  const providerType: ProviderType = input.providerType.value;
+  const billingKind: "direct" | "indirect" = raw === "direct" ? "direct" : "indirect";
   const variant =
-    `${providerType}-${input.isPrepaid ? "prepaid" : "postpaid"}` as ProviderInvoiceVariant;
+    `${billingKind}-${input.isPrepaid ? "prepaid" : "postpaid"}` as ProviderInvoiceVariant;
 
   return { status: "valid", variant };
 }

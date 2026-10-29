@@ -29,6 +29,8 @@ export interface BackgroundCheckTemplate {
   hasQsaBackgroundCheck?: boolean;
   has_qsa_background_check?: boolean;
   referenceCost?: number | null;
+  /** Custo de referência cadastrado no modelo (informações básicas). */
+  modelReferenceCost?: number | null;
   actualCost?: number | null;
   linkedDataSources?: Array<{ id: string; name: string; isActive?: boolean }>;
 }
@@ -52,6 +54,7 @@ export interface CreateBackgroundCheckTemplateRequest {
   name: string;
   description?: string;
   commercialName?: string;
+  modelReferenceCost?: number | null;
   consultationType: "br-person" | "br-entity" | "intl-entity";
   isActive?: boolean;
 }
@@ -61,6 +64,7 @@ export interface UpdateBackgroundCheckTemplateRequest {
   name: string;
   description?: string;
   commercialName: string;
+  modelReferenceCost?: number | null;
   consultationType: "br-person" | "br-entity" | "intl-entity";
   hasQsaBackgroundCheck?: boolean;
 }

@@ -121,9 +121,6 @@ export function SourceSelectionSummary({
   title = "Resumo do modelo",
 }: SourceSelectionSummaryProps) {
   const groups = buildSummaryGroups(sources, selections);
-  const totalReferenceCost = sumEligibleReferenceCosts(
-    groups.flatMap((group) => group.items.map(({ source }) => eligibleSourceReferenceCost(source))),
-  );
   const totalRealCost = sumCosts(
     groups.flatMap((group) => group.items.map(({ provider }) => provider?.realCost ?? null)),
   );
@@ -150,17 +147,9 @@ export function SourceSelectionSummary({
             ))}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 rounded-lg bg-sky-100 px-4 py-4 sm:grid-cols-2">
-            <div>
-              <p className="text-base font-medium text-zinc-600">Custo de referência total</p>
-              <p className="mt-1 text-sm text-zinc-500">
-                {formatReferenceCostDisplay(totalReferenceCost)}
-              </p>
-            </div>
-            <div>
-              <p className="text-base font-medium text-zinc-600">Custo real total</p>
-              <p className="mt-1 text-sm text-zinc-500">{formatCost(totalRealCost)}</p>
-            </div>
+          <div className="rounded-lg bg-sky-100 px-4 py-4">
+            <p className="text-base font-medium text-zinc-600">Custo real total</p>
+            <p className="mt-1 text-sm text-zinc-500">{formatCost(totalRealCost)}</p>
           </div>
         </>
       )}
