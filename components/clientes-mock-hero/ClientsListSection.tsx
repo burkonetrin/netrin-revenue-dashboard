@@ -236,7 +236,7 @@ export function ClientsListSection({
   }, [currentCompetence, billingStatusRevision]);
 
   const openWorkflowForClient = (client: MockClient, action: string) => {
-    if (action === "Fechar fatura" || action === "Reabrir fatura") {
+    if (action === "Aprovar fatura" || action === "Reabrir conferência") {
       if (!isClientListCloseToggleEligible(client.id)) return;
       const state = useClientListInvoiceStatusStore.getState().getState(client.id);
       setClientClosed(client.id, state.status !== "fatura_fechada");
@@ -327,20 +327,20 @@ export function ClientsListSection({
     return tableSort.dir === "asc" ? "↑" : "↓";
   };
 
-  const billClientsModalDescription = (
-    <div className="flex flex-col gap-4">
+  const billClientsModalDescription =
+    billClientsPreview.openInvoiceCount > 0 ? (
       <p className="m-0">
         Faturando {billClientsPreview.closedClientCount} clientes para a competência{" "}
-        {formatBillingCompetence(currentCompetence)}
+        {formatBillingCompetence(currentCompetence).replace("/", " / ")}. Ainda existem{" "}
+        {billClientsPreview.openInvoiceCount} faturas com conferência pendente nesta competência.
+        Esses clientes não serão faturados.
       </p>
-      {billClientsPreview.openInvoiceCount > 0 ? (
-        <p className="m-0">
-          Ainda existem {billClientsPreview.openInvoiceCount} faturas abertas nesta competência.
-          Esses clientes não serão faturados.
-        </p>
-      ) : null}
-    </div>
-  );
+    ) : (
+      <p className="m-0">
+        Faturando {billClientsPreview.closedClientCount} clientes para a competência{" "}
+        {formatBillingCompetence(currentCompetence).replace("/", " / ")}
+      </p>
+    );
 
   return (
     <div>
@@ -370,7 +370,7 @@ export function ClientsListSection({
               className="ms-auto shrink-0"
               onClick={() => setIsBulkCloseModalOpen(true)}
             >
-              Fechar faturas selecionadas ({selectedCount})
+              Aprovar faturas selecionadas ({selectedCount})
             </PrimaryButton>
           ) : null}
         </div>

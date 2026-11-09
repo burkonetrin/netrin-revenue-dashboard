@@ -12,8 +12,10 @@ import { getCurrentMonth } from "../utils/billing-list.utils";
 import {
   BILLING_INVOICE_STATUS_LIST_SORT_ORDER,
   BILLING_LIST_STATUS_SHOWCASE_ORDER,
+  buildDualNoteCancelOpenShowcaseInvoice,
   buildStatusShowcaseInvoice,
 } from "./billingMockStatusShowcase";
+import { billingRecordMatchesStatusFilter } from "../utils/billing-invoice-status-filter.utils";
 import type { BillingInvoiceStatusKey } from "../types/billing-invoice-status.types";
 
 export type BillingRecordSource = "entry" | "invoice";
@@ -24,9 +26,12 @@ interface StoredBillingRecord {
   profitCenterId: string;
 }
 
+const MOCK_PROFIT_CENTER_PRIMARY = "f0a8a218-08c8-44a3-a2b7-4e3b690651bd";
+const MOCK_PROFIT_CENTER_SECONDARY = "d4e5f6a7-08c8-44a3-a2b7-4e3b690651bd";
+
 const PROFIT_CENTER_BY_LABEL: Record<string, { id: string; code: string; name: string }> = {
-  "Centro 01": { id: "pc-01", code: "01", name: "Centro 01" },
-  "Centro 02": { id: "pc-02", code: "02", name: "Centro 02" },
+  "Centro 01": { id: MOCK_PROFIT_CENTER_PRIMARY, code: "NL10801001", name: "Projetos: Junior Duraes - NL10801001" },
+  "Centro 02": { id: MOCK_PROFIT_CENTER_SECONDARY, code: "NL10801002", name: "Consumo: Junior Duraes - NL10801002" },
 };
 
 function cloneDetail(detail: BillingInvoiceDetail): BillingInvoiceDetail {
@@ -44,12 +49,12 @@ function seedRecords(): StoredBillingRecord[] {
     {
       source: "invoice",
       detail: withCompetence(cloneDetail(clientScopeDueDateInvoice), competence),
-      profitCenterId: "pc-01",
+      profitCenterId: MOCK_PROFIT_CENTER_PRIMARY,
     },
     {
       source: "entry",
       detail: withCompetence(cloneDetail(clientScopeEntry), competence),
-      profitCenterId: "pc-01",
+      profitCenterId: MOCK_PROFIT_CENTER_PRIMARY,
     },
   ];
 
@@ -57,11 +62,17 @@ function seedRecords(): StoredBillingRecord[] {
     (status, index) => ({
       source: "invoice" as const,
       detail: cloneDetail(buildStatusShowcaseInvoice(status, index, competence)),
-      profitCenterId: index % 2 === 0 ? "pc-01" : "pc-02",
+      profitCenterId: index % 2 === 0 ? MOCK_PROFIT_CENTER_PRIMARY : MOCK_PROFIT_CENTER_SECONDARY,
     }),
   );
 
-  return [...base, ...showcase];
+  const dualNotesShowcase: StoredBillingRecord = {
+    source: "invoice",
+    detail: cloneDetail(buildDualNoteCancelOpenShowcaseInvoice(competence)),
+    profitCenterId: MOCK_PROFIT_CENTER_PRIMARY,
+  };
+
+  return [...base, ...showcase, dualNotesShowcase];
 }
 
 let records: StoredBillingRecord[] = seedRecords();
@@ -126,8 +137,14 @@ function applyListFilters(filters: BillingFilters, rows: BillingInvoiceRecord[])
     filtered = filtered.filter((row) => row.clientId === filters.clientId);
   }
 
-  if (filters.profitCenterId) {
-    filtered = filtered.filter((row) => row.profitCenterId === filters.profitCenterId);
+  const profitCenterIds =
+    filters.profitCenterIds ??
+    (filters.profitCenterId ? [filters.profitCenterId] : undefined);
+
+  if (profitCenterIds && profitCenterIds.length > 0) {
+    filtered = filtered.filter(
+      (row) => row.profitCenterId && profitCenterIds.includes(row.profitCenterId),
+    );
   }
 
   const startMonth = filters.startMonth;
@@ -137,8 +154,14 @@ function applyListFilters(filters: BillingFilters, rows: BillingInvoiceRecord[])
     filtered = filtered.filter((row) => monthInRange(row.competence, startMonth, endMonth));
   }
 
-  if (filters.invoiceStatus) {
-    filtered = filtered.filter((row) => row.billingStatus === filters.invoiceStatus);
+  const invoiceStatuses =
+    filters.invoiceStatuses ??
+    (filters.invoiceStatus ? [filters.invoiceStatus] : undefined);
+
+  if (invoiceStatuses && invoiceStatuses.length > 0) {
+    filtered = filtered.filter((row) =>
+      invoiceStatuses.some((filterKey) => billingRecordMatchesStatusFilter(row, filterKey)),
+    );
   }
 
   return [...filtered].sort((a, b) => {

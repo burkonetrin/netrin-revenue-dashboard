@@ -5,13 +5,20 @@ import { useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { getProfitCenters } from "../services/clientsMock.service";
 
-export function useProfitCenters(enabled = true) {
+export function useProfitCenters(
+  enabled = true,
+  options: { useFinancialManagementMock?: boolean } = {},
+) {
+  const useFinancialManagementMock = options.useFinancialManagementMock ?? false;
+
   return useQuery<
     Awaited<ReturnType<typeof getProfitCenters>>,
     AxiosError<ErrorResponse>
   >({
-    queryKey: ["profit-centers"],
-    queryFn: getProfitCenters,
+    queryKey: useFinancialManagementMock
+      ? ["profit-centers", "financial-management-mock"]
+      : ["profit-centers"],
+    queryFn: () => getProfitCenters({ useFinancialManagementMock }),
     enabled,
   });
 }

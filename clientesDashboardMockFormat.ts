@@ -136,7 +136,7 @@ export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
   const badge = count > 0 ? nfeCountLabel(count) : undefined;
   const billing = useClientListInvoiceStatusStore.getState().getState(client.id);
   const closeToggleLabel =
-    billing.status === "fatura_fechada" ? "Reabrir fatura" : "Fechar fatura";
+    billing.status === "fatura_fechada" ? "Reabrir conferência" : "Aprovar fatura";
   const showCloseToggle = isClientListCloseToggleEligible(client.id);
   const showBillClient = isClientListBillEligible(client.id);
 
@@ -144,7 +144,7 @@ export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
     if (entry.kind === "action" && entry.label === "Ver notas fiscais") {
       return badge ? [{ ...entry, badge }] : [entry];
     }
-    if (entry.kind === "action" && entry.label === "Fechar fatura") {
+    if (entry.kind === "action" && entry.label === "Aprovar fatura") {
       if (!showCloseToggle) return [];
       return [{ ...entry, label: closeToggleLabel }];
     }
@@ -182,7 +182,7 @@ export function clientSidebarNotes(client: MockClient): MockNfeNote[] {
       nome: "Contrato complementar",
       referencia: client.referencia,
       vencimento: client.vencimentoNF,
-      statusPagamento: "Fatura aberta",
+      statusPagamento: "A conferir",
     },
   ];
   const merged = [...base];

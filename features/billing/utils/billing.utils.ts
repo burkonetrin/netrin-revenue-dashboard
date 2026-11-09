@@ -68,7 +68,7 @@ export function getBillingNoteTooltipTitle(
   return `${billingScopeLabels[scope]}: ${note.ownerName}`;
 }
 
-/** Remove rótulo de status da fatura (ex.: "Fatura fechada — ") do nome da nota. */
+/** Remove rótulo de status da fatura (ex.: "Conferida — ") do nome da nota. */
 export function stripBillingStatusLabelFromOwnerName(ownerName: string): string {
   const separators = [" — ", " - "] as const;
   for (const label of Object.values(BILLING_INVOICE_STATUS_LABEL)) {
@@ -203,6 +203,11 @@ export function alignTotalizerWithData(
 /** Indica se há filtros de período ou centro de lucro ativos. */
 export function hasBillingFilters(filters: BillingFilters) {
   return Boolean(
-    filters.startMonth || filters.endMonth || filters.profitCenterId || filters.invoiceStatus,
+    filters.startMonth ||
+      filters.endMonth ||
+      filters.profitCenterId ||
+      (filters.profitCenterIds?.length ?? 0) > 0 ||
+      filters.invoiceStatus ||
+      (filters.invoiceStatuses?.length ?? 0) > 0,
   );
 }

@@ -33,7 +33,8 @@ import {
   useBillingInvoiceStatusStore,
 } from "@/features/billing/store/billing-invoice-status.store";
 import { getBillClientsBatchPreview } from "@/features/billing/utils/billing-bill-clients.utils";
-import type { BillingInvoiceStatusKey } from "@/features/billing/types/billing-invoice-status.types";
+import type { BillingInvoiceStatusFilterKey } from "@/features/billing/types/billing-invoice-status.types";
+import { BILLING_INVOICE_STATUS_FILTER_KEYS } from "@/features/billing/types/billing-invoice-status.types";
 import {
   BillingBillClientsConfirmModal,
   BillingBulkCloseConfirmModal,
@@ -50,6 +51,23 @@ import { useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const PAGE_SIZE = 10;
+
+const BILLING_INVOICE_STATUS_KEYS = BILLING_INVOICE_STATUS_FILTER_KEYS;
+
+function parseCommaSeparatedList(param: string | null): string[] | undefined {
+  if (!param) return undefined;
+  const values = param.split(",").map((part) => part.trim()).filter(Boolean);
+  return values.length > 0 ? values : undefined;
+}
+
+function parseInvoiceStatusesParam(param: string | null): BillingInvoiceStatusFilterKey[] | undefined {
+  const values = parseCommaSeparatedList(param);
+  if (!values) return undefined;
+  const statuses = values.filter((value): value is BillingInvoiceStatusFilterKey =>
+    BILLING_INVOICE_STATUS_KEYS.includes(value as BillingInvoiceStatusFilterKey),
+  );
+  return statuses.length > 0 ? statuses : undefined;
+}
 
 function BillingListContent() {
   const navigate = useNavigate();
@@ -94,19 +112,35 @@ function BillingListContent() {
 
   const startMonthParam = searchParams.get("startMonth") || undefined;
   const endMonthParam = searchParams.get("endMonth") || undefined;
+  const profitCenterIdsParam = parseCommaSeparatedList(searchParams.get("profitCenterIds"));
   const profitCenterIdParam = searchParams.get("profitCenterId") || undefined;
   const clientIdParam = searchParams.get("client") || undefined;
+  const invoiceStatusesParam = parseInvoiceStatusesParam(searchParams.get("invoiceStatuses"));
   const invoiceStatusParam = searchParams.get("invoiceStatus") || undefined;
 
   const filters = useMemo<BillingFilters>(
     () => ({
       startMonth: startMonthParam,
       endMonth: endMonthParam,
-      profitCenterId: profitCenterIdParam,
+      profitCenterIds:
+        profitCenterIdsParam ??
+        (profitCenterIdParam ? [profitCenterIdParam] : undefined),
       clientId: clientIdParam,
-      invoiceStatus: invoiceStatusParam as BillingInvoiceStatusKey | undefined,
+      invoiceStatuses:
+        invoiceStatusesParam ??
+        (invoiceStatusParam
+          ? ([invoiceStatusParam] as BillingInvoiceStatusFilterKey[])
+          : undefined),
     }),
-    [startMonthParam, endMonthParam, profitCenterIdParam, clientIdParam, invoiceStatusParam],
+    [
+      startMonthParam,
+      endMonthParam,
+      profitCenterIdsParam,
+      profitCenterIdParam,
+      clientIdParam,
+      invoiceStatusesParam,
+      invoiceStatusParam,
+    ],
   );
 
   const statusRevision = useBillingInvoiceStatusStore((state) => state.byKey);
@@ -203,20 +237,32 @@ function BillingListContent() {
   const updateURL = (nextFilters: BillingFilters) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    const entries = {
-      startMonth: nextFilters.startMonth,
-      endMonth: nextFilters.endMonth,
-      profitCenterId: nextFilters.profitCenterId,
-      client: nextFilters.clientId,
-      invoiceStatus: nextFilters.invoiceStatus,
-    };
-
-    for (const [key, value] of Object.entries(entries)) {
+    const setOrDelete = (key: string, value: string | undefined) => {
       if (value) {
         params.set(key, value);
       } else {
         params.delete(key);
       }
+    };
+
+    setOrDelete("startMonth", nextFilters.startMonth);
+    setOrDelete("endMonth", nextFilters.endMonth);
+    setOrDelete("client", nextFilters.clientId);
+
+    if (nextFilters.profitCenterIds?.length) {
+      params.set("profitCenterIds", nextFilters.profitCenterIds.join(","));
+      params.delete("profitCenterId");
+    } else {
+      params.delete("profitCenterIds");
+      params.delete("profitCenterId");
+    }
+
+    if (nextFilters.invoiceStatuses?.length) {
+      params.set("invoiceStatuses", nextFilters.invoiceStatuses.join(","));
+      params.delete("invoiceStatus");
+    } else {
+      params.delete("invoiceStatuses");
+      params.delete("invoiceStatus");
     }
 
     setSearchParams(params, { replace: false });
@@ -226,7 +272,8 @@ function BillingListContent() {
     setPage(1);
     updateURL({
       clientId: filters.clientId,
-      invoiceStatus: undefined,
+      profitCenterIds: undefined,
+      invoiceStatuses: undefined,
     });
     setIsFiltersOpen(false);
   };
@@ -264,7 +311,7 @@ function BillingListContent() {
               color="primary"
               onPress={() => setIsBulkCloseModalOpen(true)}
             >
-              Fechar faturas selecionadas ({selectedCount})
+              Aprovar faturas selecionadas ({selectedCount})
             </Button>
           ) : null}
 
@@ -412,18 +459,19 @@ function BillingListContent() {
         isOpen={isBillClientsModalOpen}
         onClose={() => setIsBillClientsModalOpen(false)}
         description={
-          <div className="flex flex-col gap-4">
+          openInCompetenceCount > 0 ? (
             <p className="m-0">
               Faturando {closedInCompetenceCount} clientes para a competência{" "}
-              {formatBillingCompetence(currentCompetence)}
+              {formatBillingCompetence(currentCompetence).replace("/", " / ")}. Ainda existem{" "}
+              {openInCompetenceCount} faturas com conferência pendente nesta competência. Esses
+              clientes não serão faturados.
             </p>
-            {openInCompetenceCount > 0 ? (
-              <p className="m-0">
-                Ainda existem {openInCompetenceCount} faturas abertas nesta competência. Esses
-                clientes não serão faturados.
-              </p>
-            ) : null}
-          </div>
+          ) : (
+            <p className="m-0">
+              Faturando {closedInCompetenceCount} clientes para a competência{" "}
+              {formatBillingCompetence(currentCompetence).replace("/", " / ")}
+            </p>
+          )
         }
         onConfirm={() => {
           billClientsClosedInCompetence(currentCompetence);

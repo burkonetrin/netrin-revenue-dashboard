@@ -19,14 +19,14 @@ export interface BillingInvoiceStatusMeta {
 
 export interface BillingInvoiceStatusState {
   status: BillingInvoiceStatusKey;
-  /** Após faturar no Sankhya, o checkbox Fechar fatura fica travado. */
+  /** Após faturar no Sankhya, o botão Aprovar fatura fica travado. */
   closeCheckboxLocked?: boolean;
   meta?: BillingInvoiceStatusMeta;
 }
 
 export const BILLING_INVOICE_STATUS_LABEL: Record<BillingInvoiceStatusKey, string> = {
-  fatura_aberta: "Fatura aberta",
-  fatura_fechada: "Fatura fechada",
+  fatura_aberta: "A conferir",
+  fatura_fechada: "Conferida",
   faturado: "Faturado",
   pagamento_aberto: "Pagamento aberto",
   pago_parcial: "Pago parcial",
@@ -36,15 +36,27 @@ export const BILLING_INVOICE_STATUS_LABEL: Record<BillingInvoiceStatusKey, strin
   nota_cancelada: "Nota cancelada",
 };
 
+/** Chave extra só no filtro da listagem (espelho / lançamento aberto). */
+export type BillingInvoiceStatusFilterKey =
+  | BillingInvoiceStatusKey
+  | "fatura_aberta_espelho";
+
+export const BILLING_INVOICE_STATUS_FILTER_OPTION_FATURA_ABERTA: BillingInvoiceStatusFilterKey =
+  "fatura_aberta_espelho";
+
 export const BILLING_INVOICE_STATUS_FILTER_OPTIONS: {
-  value: BillingInvoiceStatusKey;
+  value: BillingInvoiceStatusFilterKey;
   label: string;
-}[] = (Object.keys(BILLING_INVOICE_STATUS_LABEL) as BillingInvoiceStatusKey[]).map(
-  (value) => ({
+}[] = [
+  ...(Object.keys(BILLING_INVOICE_STATUS_LABEL) as BillingInvoiceStatusKey[]).map((value) => ({
     value,
     label: BILLING_INVOICE_STATUS_LABEL[value],
-  }),
-);
+  })),
+  { value: BILLING_INVOICE_STATUS_FILTER_OPTION_FATURA_ABERTA, label: "Fatura aberta" },
+];
+
+export const BILLING_INVOICE_STATUS_FILTER_KEYS: BillingInvoiceStatusFilterKey[] =
+  BILLING_INVOICE_STATUS_FILTER_OPTIONS.map((option) => option.value);
 
 export const BILLING_INVOICE_STATUS_CHIP_CLASS: Record<BillingInvoiceStatusKey, string> = {
   fatura_aberta: "bg-zinc-100 text-zinc-700",

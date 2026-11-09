@@ -60,13 +60,20 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
   } as const;
   const status = record.billingStatus ?? "fatura_aberta";
   const meta = record.statusMeta;
+  const showRecordCancelReasonInline = status === "nota_cancelada" && Boolean(meta?.cancelReason);
 
-  const statusBadge = <BillingInvoiceStatusBadge status={status} meta={meta} />;
+  const renderStatusBadge = (suppressInfoTooltip: boolean) => (
+    <BillingInvoiceStatusBadge
+      status={status}
+      meta={meta}
+      suppressInfoTooltip={suppressInfoTooltip}
+    />
+  );
 
-  const dueDateWithBadge = (dueDateLabel: ReactNode) => (
+  const dueDateWithBadge = (dueDateLabel: ReactNode, suppressInfoTooltip = false) => (
     <span className="inline-flex flex-wrap items-center gap-2">
       <span>{dueDateLabel}</span>
-      {statusBadge}
+      {renderStatusBadge(suppressInfoTooltip)}
     </span>
   );
 
@@ -75,7 +82,17 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
   }
 
   if (view.kind === "single") {
-    return dueDateWithBadge(getBillingDueDateDisplay(view.dueDate, dueDateDisplayOptions));
+    return (
+      <span className="flex flex-col items-start gap-1 text-left">
+        {dueDateWithBadge(
+          getBillingDueDateDisplay(view.dueDate, dueDateDisplayOptions),
+          showRecordCancelReasonInline,
+        )}
+        {showRecordCancelReasonInline ? (
+          <BillingInvoiceStatusInfoContent status={status} meta={meta} />
+        ) : null}
+      </span>
+    );
   }
 
   const orderedNotes = getBillingListingTooltipNotes(scope, view.notes);
@@ -109,8 +126,8 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
                       {destination?.kind === "contract_group"
                         ? destination.names.map((name) => <p key={`${note.id}-${name}`}>{name}</p>)
                         : null}
-                      <div className="space-y-1">
-                        <p className="inline-flex flex-wrap items-center gap-2">
+                      <div className="flex w-full flex-col items-start gap-1 text-left">
+                        <p className="inline-flex max-w-full flex-wrap items-center gap-2">
                           <span>
                             Vencimento: {getBillingDueDateDisplay(dueDate, dueDateDisplayOptions)}
                           </span>

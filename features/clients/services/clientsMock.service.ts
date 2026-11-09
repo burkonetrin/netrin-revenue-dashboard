@@ -1,4 +1,5 @@
 import type { PaginationInfo } from "@/shared/types/pagination.types";
+import { CLIENTS } from "@/clientesDashboardMockData";
 
 export interface Client {
   id: string;
@@ -110,7 +111,21 @@ export async function getClients(params: ListClientsParams): Promise<PaginatedCl
   };
 }
 
-export async function getProfitCenters() {
+export type ProfitCenterResponse = {
+  id: string;
+  code: string;
+  name: string;
+  isActive?: boolean;
+  representativeName?: string;
+  tipo?: { label: string; value: string };
+};
+
+export async function getProfitCenters(options?: { useFinancialManagementMock?: boolean }) {
+  if (options?.useFinancialManagementMock === true) {
+    const { mockProfitCenters } = await import("./mockProfitCenters");
+    return mockProfitCenters;
+  }
+
   return [
     { id: "pc-01", code: "01", name: "Centro 01", isActive: true },
     { id: "pc-02", code: "02", name: "Centro 02", isActive: true },
@@ -128,4 +143,31 @@ export function formatProfitCenterOptions(
       value: profitCenter.id,
       label: `${profitCenter.code} - ${profitCenter.name}`,
     }));
+}
+
+function getDashboardMockClientAsClient(clientId: string): Client | undefined {
+  const row = CLIENTS.find((client) => client.id === clientId);
+  if (!row) return undefined;
+  return {
+    id: row.id,
+    name: row.nome,
+    fantasyName: row.nome,
+    cnpj: row.cnpj,
+    ...BASE_CLIENT_FIELDS,
+    isActive: row.ativo,
+    nfeUnificationLevel: {
+      label: "Por franquia",
+      value: "deductible",
+    },
+  };
+}
+
+export function resolveClientForFranchiseDetail(clientId: string): Client {
+  try {
+    return getClientById(clientId);
+  } catch {
+    const dashboardClient = getDashboardMockClientAsClient(clientId);
+    if (dashboardClient) return dashboardClient;
+    throw new Error("Cliente não encontrado");
+  }
 }

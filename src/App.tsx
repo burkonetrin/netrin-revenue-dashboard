@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { BillingDetailPage } from "@/components/BillingDetailPage";
 import { BillingListPage } from "@/components/BillingListPage";
 import { CommercialClientDetailPage } from "@/components/CommercialClientDetailPage";
+import { CommercialFranchiseDetailPage } from "@/components/CommercialFranchiseDetailPage";
 import { CommercialClientsPage } from "@/components/CommercialClientsPage";
 import { CommercialDashboardPage } from "@/components/CommercialDashboardPage";
 import { CommercialPrototypeShell } from "@/components/CommercialPrototypeShell";
@@ -11,6 +12,8 @@ import { BackgroundCheckPreviewRoute } from "@/components/BackgroundCheckPreview
 import { DataSourceDetailRoute } from "@/components/DataSourceDetailRoute";
 import { ProviderDetailRoute } from "@/components/ProviderDetailRoute";
 import { ProvidersAndSourcesPage } from "@/components/ProvidersAndSourcesPage";
+import { DataIntelligencePage } from "@/components/DataIntelligencePage";
+import { BannedBettorDetailPage } from "@/components/BannedBettorDetailPage";
 import { PROTOTYPE_BASE_PATH } from "@/constants";
 
 export function App() {
@@ -25,6 +28,15 @@ export function App() {
           <Route index element={<CommercialDashboardPage />} />
           <Route path="clientes" element={<CommercialClientsPage />} />
           <Route path="clientes/:clientId" element={<CommercialClientDetailPage />} />
+          <Route
+            path="clientes/:clientId/franquias/:franchiseId"
+            element={<CommercialFranchiseDetailPage />}
+          />
+          <Route path="inteligencia-de-dados" element={<DataIntelligencePage />} />
+          <Route
+            path="inteligencia-de-dados/impedidos/:sportId"
+            element={<BannedBettorDetailPage />}
+          />
           <Route path="faturamento" element={<BillingListPage />} />
           <Route path="faturamento/tasks" element={<BillingTaskLookup />} />
           <Route path="faturamento/tasks/:taskId" element={<BillingTaskDetailPage />} />

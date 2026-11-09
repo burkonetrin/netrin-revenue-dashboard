@@ -1,5 +1,9 @@
 import type { PaginationInfo } from "@/shared/types/pagination.types";
-import type { BillingInvoiceStatusKey, BillingInvoiceStatusMeta } from "./billing-invoice-status.types";
+import type {
+  BillingInvoiceStatusFilterKey,
+  BillingInvoiceStatusKey,
+  BillingInvoiceStatusMeta,
+} from "./billing-invoice-status.types";
 
 /**
  * Define a estrutura de billing invoice scope.
@@ -87,9 +91,13 @@ export interface BillingInvoiceRecord {
 export interface BillingFilters {
   startMonth?: string;
   endMonth?: string;
+  /** @deprecated Prefer profitCenterIds (listagem). */
   profitCenterId?: string;
+  profitCenterIds?: string[];
   clientId?: string;
+  /** @deprecated Prefer invoiceStatuses (listagem). */
   invoiceStatus?: BillingInvoiceStatusKey;
+  invoiceStatuses?: BillingInvoiceStatusFilterKey[];
 }
 
 /**

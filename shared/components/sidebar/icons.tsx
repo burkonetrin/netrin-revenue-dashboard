@@ -55,6 +55,28 @@ export const SettingsIcon = createSidebarStrokeIcon("Settings icon", ({ iconColo
   </>
 ));
 
+export const DataSourcesIcon = createSidebarStrokeIcon("Data sources icon", ({ iconColor }) => (
+  <>
+    <path d="M8 8H16V16H8V8Z" {...sidebarStroke(iconColor)} />
+    <path
+      d="M16 16.001L19 16.0005C20.6569 16.0002 22.0002 17.3432 22.0005 19C22.0007 20.6569 20.6578 22.0002 19.0009 22.0005C17.3441 22.0007 16.0007 20.6578 16.0005 19.001L16 16.001Z"
+      {...sidebarStroke(iconColor)}
+    />
+    <path
+      d="M8.00098 16.001L5.00098 16.0005C3.34412 16.0002 2.00076 17.3432 2.0005 19C2.00024 20.6569 3.34318 22.0002 5.00003 22.0005C6.65689 22.0007 8.00024 20.6578 8.0005 19.001L8.00098 16.001Z"
+      {...sidebarStroke(iconColor)}
+    />
+    <path
+      d="M16 8.00002L19 8.00049C20.6569 8.00075 22.0002 6.65781 22.0005 5.00096C22.0007 3.34411 20.6578 2.00075 19.0009 2.00049C17.3441 2.00023 16.0007 3.34316 16.0005 5.00002L16 8.00002Z"
+      {...sidebarStroke(iconColor)}
+    />
+    <path
+      d="M8.00098 8.00002L5.00098 8.00049C3.34412 8.00075 2.00076 6.65781 2.0005 5.00096C2.00024 3.34411 3.34318 2.00075 5.00003 2.00049C6.65689 2.00023 8.00024 3.34316 8.0005 5.00002L8.00098 8.00002Z"
+      {...sidebarStroke(iconColor)}
+    />
+  </>
+));
+
 export const ProvidersIcon = createSidebarStrokeIcon("Providers icon", ({ iconColor }) => (
   <>
     <path

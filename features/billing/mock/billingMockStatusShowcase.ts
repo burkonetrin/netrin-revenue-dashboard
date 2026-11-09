@@ -123,6 +123,59 @@ export function buildBillingStatusShowcaseInvoices(competence: string): BillingI
   );
 }
 
+/** Linha demo: tooltip com nota cancelada (motivo) e nota com pagamento aberto. */
+export function buildDualNoteCancelOpenShowcaseInvoice(competence: string): BillingInvoiceDetail {
+  const total = 2847;
+  const sharedContractName = "Contrato Comercial 2026";
+  return {
+    id: "bill-st-duas-notas",
+    clientId: "client-status-duas-notas",
+    clientName: "Demo duas notas",
+    profitCenter: "Centro 01",
+    competence,
+    referenceMonth: competence,
+    invoicePeriodMonths: 1,
+    totalAmount: total,
+    invoiceDetails: {
+      scope: "contract",
+      notes: [
+        {
+          id: "note-duas-notas-cancel",
+          ownerName: sharedContractName,
+          dueDate: "2026-06-10",
+          billingStatus: "nota_cancelada",
+          statusMeta: {
+            cancelReason: "Cancelamento solicitado pelo cliente por divergência de valor.",
+          },
+        },
+        {
+          id: "note-duas-notas-open",
+          ownerName: sharedContractName,
+          dueDate: "2026-06-25",
+          billingStatus: "pagamento_aberto",
+        },
+      ],
+    },
+    contracts: [
+      buildMinimalContract(
+        "contract-duas-notas-a",
+        "franchise-duas-notas-a",
+        "item-duas-notas-a",
+        "Franquia Alpha",
+        1200,
+      ),
+      buildMinimalContract(
+        "contract-duas-notas-b",
+        "franchise-duas-notas-b",
+        "item-duas-notas-b",
+        "Franquia Beta",
+        1647,
+      ),
+    ],
+    invoiceTotal: total,
+  };
+}
+
 export const billingStatusShowcaseSeed: Record<string, BillingInvoiceStatusState> = {
   "invoice:bill-st-fatura_fechada": { status: "fatura_fechada" },
   "invoice:bill-st-faturado": { status: "faturado", closeCheckboxLocked: true },
@@ -148,4 +201,5 @@ export const billingStatusShowcaseSeed: Record<string, BillingInvoiceStatusState
     closeCheckboxLocked: true,
     meta: { cancelReason: "Nota cancelada a pedido do cliente (demonstração)." },
   },
+  "invoice:bill-st-duas-notas": { status: "faturado", closeCheckboxLocked: true },
 };

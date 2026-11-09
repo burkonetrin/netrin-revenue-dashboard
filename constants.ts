@@ -12,8 +12,24 @@ export const BILLING_TASKS_BASE_PATH = `${BILLING_BASE_PATH}/tasks`;
 /** Fontes e fornecedores (espelho do menu `/providers` do Nucleus). */
 export const PROVIDERS_BASE_PATH = `${PROTOTYPE_BASE_PATH}/fontes-fornecedores`;
 
+/** Inteligência de dados (dados bancários + impedidos de apostar). */
+export const DATA_INTELLIGENCE_BASE_PATH = `${PROTOTYPE_BASE_PATH}/inteligencia-de-dados`;
+
+export function personRestrictionSportDetailPath(sportId: string): string {
+  return `${DATA_INTELLIGENCE_BASE_PATH}/impedidos/${sportId}`;
+}
+
 /** Prévia isolada de modelos Background Check. */
 export const PROVIDERS_BGC_PREVIEW_PATH = `${PROVIDERS_BASE_PATH}/modelos-background-check-preview`;
+
+export function clientFranchiseDetailPath(
+  clientId: string,
+  franchiseId: string,
+  contractId: string,
+): string {
+  const params = new URLSearchParams({ contractId });
+  return `${PROTOTYPE_BASE_PATH}/clientes/${clientId}/franquias/${franchiseId}?${params.toString()}`;
+}
 
 /** Detalhe analítico de uma fonte (espelho `/providers/sources/[id]`). */
 export function providersSourceDetailPath(sourceId: string): string {

@@ -7,6 +7,7 @@
 export { AUTH_ENDPOINTS } from "./auth";
 export { BACKGROUND_CHECK_TEMPLATES_ENDPOINTS } from "./background-check-templates.endpoints";
 export { BANK_VALIDATION_ENDPOINTS } from "./bank-validation";
+export { PERSON_RESTRICTION_ENDPOINTS } from "./person-restriction";
 export { USERS_ENDPOINTS } from "./users";
 export { CLIENTS_ENDPOINTS } from "./clients";
 export { CONTRACTS_ENDPOINTS } from "./contracts";
@@ -24,6 +25,7 @@ export { TAGS_ENDPOINTS } from "./tags";
 import { AUTH_ENDPOINTS } from "./auth";
 import { BACKGROUND_CHECK_TEMPLATES_ENDPOINTS } from "./background-check-templates.endpoints";
 import { BANK_VALIDATION_ENDPOINTS } from "./bank-validation";
+import { PERSON_RESTRICTION_ENDPOINTS } from "./person-restriction";
 import { BILLING_ENDPOINTS } from "./billing";
 import { CLIENTS_ENDPOINTS } from "./clients";
 import { CONTRACTS_ENDPOINTS } from "./contracts";
@@ -44,6 +46,7 @@ export const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
   BACKGROUND_CHECK_TEMPLATES: BACKGROUND_CHECK_TEMPLATES_ENDPOINTS,
   BANK_VALIDATION: BANK_VALIDATION_ENDPOINTS,
+  PERSON_RESTRICTION: PERSON_RESTRICTION_ENDPOINTS,
   USERS: USERS_ENDPOINTS,
   CLIENTS: CLIENTS_ENDPOINTS,
   CONTRACTS: CONTRACTS_ENDPOINTS,

@@ -1,8 +1,15 @@
-import { CustomersIcon, FinancialIcon, ProvidersIcon, SettingsIcon } from "@/shared/components/sidebar/icons";
+import {
+  CustomersIcon,
+  DataSourcesIcon,
+  FinancialIcon,
+  ProvidersIcon,
+  SettingsIcon,
+} from "@/shared/components/sidebar/icons";
 import type { MenuItem } from "@/shared/components/sidebar/menuItems";
 import {
   BILLING_BASE_PATH,
   BILLING_TASKS_BASE_PATH,
+  DATA_INTELLIGENCE_BASE_PATH,
   PROTOTYPE_BASE_PATH,
   PROVIDERS_BASE_PATH,
 } from "./constants";
@@ -18,6 +25,11 @@ export const commercialDashboardPrototypeMenuItems: MenuItem[] = [
     label: "Faturamento",
     path: BILLING_BASE_PATH,
     icon: <FinancialIcon />,
+  },
+  {
+    label: "Inteligência de dados",
+    path: DATA_INTELLIGENCE_BASE_PATH,
+    icon: <DataSourcesIcon />,
   },
   {
     label: "Fontes e Fornecedores",

@@ -64,7 +64,7 @@ export const useBillingInvoiceStatusStore = create<BillingInvoiceStatusStore>((s
     }));
 
     addToast({
-      title: closed ? "Fatura fechada" : "Fatura reaberta",
+      title: closed ? "Conferida" : "Conferência reaberta",
       color: "success",
       timeout: 3000,
       shouldShowTimeoutProgress: true,

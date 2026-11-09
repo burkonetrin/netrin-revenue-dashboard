@@ -34,6 +34,8 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import { clientFranchiseDetailPath } from "@/constants";
+import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { ClientContactsTab } from "@/features/clients/components/ClientContactsTab";
 import {
@@ -178,13 +180,14 @@ function ContractFranchisesExpanded({
     {
       id: "name",
       label: "Franquia",
-      render: (value) => (
-        <button
-          type="button"
+      render: (value, row) => (
+        <Link
+          to={clientFranchiseDetailPath(clientId, row.id, contractId)}
           className="text-primary underline text-xs text-left inline-block font-medium"
+          onClick={(event) => event.stopPropagation()}
         >
           {String(value)}
-        </button>
+        </Link>
       ),
     },
     buildBooleanStatusColumn<MockFranchiseRow>(),

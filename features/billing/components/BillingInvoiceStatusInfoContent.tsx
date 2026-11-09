@@ -15,7 +15,7 @@ export function getBillingInvoiceStatusInfoContent(
   if (status === "pago_parcial" || status === "nota_vencida") {
     if (meta?.paidAmount != null && meta?.dueAmount != null) {
       return (
-        <div className={`space-y-1 ${TOOLTIP_BODY_CLASS}`}>
+        <div className={`w-full space-y-1 text-left ${TOOLTIP_BODY_CLASS}`}>
           <p>Valor pago: {formatCurrency(meta.paidAmount)}</p>
           <p>Valor a pagar: {formatCurrency(meta.dueAmount)}</p>
         </div>
@@ -30,7 +30,9 @@ export function getBillingInvoiceStatusInfoContent(
     );
   }
   if (status === "nota_cancelada" && meta?.cancelReason) {
-    return <span className={TOOLTIP_BODY_CLASS}>{meta.cancelReason}</span>;
+    return (
+      <p className={`block w-full text-left ${TOOLTIP_BODY_CLASS}`}>{meta.cancelReason}</p>
+    );
   }
   return null;
 }

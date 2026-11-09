@@ -266,8 +266,8 @@ export const INVOICE_STATUS: Record<
   InvoiceStatusKey,
   { label: string; chip: string }
 > = {
-  aberta: { label: "Fatura aberta", chip: "inv-open" },
-  fatura_fechada: { label: "Fatura fechada", chip: "inv-closed" },
+  aberta: { label: "A conferir", chip: "inv-open" },
+  fatura_fechada: { label: "Conferida", chip: "inv-closed" },
   enviada_faturar: { label: "Enviada para faturar", chip: "inv-sent" },
   faturado_aberto: {
     label: "Pagamento aberto",
@@ -314,7 +314,7 @@ export const CLIENT_ROW_ACTIONS_MENU: ClientRowMenuEntry[] = [
   { kind: "heading", label: "Faturamento" },
   { kind: "action", label: "Adicionar fatura" },
   { kind: "action", label: "Ajustar fatura" },
-  { kind: "action", label: "Fechar fatura" },
+  { kind: "action", label: "Aprovar fatura" },
   { kind: "action", label: "Faturar cliente" },
   { kind: "divider" },
   { kind: "heading", label: "Nota fiscal" },
@@ -644,7 +644,7 @@ const CLIENT_PROFILES_BY_STATUS: Record<
         tipo: "Franquia",
         nome: "Workflow enterprise",
         vencimento: "20/01/2027",
-        statusPagamento: "Fatura aberta",
+        statusPagamento: "A conferir",
         descricao:
           "Licenciamento e execuções de fluxos automatizados. Aguardando confirmação de pagamento para baixa.",
       },

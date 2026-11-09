@@ -76,7 +76,7 @@ export function BillingInvoiceActions({
           startContent={<Lock size={18} className="text-gray-400" />}
           onPress={() => setClosed(source, invoiceId, !isClosed)}
         >
-          {isClosed ? "Reabrir fatura" : "Fechar fatura"}
+          {isClosed ? "Reabrir conferência" : "Aprovar para faturamento"}
         </Button>
       ) : null}
 

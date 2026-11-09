@@ -3,7 +3,7 @@
 import type { ErrorResponse } from "@/shared/utils/errorParser";
 import { useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { getClientById } from "../services/clientsMock.service";
+import { resolveClientForFranchiseDetail } from "../services/clientsMock.service";
 import type { Client } from "../types/clients.types";
 
 export function useClientById(clientId: string | undefined) {
@@ -11,7 +11,7 @@ export function useClientById(clientId: string | undefined) {
     queryKey: ["clients", "detail", clientId],
     queryFn: async () => {
       if (!clientId) throw new Error("clientId is required");
-      return getClientById(clientId);
+      return resolveClientForFranchiseDetail(clientId);
     },
     enabled: Boolean(clientId),
   });

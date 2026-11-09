@@ -20,10 +20,10 @@ export function BillingBulkCloseConfirmModal({
     <ConfirmModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Fechar faturas selecionadas"
-      description={`${selectedCount} faturas serão fechadas. Deseja prosseguir?`}
+      title="Aprovar faturas selecionadas"
+      description={`${selectedCount} faturas serão marcadas como prontas para faturar. Deseja prosseguir?`}
       cancelLabel="Cancelar"
-      confirmLabel="Fechar faturas"
+      confirmLabel="Aprovar faturas"
       onConfirm={onConfirm}
     />
   );
