@@ -7,6 +7,8 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useCreateContact } from "../hooks/useCreateContact";
 import { useUpdateContact } from "../hooks/useUpdateContact";
 import {
+  CONTACT_RECEIVES_BOLETOS_CHECKBOX_LABEL,
+  CONTACT_RECEIVES_NFE_CHECKBOX_LABEL,
   CONTACT_TYPE_OPTIONS,
   type Contact,
   type ContactType,
@@ -33,9 +35,8 @@ export function ContactForm({
   const updateContact = useUpdateContact();
   const isPending = createContact.isPending || updateContact.isPending;
 
-  const [sendInvoicesAndBillsByEmail, setSendInvoicesAndBillsByEmail] = useState(
-    contact?.sendInvoicesAndBillsByEmail ?? false,
-  );
+  const [receivesNfe, setReceivesNfe] = useState(contact?.receivesNfe ?? false);
+  const [receivesBoletos, setReceivesBoletos] = useState(contact?.receivesBoletos ?? false);
   const [name, setName] = useState(contact?.name ?? "");
   const [email, setEmail] = useState(contact?.email ?? "");
   const [phone, setPhone] = useState(maskBrazilianPhone(contact?.phone ?? ""));
@@ -50,7 +51,8 @@ export function ContactForm({
   }>({});
 
   useEffect(() => {
-    setSendInvoicesAndBillsByEmail(contact?.sendInvoicesAndBillsByEmail ?? false);
+    setReceivesNfe(contact?.receivesNfe ?? false);
+    setReceivesBoletos(contact?.receivesBoletos ?? false);
     setName(contact?.name ?? "");
     setEmail(contact?.email ?? "");
     setPhone(maskBrazilianPhone(contact?.phone ?? ""));
@@ -99,7 +101,8 @@ export function ContactForm({
       email: email.trim(),
       phone: maskBrazilianPhone(phone),
       contactType,
-      sendInvoicesAndBillsByEmail,
+      receivesNfe,
+      receivesBoletos,
     };
 
     if (isEditMode && contact) {
@@ -119,14 +122,26 @@ export function ContactForm({
   return (
     <div className="flex flex-col gap-6">
       <form id="contact-form" onSubmit={onSubmit} className="flex flex-col gap-6">
-        <Checkbox
-          isSelected={sendInvoicesAndBillsByEmail}
-          onValueChange={setSendInvoicesAndBillsByEmail}
-          isDisabled={isPending}
-          classNames={{ label: "text-sm text-zinc-500" }}
-        >
-          Enviar notas e boletos por e-mail
-        </Checkbox>
+        <div className="flex flex-col gap-3">
+          <Checkbox
+            isSelected={receivesNfe}
+            onValueChange={setReceivesNfe}
+            isDisabled={isPending}
+            aria-label={CONTACT_RECEIVES_NFE_CHECKBOX_LABEL}
+            classNames={{ label: "text-sm text-zinc-500" }}
+          >
+            {CONTACT_RECEIVES_NFE_CHECKBOX_LABEL}
+          </Checkbox>
+          <Checkbox
+            isSelected={receivesBoletos}
+            onValueChange={setReceivesBoletos}
+            isDisabled={isPending}
+            aria-label={CONTACT_RECEIVES_BOLETOS_CHECKBOX_LABEL}
+            classNames={{ label: "text-sm text-zinc-500" }}
+          >
+            {CONTACT_RECEIVES_BOLETOS_CHECKBOX_LABEL}
+          </Checkbox>
+        </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor="contact-name" className={fieldLabelClassName}>

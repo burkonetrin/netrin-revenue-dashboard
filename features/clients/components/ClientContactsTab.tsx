@@ -68,8 +68,14 @@ export function ClientContactsTab({ clientId }: ClientContactsTabProps) {
         },
       },
       {
-        id: "sendInvoicesAndBillsByEmail",
-        label: "Notas por e-mail",
+        id: "receivesNfe",
+        label: "Recebe NF-e",
+        sortable: true,
+        render: (value: boolean | undefined) => (value ? "Sim" : "Não"),
+      },
+      {
+        id: "receivesBoletos",
+        label: "Recebe boletos",
         sortable: true,
         render: (value: boolean | undefined) => (value ? "Sim" : "Não"),
       },

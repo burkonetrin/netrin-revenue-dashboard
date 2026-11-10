@@ -1474,6 +1474,8 @@ export interface MockClientContactRow {
   email: string;
   phone: string;
   contactType: string;
+  receivesNfe?: boolean;
+  receivesBoletos?: boolean;
 }
 
 export interface MockClientInvoiceRow {
@@ -1517,6 +1519,8 @@ export const MOCK_CLIENT_CONTACTS: MockClientContactRow[] = [
     email: "ana.paula@empresa.com.br",
     phone: "11987654321",
     contactType: "Financeiro",
+    receivesNfe: true,
+    receivesBoletos: true,
   },
   {
     id: "ct2",
@@ -1524,6 +1528,8 @@ export const MOCK_CLIENT_CONTACTS: MockClientContactRow[] = [
     email: "roberto.lima@empresa.com.br",
     phone: "21976543210",
     contactType: "Comercial",
+    receivesNfe: true,
+    receivesBoletos: false,
   },
 ];
 

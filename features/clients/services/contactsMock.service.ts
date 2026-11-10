@@ -45,7 +45,8 @@ function seedForClient(clientId: string): Contact[] {
     email: row.email,
     phone: row.phone,
     contactType: LEGACY_TYPE_MAP[row.contactType] ?? "finance",
-    sendInvoicesAndBillsByEmail: row.id === "ct1",
+    receivesNfe: row.receivesNfe ?? row.id === "ct1",
+    receivesBoletos: row.receivesBoletos ?? row.id === "ct1",
     isActive: true,
     isArchived: false,
     createdAt: now,
@@ -90,7 +91,8 @@ export async function createContact(
     email: data.email,
     phone: data.phone,
     contactType: data.contactType,
-    sendInvoicesAndBillsByEmail: data.sendInvoicesAndBillsByEmail ?? false,
+    receivesNfe: data.receivesNfe ?? false,
+    receivesBoletos: data.receivesBoletos ?? false,
     isActive: data.isActive ?? true,
     isArchived: false,
     createdAt: now,
@@ -113,7 +115,8 @@ export async function updateContact(
   const updated: Contact = {
     ...list[idx],
     ...data,
-    sendInvoicesAndBillsByEmail: data.sendInvoicesAndBillsByEmail ?? false,
+    receivesNfe: data.receivesNfe ?? false,
+    receivesBoletos: data.receivesBoletos ?? false,
     updatedAt: new Date().toISOString(),
   };
   list[idx] = updated;

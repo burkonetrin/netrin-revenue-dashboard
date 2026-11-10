@@ -11,7 +11,8 @@ export interface Contact {
   email: string;
   phone?: string | null;
   contactType: ContactType;
-  sendInvoicesAndBillsByEmail: boolean;
+  receivesNfe: boolean;
+  receivesBoletos: boolean;
   isActive: boolean;
   isArchived: boolean;
   createdAt: string;
@@ -38,7 +39,8 @@ export interface CreateContactRequest {
   email: string;
   contactType: ContactType;
   phone: string;
-  sendInvoicesAndBillsByEmail?: boolean;
+  receivesNfe?: boolean;
+  receivesBoletos?: boolean;
   isActive?: boolean;
 }
 
@@ -47,7 +49,8 @@ export interface UpdateContactRequest {
   email: string;
   contactType: ContactType;
   phone: string;
-  sendInvoicesAndBillsByEmail?: boolean;
+  receivesNfe?: boolean;
+  receivesBoletos?: boolean;
 }
 
 export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
@@ -56,6 +59,9 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   key_user: "Key user",
   finance: "Financeiro",
 };
+
+export const CONTACT_RECEIVES_NFE_CHECKBOX_LABEL = "Recebe notas por e-mail";
+export const CONTACT_RECEIVES_BOLETOS_CHECKBOX_LABEL = "Recebe boletos por e-mail";
 
 export const CONTACT_TYPE_OPTIONS: Array<{
   value: ContactType;
