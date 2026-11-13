@@ -2,10 +2,10 @@
 
 import {
   BILLING_INVOICE_STATUS_CHIP_CLASS,
-  BILLING_INVOICE_STATUS_LABEL,
   type BillingInvoiceStatusKey,
   type BillingInvoiceStatusMeta,
 } from "../types/billing-invoice-status.types";
+import { resolveBillingInvoiceStatusDisplayLabel } from "../utils/billing-invoice-status.utils";
 import {
   HEROUI_TOOLTIP_CONTENT_CLASS_NAMES,
 } from "@/shared/constants/tooltip.constants";
@@ -17,6 +17,8 @@ interface BillingInvoiceStatusBadgeProps {
   status: BillingInvoiceStatusKey;
   meta?: BillingInvoiceStatusMeta;
   className?: string;
+  /** Origem da linha (`entry` usa rótulo “Faturamento em aberto” para fatura_aberta). */
+  source?: "entry" | "invoice";
   /** Na tooltip multi-nota, detalhes ficam inline — sem ícone “i”. */
   suppressInfoTooltip?: boolean;
 }
@@ -25,9 +27,10 @@ export function BillingInvoiceStatusBadge({
   status,
   meta,
   className,
+  source,
   suppressInfoTooltip = false,
 }: BillingInvoiceStatusBadgeProps) {
-  const label = BILLING_INVOICE_STATUS_LABEL[status];
+  const label = resolveBillingInvoiceStatusDisplayLabel(status, { source });
   const chipClass = BILLING_INVOICE_STATUS_CHIP_CLASS[status];
   const tooltip = getBillingInvoiceStatusInfoContent(status, meta);
 

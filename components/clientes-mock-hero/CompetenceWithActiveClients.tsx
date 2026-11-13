@@ -5,9 +5,11 @@ import type { ReactNode } from "react";
 interface CompetenceWithActiveClientsProps {
   competenceLabel: ReactNode;
   activeClientCount: number;
-  /** Ex.: `Período:` antes da competência (aba dashboard). */
+  /** Ex.: `Competência:` antes do mês de referência. */
   competencePrefix?: ReactNode;
   className?: string;
+  /** Estilo de subtítulo abaixo das abas do painel. */
+  variant?: "default" | "subtitle";
 }
 
 function capitalizeCompetenceLabel(label: ReactNode): ReactNode {
@@ -20,12 +22,18 @@ export function CompetenceWithActiveClients({
   activeClientCount,
   competencePrefix,
   className = "",
+  variant = "default",
 }: CompetenceWithActiveClientsProps) {
   const formattedCompetence = capitalizeCompetenceLabel(competenceLabel);
+  const Tag = variant === "subtitle" ? "h4" : "h6";
+  const variantClassName =
+    variant === "subtitle"
+      ? "text-lg font-medium leading-snug text-gray-600 whitespace-nowrap"
+      : "text-sm font-normal text-default-600";
 
   return (
-    <h6
-      className={`m-0 flex flex-wrap items-center gap-3 text-sm font-normal text-default-600 ${className}`.trim()}
+    <Tag
+      className={`m-0 flex flex-wrap items-center gap-3 ${variantClassName} ${className}`.trim()}
     >
       <span>
         {competencePrefix ? (
@@ -37,6 +45,6 @@ export function CompetenceWithActiveClients({
       </span>
       <span className="h-4 w-px shrink-0 bg-default-200" aria-hidden />
       <span>{activeClientCount} clientes ativos</span>
-    </h6>
+    </Tag>
   );
 }

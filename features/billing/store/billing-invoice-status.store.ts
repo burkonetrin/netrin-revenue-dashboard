@@ -18,7 +18,16 @@ type StatusMap = Record<string, BillingInvoiceStatusState>;
 
 const SEED_STATUS: StatusMap = {
   "invoice:bill-001": { status: "fatura_aberta" },
-  "entry:bill-005": { status: "fatura_aberta" },
+  "invoice:bill-nota-vencida": {
+    status: "nota_vencida",
+    closeCheckboxLocked: true,
+    meta: { paidAmount: 300, dueAmount: 900 },
+  },
+  "invoice:bill-nota-cancelada": {
+    status: "nota_cancelada",
+    closeCheckboxLocked: true,
+    meta: { cancelReason: "Nota cancelada a pedido do cliente (demonstração)." },
+  },
   ...billingStatusShowcaseSeed,
 };
 

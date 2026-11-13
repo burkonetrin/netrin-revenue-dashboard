@@ -13,12 +13,16 @@ const STATUS_ORDER: BillingInvoiceStatusKey[] = [
   "pago_parcial",
   "pago_total",
   "pago_excedente",
+  "pagamento_parcelado",
   "nota_vencida",
   "nota_cancelada",
 ];
 
 export const BILLING_LIST_STATUS_SHOWCASE_ORDER: BillingInvoiceStatusKey[] = STATUS_ORDER.filter(
-  (status) => status !== "fatura_aberta",
+  (status) =>
+    status !== "fatura_aberta" &&
+    status !== "nota_vencida" &&
+    status !== "nota_cancelada",
 );
 
 export const BILLING_INVOICE_STATUS_LIST_SORT_ORDER: BillingInvoiceStatusKey[] = STATUS_ORDER;
@@ -189,17 +193,18 @@ export const billingStatusShowcaseSeed: Record<string, BillingInvoiceStatusState
   "invoice:bill-st-pago_excedente": {
     status: "pago_excedente",
     closeCheckboxLocked: true,
-    meta: { excessAmount: 250 },
+    meta: { interestAmount: 847.35 },
   },
-  "invoice:bill-st-nota_vencida": {
-    status: "nota_vencida",
+  "invoice:bill-st-pagamento_parcelado": {
+    status: "pagamento_parcelado",
     closeCheckboxLocked: true,
-    meta: { paidAmount: 300, dueAmount: 900 },
-  },
-  "invoice:bill-st-nota_cancelada": {
-    status: "nota_cancelada",
-    closeCheckboxLocked: true,
-    meta: { cancelReason: "Nota cancelada a pedido do cliente (demonstração)." },
+    meta: {
+      installments: [
+        { installmentNumber: 1, amount: 18_500, status: "pago" },
+        { installmentNumber: 2, amount: 18_500, status: "em_aberto" },
+        { installmentNumber: 3, amount: 18_500, status: "em_aberto" },
+      ],
+    },
   },
   "invoice:bill-st-duas-notas": { status: "faturado", closeCheckboxLocked: true },
 };

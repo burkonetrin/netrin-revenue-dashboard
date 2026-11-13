@@ -8,8 +8,10 @@ import { FieldInput, PrimaryButton } from "@/design-system/ui";
 import { ClientsListToolbarOverflow } from "./ClientsListToolbarOverflow";
 import {
   CLIENTS,
+  clientHasFranchiseWithHealth,
   getClientFranchiseConsumptions,
   LIST_COLSPAN,
+  type ClientHealthKey,
   type MockClient,
 } from "../../clientesDashboardMockData";
 import { clientRowActionsMenu, fmt, mockClientLtv } from "../../clientesDashboardMockFormat";
@@ -24,7 +26,6 @@ import {
 import { MockInfoTooltip } from "./MockInfoTooltip";
 import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
 import { RowActionsDropdown } from "./RowActionsDropdown";
-import { CompetenceWithActiveClients } from "./CompetenceWithActiveClients";
 import {
   clientHierarchySortableTableHeadCellClass,
   clientHierarchySublineClassName,
@@ -149,16 +150,28 @@ function clientsMatchingStatusFilter(
   return CLIENTS.filter((c) => !c.ativo);
 }
 
-function sortedClients(
-  statusFilter: FilterDrawerStatus,
-  search: string,
-  showInactive: boolean,
-  sort: TableSort,
-) {
+export function filterClientsForList({
+  statusFilter,
+  search,
+  showInactive,
+  sort,
+  healthFilters,
+}: {
+  statusFilter: FilterDrawerStatus;
+  search: string;
+  showInactive: boolean;
+  sort: TableSort;
+  healthFilters: ClientHealthKey[];
+}) {
   let list = clientsMatchingSearch(
     [...clientsMatchingStatusFilter(statusFilter)],
     search,
   );
+  if (healthFilters.length > 0) {
+    list = list.filter((client) =>
+      healthFilters.some((health) => clientHasFranchiseWithHealth(client, health)),
+    );
+  }
   if (!showInactive) list = list.filter((c) => c.ativo);
   if (sort.key === "ltv") {
     list.sort((a, b) => {
@@ -181,6 +194,7 @@ function sortedClients(
 
 interface ClientsListSectionProps {
   statusFilter: FilterDrawerStatus;
+  healthFilters?: ClientHealthKey[];
   showInactiveItems: boolean;
   onToggleShowInactive: () => void;
   competenceLabel: string;
@@ -190,6 +204,7 @@ interface ClientsListSectionProps {
 
 export function ClientsListSection({
   statusFilter,
+  healthFilters = [],
   showInactiveItems,
   onToggleShowInactive,
   competenceLabel,
@@ -266,8 +281,14 @@ export function ClientsListSection({
 
   const list = useMemo(
     () =>
-      sortedClients(statusFilter, search, showInactiveItems, tableSort),
-    [statusFilter, search, showInactiveItems, tableSort],
+      filterClientsForList({
+        statusFilter,
+        search,
+        showInactive: showInactiveItems,
+        sort: tableSort,
+        healthFilters,
+      }),
+    [statusFilter, search, showInactiveItems, tableSort, healthFilters],
   );
 
   const eligibleClientIds = useMemo(() => {
@@ -302,10 +323,6 @@ export function ClientsListSection({
   );
 
   const selectedCount = selectedClientIds.size;
-  const activeClientsDisplayed = useMemo(
-    () => list.filter((client) => client.ativo).length,
-    [list],
-  );
 
   const effectiveExpanded =
     expandedListClientId &&
@@ -345,11 +362,6 @@ export function ClientsListSection({
   return (
     <div>
       <div className="mb-4 listagem-head">
-        <CompetenceWithActiveClients
-          className="mb-3"
-          competenceLabel={competenceLabel}
-          activeClientCount={activeClientsDisplayed}
-        />
         <div className="flex flex-wrap gap-2.5 items-center w-full">
           <FieldInput
             type="search"

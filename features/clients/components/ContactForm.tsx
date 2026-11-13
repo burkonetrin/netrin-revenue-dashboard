@@ -7,6 +7,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { useCreateContact } from "../hooks/useCreateContact";
 import { useUpdateContact } from "../hooks/useUpdateContact";
 import {
+  CONTACT_ACTIVE_CHECKBOX_LABEL,
   CONTACT_RECEIVES_BOLETOS_CHECKBOX_LABEL,
   CONTACT_RECEIVES_NFE_CHECKBOX_LABEL,
   CONTACT_TYPE_OPTIONS,
@@ -35,6 +36,7 @@ export function ContactForm({
   const updateContact = useUpdateContact();
   const isPending = createContact.isPending || updateContact.isPending;
 
+  const [isActive, setIsActive] = useState(contact?.isActive ?? true);
   const [receivesNfe, setReceivesNfe] = useState(contact?.receivesNfe ?? false);
   const [receivesBoletos, setReceivesBoletos] = useState(contact?.receivesBoletos ?? false);
   const [name, setName] = useState(contact?.name ?? "");
@@ -51,6 +53,7 @@ export function ContactForm({
   }>({});
 
   useEffect(() => {
+    setIsActive(contact?.isActive ?? true);
     setReceivesNfe(contact?.receivesNfe ?? false);
     setReceivesBoletos(contact?.receivesBoletos ?? false);
     setName(contact?.name ?? "");
@@ -103,6 +106,7 @@ export function ContactForm({
       contactType,
       receivesNfe,
       receivesBoletos,
+      isActive,
     };
 
     if (isEditMode && contact) {
@@ -114,7 +118,7 @@ export function ContactForm({
     }
 
     createContact.mutate(
-      { clientId, data: { ...payload, isActive: true } },
+      { clientId, data: payload },
       { onSuccess: () => onSuccessSubmit?.() },
     );
   };
@@ -123,6 +127,15 @@ export function ContactForm({
     <div className="flex flex-col gap-6">
       <form id="contact-form" onSubmit={onSubmit} className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
+          <Checkbox
+            isSelected={isActive}
+            onValueChange={setIsActive}
+            isDisabled={isPending}
+            aria-label={CONTACT_ACTIVE_CHECKBOX_LABEL}
+            classNames={{ label: "text-sm text-zinc-500" }}
+          >
+            {CONTACT_ACTIVE_CHECKBOX_LABEL}
+          </Checkbox>
           <Checkbox
             isSelected={receivesNfe}
             onValueChange={setReceivesNfe}

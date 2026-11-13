@@ -1,7 +1,12 @@
 "use client";
 
+import { Funnel } from "lucide-react";
 import { useState } from "react";
-import type { BarRow, HealthBarRow } from "../../clientesDashboardMockData";
+import type {
+  BarRow,
+  ClientHealthKey,
+  HealthBarRow,
+} from "../../clientesDashboardMockData";
 import { fc, fmt } from "../../clientesDashboardMockFormat";
 import {
   ChartTooltipPortal,
@@ -17,6 +22,8 @@ interface HorizontalBarsMockProps {
   health?: boolean;
   /** Valor compacto + Share + variação mensal (produto / centro de lucro). */
   showRevenueBreakdown?: boolean;
+  /** Abre a aba Clientes filtrada pela faixa de saúde do cliente. */
+  onHealthFilter?: (healthKey: ClientHealthKey) => void;
 }
 
 function MetricsDivider() {
@@ -86,14 +93,97 @@ function RevenueBarRows({
   );
 }
 
+function HealthBarRows({
+  rows,
+  color,
+  tooltip,
+  setTooltip,
+  onHealthFilter,
+}: {
+  rows: HealthBarRow[];
+  color: string;
+  tooltip: ChartTooltipState | null;
+  setTooltip: (value: ChartTooltipState | null) => void;
+  onHealthFilter?: (healthKey: ClientHealthKey) => void;
+}) {
+  const max = Math.max(...rows.map((r) => r.v), 1);
+
+  return (
+    <div className="flex flex-col gap-2 py-1" onMouseLeave={() => setTooltip(null)}>
+      {rows.map((row) => {
+        const widthPct = (row.v / max) * 100;
+        return (
+          <div
+            key={row.healthKey}
+            className="grid grid-cols-[auto_minmax(0,6.5rem)_1fr_auto] items-center gap-2"
+          >
+            <button
+              type="button"
+              className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 text-zinc-400 transition-colors hover:text-primary"
+              aria-label={`Filtrar clientes por ${row.title}`}
+              onClick={() => onHealthFilter?.(row.healthKey)}
+            >
+              <Funnel size={14} strokeWidth={2} />
+            </button>
+            <div className="min-w-0">
+              <span className="block text-[10px] text-zinc-600">{row.title}</span>
+              <span className="block text-[9px] text-zinc-400">{row.sub}</span>
+            </div>
+            <div className="min-w-0">
+              <div
+                className="h-4 cursor-default rounded-[3px]"
+                style={{
+                  width: `${widthPct}%`,
+                  minWidth: row.v > 0 ? 4 : 0,
+                  backgroundColor: color,
+                }}
+                onMouseMove={(e) => {
+                  setTooltip({
+                    x: e.clientX,
+                    y: e.clientY,
+                    content: (
+                      <>
+                        <span className={TOOLTIP_TITLE_CLASS}>{row.title}</span>
+                        <div className="mt-1.5 flex items-baseline gap-1.5 font-semibold">
+                          {row.v}
+                          <CmpRight cur={row.v} prev={row.p} />
+                        </div>
+                      </>
+                    ),
+                  });
+                }}
+              />
+            </div>
+            <span className="text-[10px] tabular-nums text-zinc-500">{row.v}</span>
+          </div>
+        );
+      })}
+      <ChartTooltipPortal tooltip={tooltip} />
+    </div>
+  );
+}
+
 export function HorizontalBarsMock({
   rows,
   color,
   money = true,
   health = false,
   showRevenueBreakdown = false,
+  onHealthFilter,
 }: HorizontalBarsMockProps) {
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
+
+  if (health) {
+    return (
+      <HealthBarRows
+        rows={rows as HealthBarRow[]}
+        color={color}
+        tooltip={tooltip}
+        setTooltip={setTooltip}
+        onHealthFilter={onHealthFilter}
+      />
+    );
+  }
 
   if (showRevenueBreakdown && money && !health) {
     return (

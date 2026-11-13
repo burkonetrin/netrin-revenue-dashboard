@@ -99,6 +99,8 @@ export interface MockFranchise {
   billingModelName?: string;
   billingFixedPrice?: number;
   billingOveragePerQuery?: number;
+  /** Nome do modelo Background Check (subtítulo na listagem). */
+  backgroundCheckTemplateName?: string;
 }
 
 export interface MockContract {
@@ -189,6 +191,20 @@ export interface HealthBarRow {
   sub: string;
   v: number;
   p: number;
+  healthKey: ClientHealthKey;
+}
+
+/** Lê o filtro de saúde a partir da query string (`?health=`). */
+export function parseClientHealthFilterParam(
+  value: string | null,
+): ClientHealthKey | null {
+  if (!value) {
+    return null;
+  }
+  const allowed: ClientHealthKey[] = ["oportunidade", "sucesso", "warning", "danger"];
+  return allowed.includes(value as ClientHealthKey)
+    ? (value as ClientHealthKey)
+    : null;
 }
 
 export type ProductNumbersSegmentTone = "green" | "red" | "yellow" | "grey";
@@ -533,6 +549,13 @@ export const EVO: EvoPoint[] = [
   { projTotal: 332e3, cl: 0, ct: 0, fr: 0 },
 ];
 
+/** Meta mensal de faturamento (até o mês corrente do gráfico — índice `LAST_REAL`). */
+export const EVO_MONTHLY_META: number[] = Array.from({ length: LAST_REAL + 1 }, (_, i) => {
+  const point = EVO[i];
+  if (!("total" in point) || point.total === undefined) return 0;
+  return Math.round(point.total * 1.065 + 8_000);
+});
+
 export const LEGEND: LegendItem[] = [
   { id: "total", l: "Total faturado", c: "#a78bfa", type: "bar" },
   { id: "acv", l: "ACV", c: "#60a5fa", type: "bar" },
@@ -541,6 +564,7 @@ export const LEGEND: LegendItem[] = [
   { id: "mrr", l: "MRR", c: "#c084fc", type: "bar" },
   { id: "proj", l: "Projeção", c: "#fb7185", type: "bar" },
   { id: "desc", l: "Descontos", c: "#dc2626", type: "line" },
+  { id: "meta", l: "Meta", c: "#16a34a", type: "line" },
   { id: "cl", l: "Clientes ativos", c: "#652cdd", type: "line" },
   { id: "ct", l: "Contratos ativos", c: "#8456e4", type: "line" },
   { id: "fr", l: "Franquias ativas", c: "#22c55e", type: "line" },
@@ -950,6 +974,7 @@ export const CONTRACTS_MOCK: MockContract[] = [
         id: "f1",
         name: "Franquia de BGC",
         product: "Background Check",
+        backgroundCheckTemplateName: "BGC PF Padrão",
         ativo: true,
         faturaStatus: "pago_total",
         centro: "ACV - Junior Duraes",
@@ -1106,6 +1131,21 @@ function franchiseToConsumo(f: MockFranchise): MockClientFranchiseConsumo {
 
 const DEMO_CONTRACT_FRANCHISE_CONSUMOS: MockClientFranchiseConsumo[] =
   CONTRACTS_MOCK[0].franchises.filter((f) => f.ativo).map(franchiseToConsumo);
+
+export const CLIENT_HEALTH_FILTER_CHECKBOX_ID: Record<ClientHealthKey, string> = {
+  danger: "health_risco_alto",
+  warning: "health_risco_medio",
+  sucesso: "health_sucesso",
+  oportunidade: "health_oportunidade",
+};
+
+/** Indica se o cliente possui ao menos uma franquia na faixa de saúde informada. */
+export function clientHasFranchiseWithHealth(
+  client: MockClient,
+  health: ClientHealthKey,
+): boolean {
+  return getClientFranchiseConsumptions(client).some((row) => row.health === health);
+}
 
 /** Consumo por franquia na listagem de clientes (mock). */
 export function getClientFranchiseConsumptions(
@@ -1409,11 +1449,11 @@ export const SALES_REP_NUMBERS_ROWS: SalesRepNumbersRow[] =
   });
 
 export const BAR_HEALTH: HealthBarRow[] = [
-  { title: "Risco médio", sub: "entre 51% a 90%", v: 3, p: 2 },
-  { title: "Oportunidade", sub: "maior que 100%", v: 2, p: 2 },
-  { title: "Risco alto", sub: "igual ou menor a 50%", v: 1, p: 2 },
-  { title: "Sucesso", sub: "entre 91% a 100%", v: 2, p: 1 },
-].sort((a, b) => b.v - a.v);
+  { title: "Oportunidade", sub: "maior que 100%", v: 2, p: 2, healthKey: "oportunidade" },
+  { title: "Sucesso", sub: "entre 91% a 100%", v: 2, p: 1, healthKey: "sucesso" },
+  { title: "Risco médio", sub: "entre 51% a 90%", v: 3, p: 2, healthKey: "warning" },
+  { title: "Risco alto", sub: "igual ou menor a 50%", v: 1, p: 2, healthKey: "danger" },
+];
 
 export const COHORT_OFFSETS = [0, 1, 2, 3, 6, 9, 12, 18, 24, 30, 31];
 

@@ -1,12 +1,14 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DynamicDrawer } from "@/shared/components/DynamicDrawer";
 import { FieldCheckbox, FieldInput, FieldSelect } from "@/design-system/ui";
 import {
+  CLIENT_HEALTH_FILTER_CHECKBOX_ID,
   INVOICE_STATUS_FILTER_OPTIONS,
   MOCK_COMPETENCE_MONTHS,
+  type ClientHealthKey,
 } from "../../clientesDashboardMockData";
 import { ProfitCenterFilterSection } from "./ProfitCenterFilterSection";
 
@@ -20,7 +22,36 @@ interface ClientesFilterDrawerProps {
   onOpenChange: (open: boolean) => void;
   statusFilter: FilterDrawerStatus;
   onStatusFilterChange: (next: FilterDrawerStatus) => void;
-  onApply: () => void;
+  healthFilters?: ClientHealthKey[];
+  onApply: (result: { healthFilters: ClientHealthKey[] }) => void;
+  onClearAll?: () => void;
+}
+
+const CLIENT_HEALTH_FILTER_OPTIONS: Array<{ id: string; label: string }> = [
+  {
+    id: CLIENT_HEALTH_FILTER_CHECKBOX_ID.oportunidade,
+    label: "Oportunidade (maior que 100%)",
+  },
+  {
+    id: CLIENT_HEALTH_FILTER_CHECKBOX_ID.sucesso,
+    label: "Sucesso (entre 91% a 100%)",
+  },
+  {
+    id: CLIENT_HEALTH_FILTER_CHECKBOX_ID.warning,
+    label: "Risco médio (entre 51% a 90%)",
+  },
+  {
+    id: CLIENT_HEALTH_FILTER_CHECKBOX_ID.danger,
+    label: "Risco alto (igual ou menor a 50%)",
+  },
+];
+
+function healthFiltersFromCheckboxState(
+  checkboxIds: Record<string, boolean>,
+): ClientHealthKey[] {
+  return (Object.keys(CLIENT_HEALTH_FILTER_CHECKBOX_ID) as ClientHealthKey[]).filter(
+    (key) => checkboxIds[CLIENT_HEALTH_FILTER_CHECKBOX_ID[key]],
+  );
 }
 
 const COMPARISON_OPERATORS = [
@@ -63,7 +94,9 @@ export function ClientesFilterDrawer({
   onOpenChange,
   statusFilter,
   onStatusFilterChange,
+  healthFilters = [],
   onApply,
+  onClearAll,
 }: ClientesFilterDrawerProps) {
   const [checkboxIds, setCheckboxIds] = useState<Record<string, boolean>>({});
   const [expandedProfitCenterReps, setExpandedProfitCenterReps] = useState<
@@ -75,10 +108,24 @@ export function ClientesFilterDrawer({
     [competenceItems],
   );
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const healthChecks = Object.fromEntries(
+      CLIENT_HEALTH_FILTER_OPTIONS.map(({ id }) => [id, false]),
+    ) as Record<string, boolean>;
+    for (const key of healthFilters) {
+      healthChecks[CLIENT_HEALTH_FILTER_CHECKBOX_ID[key]] = true;
+    }
+    setCheckboxIds((prev) => ({ ...prev, ...healthChecks }));
+  }, [isOpen, healthFilters]);
+
   const clearAll = () => {
     setCheckboxIds({});
     setExpandedProfitCenterReps({});
     onStatusFilterChange({ ativo: false, inativo: false });
+    onClearAll?.();
   };
 
   const toggleCheck = (id: string, checked: boolean) => {
@@ -167,12 +214,7 @@ export function ClientesFilterDrawer({
         title="Saúde do cliente"
         checked={checkboxIds}
         onToggle={toggleCheck}
-        items={[
-          "Risco alto (igual ou menor a 50%)",
-          "Risco médio (entre 51% a 90%)",
-          "Sucesso (entre 91% a 100%)",
-          "Oportunidade (maior que 100%)",
-        ].map((label) => ({ id: `health_${label}`, label }))}
+        items={CLIENT_HEALTH_FILTER_OPTIONS}
       />
       <FilterCheckGroup
         title="Tags"
@@ -274,7 +316,7 @@ export function ClientesFilterDrawer({
             color="primary"
             className="h-10 flex-1 min-w-[120px]"
             onPress={() => {
-              onApply();
+              onApply({ healthFilters: healthFiltersFromCheckboxState(checkboxIds) });
               onOpenChange(false);
             }}
           >

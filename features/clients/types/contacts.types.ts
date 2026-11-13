@@ -51,6 +51,7 @@ export interface UpdateContactRequest {
   phone: string;
   receivesNfe?: boolean;
   receivesBoletos?: boolean;
+  isActive?: boolean;
 }
 
 export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
@@ -60,6 +61,7 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   finance: "Financeiro",
 };
 
+export const CONTACT_ACTIVE_CHECKBOX_LABEL = "Contato ativo";
 export const CONTACT_RECEIVES_NFE_CHECKBOX_LABEL = "Recebe notas por e-mail";
 export const CONTACT_RECEIVES_BOLETOS_CHECKBOX_LABEL = "Recebe boletos por e-mail";
 

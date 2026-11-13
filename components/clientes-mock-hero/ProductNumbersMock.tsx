@@ -27,13 +27,12 @@ const SEGMENT_TONE_CLASS: Record<ProductNumbersSegmentTone, string> = {
 
 const ROW_MIN_HEIGHT_CLASS = "min-h-[56px]";
 
-const SUMMARY_CARD_CLASS =
-  `flex min-w-[9.25rem] shrink-0 flex-col justify-center rounded-sm bg-zinc-100 px-2.5 py-1.5 ${ROW_MIN_HEIGHT_CLASS}`;
+/** Largura base do card; cresce só se o conteúdo precisar de mais espaço. */
+const SUMMARY_CARD_CLASS = `flex w-[9.25rem] shrink-0 min-w-[max(9.25rem,max-content)] flex-col justify-center rounded-sm bg-zinc-100 px-2.5 py-1.5 ${ROW_MIN_HEIGHT_CLASS}`;
 
-const FATURAMENTO_CARD_CLASS =
-  `flex w-[11rem] shrink-0 flex-col justify-center rounded-sm bg-zinc-100 px-2.5 py-1.5 ${ROW_MIN_HEIGHT_CLASS}`;
+const FATURAMENTO_CARD_CLASS = `flex w-[11rem] shrink-0 min-w-[max(11rem,max-content)] flex-col justify-center rounded-sm bg-zinc-100 px-2.5 py-1.5 ${ROW_MIN_HEIGHT_CLASS}`;
 
-const SEGMENT_CARD_CLASS = `flex min-w-[6.25rem] flex-col justify-center rounded-sm px-2.5 py-1.5 ${ROW_MIN_HEIGHT_CLASS}`;
+const SEGMENT_CARD_CLASS = `flex min-w-[max(6.25rem,max-content)] shrink-0 flex-col justify-center rounded-sm px-2.5 py-1.5 ${ROW_MIN_HEIGHT_CLASS}`;
 
 const TOTAL_FATURAMENTO = PRODUCT_NUMBERS_ROWS.reduce(
   (sum, row) => sum + row.faturamento,
@@ -66,7 +65,7 @@ function SummaryMetricCard({
   return (
     <div className={className}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[9px] font-medium leading-snug text-zinc-500">
+        <span className="text-[9px] font-medium leading-snug text-zinc-500 whitespace-nowrap">
           {label}
         </span>
         <CmpRight cur={cur} prev={prev} className="text-[9px] font-normal" />
@@ -123,8 +122,8 @@ export function ProductNumbersMock({ competenceLabel }: ProductNumbersMockProps)
                 className={FATURAMENTO_CARD_CLASS}
                 label="Faturamento"
                 value={
-                  <span className="flex w-full items-baseline justify-between gap-2">
-                    <span className="truncate">{fmt(row.faturamento)}</span>
+                  <span className="flex w-full items-baseline justify-between gap-2 whitespace-nowrap">
+                    <span>{fmt(row.faturamento)}</span>
                     <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold tabular-nums text-zinc-500">
                       <PieChart
                         className="size-3 shrink-0"
@@ -153,10 +152,10 @@ export function ProductNumbersMock({ competenceLabel }: ProductNumbersMockProps)
                     <div
                       key={segment.label}
                       className={`${SEGMENT_CARD_CLASS} ${SEGMENT_TONE_CLASS[segment.tone]}`}
-                      style={{ flex: `${segment.sharePct} 1 0` }}
+                      style={{ flex: `${segment.sharePct} 0 0` }}
                     >
                       <div className="flex items-start justify-between gap-1">
-                        <span className="text-[9px] font-medium leading-snug">
+                        <span className="text-[9px] font-medium leading-snug whitespace-nowrap">
                           {segment.label}
                         </span>
                         <CmpRight
@@ -165,7 +164,7 @@ export function ProductNumbersMock({ competenceLabel }: ProductNumbersMockProps)
                           className="text-[9px] font-normal shrink-0"
                         />
                       </div>
-                      <span className="mt-1 text-[11px] font-semibold leading-tight tabular-nums">
+                      <span className="mt-1 text-[11px] font-semibold leading-tight tabular-nums whitespace-nowrap">
                         {fmtN(segment.value)}{" "}
                         <span className="font-medium">({segment.sharePct}%)</span>
                       </span>

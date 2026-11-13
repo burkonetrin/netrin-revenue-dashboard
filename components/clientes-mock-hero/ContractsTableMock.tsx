@@ -7,6 +7,7 @@ import {
   clientHierarchyTableClassName,
   clientHierarchyTableHeadCellClass,
 } from "@/shared/styles/tableClassNames";
+import { franchiseBackgroundCheckModelSubline } from "./franchiseRowDisplay.utils";
 import { TableExpandButton } from "./TableExpandButton";
 import { Button } from "@heroui/react";
 import { Fragment, useCallback, useMemo, useState, type ReactNode } from "react";
@@ -24,6 +25,7 @@ import {
 } from "../../clientesDashboardMockData";
 import { parseCompetenceMonthYear } from "../../clientesDashboardMockFormat";
 import { ProductNumbersDailyChart } from "./ProductNumbersDailyChart";
+import { ProductNumbersRowMonthSummary } from "./ProductNumbersRowMonthSummary";
 import {
   fmt,
   fmtDetail,
@@ -232,6 +234,7 @@ function FranchiseNestedTable({
             const billingTooltip = franchiseBillingModelTooltipContent(f);
             const productNumbersRow = productNumbersRowForFranchise(f);
             const isDailyOpen = Boolean(dailyOpenByFranchiseId[f.id]);
+            const bgcModelSubline = franchiseBackgroundCheckModelSubline(f);
 
             return (
             <Fragment key={f.id}>
@@ -252,7 +255,16 @@ function FranchiseNestedTable({
                   {f.excLabel}
                 </span>
               </td>
-              <td className={`${franchiseCell} whitespace-nowrap`}>{f.product}</td>
+              <td className={franchiseCell}>
+                <span className="block whitespace-nowrap">{f.product}</span>
+                {bgcModelSubline ? (
+                  <span
+                    className={`block mt-0.5 font-normal ${clientHierarchySublineClassName}`}
+                  >
+                    {bgcModelSubline}
+                  </span>
+                ) : null}
+              </td>
               <td className={franchiseCell}>
                 <div className="inline-flex items-center gap-1.5 flex-nowrap max-w-full">
                   {f.valorLabel ? (
@@ -338,7 +350,8 @@ function FranchiseNestedTable({
                   colSpan={FRANCHISE_TABLE_COLSPAN}
                   className="border-b border-zinc-100 bg-white px-4 pb-4 pt-1"
                 >
-                  <div className="mt-4">
+                  <div className="mt-3 flex flex-col gap-3">
+                    <ProductNumbersRowMonthSummary row={productNumbersRow} />
                     <ProductNumbersDailyChart
                       row={productNumbersRow}
                       year={year}

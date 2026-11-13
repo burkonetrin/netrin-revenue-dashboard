@@ -4,6 +4,10 @@ import type {
   BillingInvoiceStatusMeta,
   BillingInvoiceStatusState,
 } from "../types/billing-invoice-status.types";
+import {
+  BILLING_ENTRY_OPEN_STATUS_LABEL,
+  BILLING_INVOICE_STATUS_LABEL,
+} from "../types/billing-invoice-status.types";
 import type { BillingInvoiceRecord, BillingInvoiceNote } from "../types/billing.types";
 
 /** Status que disparam detalhes inline na tooltip multi-nota. */
@@ -11,9 +15,20 @@ export const BILLING_STATUS_WITH_INFO_CONTENT: BillingInvoiceStatusKey[] = [
   "pago_parcial",
   "pago_total",
   "pago_excedente",
+  "pagamento_parcelado",
   "nota_vencida",
   "nota_cancelada",
 ];
+
+export function resolveBillingInvoiceStatusDisplayLabel(
+  status: BillingInvoiceStatusKey,
+  options?: { source?: BillingInvoiceRecord["source"] },
+): string {
+  if (status === "fatura_aberta" && options?.source === "entry") {
+    return BILLING_ENTRY_OPEN_STATUS_LABEL;
+  }
+  return BILLING_INVOICE_STATUS_LABEL[status];
+}
 
 export function billingStatusHasInfoContent(status: BillingInvoiceStatusKey): boolean {
   return BILLING_STATUS_WITH_INFO_CONTENT.includes(status);

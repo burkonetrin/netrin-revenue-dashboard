@@ -117,6 +117,7 @@ export async function updateContact(
     ...data,
     receivesNfe: data.receivesNfe ?? false,
     receivesBoletos: data.receivesBoletos ?? false,
+    isActive: data.isActive ?? list[idx].isActive,
     updatedAt: new Date().toISOString(),
   };
   list[idx] = updated;

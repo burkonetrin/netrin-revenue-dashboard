@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 import {
   EVO,
   EVO_LABELS,
+  EVO_MONTHLY_META,
   LAST_REAL,
   LEGEND,
   initialLegendVisibility,
@@ -97,6 +98,7 @@ export function EvolutionChartMock() {
         ...EVO.slice(LAST_REAL + 1).flatMap((p) =>
           !isEvoReal(p) ? [p.projTotal] : [],
         ),
+        ...EVO_MONTHLY_META,
       ) * 1.05;
     const maxCntVal =
       Math.max(
@@ -235,6 +237,16 @@ export function EvolutionChartMock() {
                 showCmp
               />
             ) : null}
+            {legendVis.meta ? (
+              <TooltipRow
+                label="Meta"
+                color="#16a34a"
+                cur={EVO_MONTHLY_META[i] ?? 0}
+                prev={i > 0 ? (EVO_MONTHLY_META[i - 1] ?? 0) : (EVO_MONTHLY_META[i] ?? 0)}
+                keyId="meta"
+                showCmp
+              />
+            ) : null}
             <hr className="my-2 border-0 border-t border-[var(--ds-border)]" />
             {legendVis.cl ? (
               <TooltipRow
@@ -319,6 +331,13 @@ export function EvolutionChartMock() {
     }
   }
 
+  let metaPath = "";
+  if (legendVis.meta) {
+    for (let i = 0; i <= LAST_REAL; i++) {
+      metaPath += `${i ? "L" : "M"} ${tx(i)} ${tyR(EVO_MONTHLY_META[i] ?? 0)} `;
+    }
+  }
+
   return (
     <div>
       <div
@@ -393,6 +412,14 @@ export function EvolutionChartMock() {
               strokeWidth={2}
             />
           ) : null}
+          {metaPath ? (
+            <path
+              d={metaPath}
+              fill="none"
+              stroke={legendColor("meta")}
+              strokeWidth={2}
+            />
+          ) : null}
           {countLinePaths}
 
           {Array.from({ length: n }, (_, i) => (
@@ -439,6 +466,11 @@ export function EvolutionChartMock() {
               {leg.type === "line" ? (
                 <span
                   className="w-3.5 h-0 border-t-2"
+                  style={{ borderColor: leg.c }}
+                />
+              ) : leg.type === "dash" ? (
+                <span
+                  className="w-3.5 h-0 border-t-2 border-dashed"
                   style={{ borderColor: leg.c }}
                 />
               ) : (

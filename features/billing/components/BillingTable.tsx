@@ -60,20 +60,20 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
   } as const;
   const status = record.billingStatus ?? "fatura_aberta";
   const meta = record.statusMeta;
-  const showRecordCancelReasonInline = status === "nota_cancelada" && Boolean(meta?.cancelReason);
 
   const renderStatusBadge = (suppressInfoTooltip: boolean) => (
     <BillingInvoiceStatusBadge
       status={status}
       meta={meta}
+      source={record.source}
       suppressInfoTooltip={suppressInfoTooltip}
     />
   );
 
-  const dueDateWithBadge = (dueDateLabel: ReactNode, suppressInfoTooltip = false) => (
+  const dueDateWithBadge = (dueDateLabel: ReactNode) => (
     <span className="inline-flex flex-wrap items-center gap-2">
       <span>{dueDateLabel}</span>
-      {renderStatusBadge(suppressInfoTooltip)}
+      {renderStatusBadge(false)}
     </span>
   );
 
@@ -82,16 +82,8 @@ function BillingDueDate({ record }: { record: BillingInvoiceRecord }) {
   }
 
   if (view.kind === "single") {
-    return (
-      <span className="flex flex-col items-start gap-1 text-left">
-        {dueDateWithBadge(
-          getBillingDueDateDisplay(view.dueDate, dueDateDisplayOptions),
-          showRecordCancelReasonInline,
-        )}
-        {showRecordCancelReasonInline ? (
-          <BillingInvoiceStatusInfoContent status={status} meta={meta} />
-        ) : null}
-      </span>
+    return dueDateWithBadge(
+      getBillingDueDateDisplay(view.dueDate, dueDateDisplayOptions),
     );
   }
 

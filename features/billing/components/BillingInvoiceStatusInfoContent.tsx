@@ -7,6 +7,13 @@ import type {
   BillingInvoiceStatusKey,
   BillingInvoiceStatusMeta,
 } from "../types/billing-invoice-status.types";
+import { BILLING_INSTALLMENT_PAYMENT_STATUS_LABEL } from "../types/billing-invoice-status.types";
+
+function resolveInterestAmount(meta?: BillingInvoiceStatusMeta): number | undefined {
+  if (meta?.interestAmount != null) return meta.interestAmount;
+  if (meta?.excessAmount != null) return meta.excessAmount;
+  return undefined;
+}
 
 export function getBillingInvoiceStatusInfoContent(
   status: BillingInvoiceStatusKey,
@@ -22,11 +29,26 @@ export function getBillingInvoiceStatusInfoContent(
       );
     }
   }
-  if (status === "pago_excedente" && meta?.excessAmount != null) {
+  if (status === "pago_excedente") {
+    const interestAmount = resolveInterestAmount(meta);
+    if (interestAmount != null) {
+      return (
+        <span className={TOOLTIP_BODY_CLASS}>
+          Juros: {formatCurrency(interestAmount)}
+        </span>
+      );
+    }
+  }
+  if (status === "pagamento_parcelado" && meta?.installments?.length) {
     return (
-      <span className={TOOLTIP_BODY_CLASS}>
-        Valor pago em excedente: {formatCurrency(meta.excessAmount)}.
-      </span>
+      <div className={`w-full space-y-1 text-left ${TOOLTIP_BODY_CLASS}`}>
+        {meta.installments.map((line) => (
+          <p key={line.installmentNumber}>
+            Parcela {line.installmentNumber}: {formatCurrency(line.amount)} -{" "}
+            {BILLING_INSTALLMENT_PAYMENT_STATUS_LABEL[line.status]}
+          </p>
+        ))}
+      </div>
     );
   }
   if (status === "nota_cancelada" && meta?.cancelReason) {

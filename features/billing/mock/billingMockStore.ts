@@ -4,10 +4,7 @@ import { alignTotalizerWithData } from "../utils/billing.utils";
 import type { BillingListResponse } from "../types/billing.types";
 import { getBillingStatusForRecord } from "../store/billing-invoice-status.store";
 import { mergeStatusIntoRecord } from "../utils/billing-invoice-status.utils";
-import {
-  clientScopeDueDateInvoice,
-  clientScopeEntry,
-} from "./billingMockFixtures";
+import { clientScopeDueDateInvoice } from "./billingMockFixtures";
 import { getCurrentMonth } from "../utils/billing-list.utils";
 import {
   BILLING_INVOICE_STATUS_LIST_SORT_ORDER,
@@ -15,8 +12,8 @@ import {
   buildDualNoteCancelOpenShowcaseInvoice,
   buildStatusShowcaseInvoice,
 } from "./billingMockStatusShowcase";
-import { billingRecordMatchesStatusFilter } from "../utils/billing-invoice-status-filter.utils";
 import type { BillingInvoiceStatusKey } from "../types/billing-invoice-status.types";
+import { billingRecordMatchesStatusFilter } from "../utils/billing-invoice-status-filter.utils";
 
 export type BillingRecordSource = "entry" | "invoice";
 
@@ -42,6 +39,16 @@ function withCompetence(detail: BillingInvoiceDetail, competence: string): Billi
   return { ...detail, competence, referenceMonth: competence };
 }
 
+function buildFixedStatusListInvoice(
+  status: Extract<BillingInvoiceStatusKey, "nota_cancelada" | "nota_vencida">,
+  competence: string,
+): BillingInvoiceDetail {
+  const id =
+    status === "nota_cancelada" ? "bill-nota-cancelada" : "bill-nota-vencida";
+  const built = buildStatusShowcaseInvoice(status, status === "nota_cancelada" ? 97 : 98, competence);
+  return { ...built, id };
+}
+
 function seedRecords(): StoredBillingRecord[] {
   const competence = getCurrentMonth();
 
@@ -52,8 +59,19 @@ function seedRecords(): StoredBillingRecord[] {
       profitCenterId: MOCK_PROFIT_CENTER_PRIMARY,
     },
     {
-      source: "entry",
-      detail: withCompetence(cloneDetail(clientScopeEntry), competence),
+      source: "invoice",
+      detail: withCompetence(
+        cloneDetail(buildFixedStatusListInvoice("nota_vencida", competence)),
+        competence,
+      ),
+      profitCenterId: MOCK_PROFIT_CENTER_SECONDARY,
+    },
+    {
+      source: "invoice",
+      detail: withCompetence(
+        cloneDetail(buildFixedStatusListInvoice("nota_cancelada", competence)),
+        competence,
+      ),
       profitCenterId: MOCK_PROFIT_CENTER_PRIMARY,
     },
   ];
