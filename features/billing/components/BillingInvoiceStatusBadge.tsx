@@ -17,7 +17,7 @@ interface BillingInvoiceStatusBadgeProps {
   status: BillingInvoiceStatusKey;
   meta?: BillingInvoiceStatusMeta;
   className?: string;
-  /** Origem da linha (`entry` usa rótulo “Faturamento em aberto” para fatura_aberta). */
+  /** Origem da linha (`entry` usa rótulo “Fatura aberta” para fatura_aberta). */
   source?: "entry" | "invoice";
   /** Na tooltip multi-nota, detalhes ficam inline — sem ícone “i”. */
   suppressInfoTooltip?: boolean;

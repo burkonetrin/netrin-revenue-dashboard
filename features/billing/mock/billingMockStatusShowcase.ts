@@ -200,9 +200,24 @@ export const billingStatusShowcaseSeed: Record<string, BillingInvoiceStatusState
     closeCheckboxLocked: true,
     meta: {
       installments: [
-        { installmentNumber: 1, amount: 18_500, status: "pago" },
-        { installmentNumber: 2, amount: 18_500, status: "em_aberto" },
-        { installmentNumber: 3, amount: 18_500, status: "em_aberto" },
+        {
+          installmentNumber: 1,
+          amount: 18_500,
+          dueDate: "2026-04-10",
+          status: "pago",
+        },
+        {
+          installmentNumber: 2,
+          amount: 18_500,
+          dueDate: "2026-05-10",
+          status: "em_aberto",
+        },
+        {
+          installmentNumber: 3,
+          amount: 18_500,
+          dueDate: "2026-06-10",
+          status: "em_aberto",
+        },
       ],
     },
   },

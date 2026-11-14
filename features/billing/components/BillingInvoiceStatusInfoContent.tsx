@@ -2,7 +2,11 @@
 
 import type { ReactNode } from "react";
 import { formatCurrency } from "@/shared/utils/currency";
-import { TOOLTIP_BODY_CLASS } from "@/shared/constants/tooltip.constants";
+import {
+  TOOLTIP_BODY_CLASS,
+  TOOLTIP_TITLE_CLASS,
+} from "@/shared/constants/tooltip.constants";
+import { getBillingDueDateDisplay } from "../utils/billing.utils";
 import type {
   BillingInvoiceStatusKey,
   BillingInvoiceStatusMeta,
@@ -41,12 +45,17 @@ export function getBillingInvoiceStatusInfoContent(
   }
   if (status === "pagamento_parcelado" && meta?.installments?.length) {
     return (
-      <div className={`w-full space-y-1 text-left ${TOOLTIP_BODY_CLASS}`}>
+      <div className={`w-full space-y-3 text-left ${TOOLTIP_BODY_CLASS}`}>
         {meta.installments.map((line) => (
-          <p key={line.installmentNumber}>
-            Parcela {line.installmentNumber}: {formatCurrency(line.amount)} -{" "}
-            {BILLING_INSTALLMENT_PAYMENT_STATUS_LABEL[line.status]}
-          </p>
+          <div key={line.installmentNumber} className="space-y-0.5">
+            <p className={TOOLTIP_TITLE_CLASS}>Parcela {line.installmentNumber}</p>
+            <p>Valor: {formatCurrency(line.amount)}</p>
+            <p>
+              Vencimento:{" "}
+              {getBillingDueDateDisplay(line.dueDate, { emptyLabel: "—" })}
+            </p>
+            <p>Status: {BILLING_INSTALLMENT_PAYMENT_STATUS_LABEL[line.status]}</p>
+          </div>
         ))}
       </div>
     );

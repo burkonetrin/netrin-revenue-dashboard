@@ -24,6 +24,8 @@ export const BILLING_INSTALLMENT_PAYMENT_STATUS_LABEL: Record<
 export interface BillingInstallmentPaymentLine {
   installmentNumber: number;
   amount: number;
+  /** Data de vencimento (`YYYY-MM-DD`). */
+  dueDate?: string;
   status: BillingInstallmentPaymentStatus;
 }
 
@@ -58,7 +60,7 @@ export const BILLING_INVOICE_STATUS_LABEL: Record<BillingInvoiceStatusKey, strin
   nota_cancelada: "Nota cancelada",
 };
 
-export const BILLING_ENTRY_OPEN_STATUS_LABEL = "Faturamento em aberto";
+export const BILLING_ENTRY_OPEN_STATUS_LABEL = "Fatura aberta";
 
 /** Chave extra só no filtro da listagem (espelho / lançamento aberto). */
 export type BillingInvoiceStatusFilterKey =
