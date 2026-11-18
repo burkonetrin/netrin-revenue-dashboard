@@ -35,7 +35,10 @@ export interface DynamicTableProps<T> {
   onSortChange?: (descriptor: DynamicTableSortDescriptor) => void;
   expandable?: boolean;
   expandColumnLabel?: string;
+  expandButtonLabel?: string;
   expandedContent?: (row: T) => React.ReactNode;
+  expandedContentClassName?: string;
+  isRowExpandable?: (row: T) => boolean;
   expandedRowKeys?: Set<string | number>;
   onExpandedChange?: (key: string | number, isExpanded: boolean) => void;
   isLoading?: boolean;

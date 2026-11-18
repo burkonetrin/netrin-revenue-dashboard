@@ -10,6 +10,7 @@ import {
   BILLING_BASE_PATH,
   BILLING_TASKS_BASE_PATH,
   DATA_INTELLIGENCE_BASE_PATH,
+  FINANCIAL_MANAGEMENT_BASE_PATH,
   PROTOTYPE_BASE_PATH,
   PROVIDERS_BASE_PATH,
 } from "./constants";
@@ -27,7 +28,12 @@ export const commercialDashboardPrototypeMenuItems: MenuItem[] = [
     icon: <FinancialIcon />,
   },
   {
-    label: "Inteligência de dados",
+    label: "Gestão Financeira",
+    path: FINANCIAL_MANAGEMENT_BASE_PATH,
+    icon: <FinancialIcon />,
+  },
+  {
+    label: "Inteligência de Dados",
     path: DATA_INTELLIGENCE_BASE_PATH,
     icon: <DataSourcesIcon />,
   },

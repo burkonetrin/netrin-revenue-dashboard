@@ -26,7 +26,10 @@ export function DynamicTable<T>({
   onSortChange,
   expandable = false,
   expandColumnLabel,
+  expandButtonLabel = "item",
   expandedContent,
+  expandedContentClassName,
+  isRowExpandable,
   expandedRowKeys: externalExpandedRowKeys,
   onExpandedChange,
   isLoading,
@@ -149,6 +152,9 @@ export function DynamicTable<T>({
                 onClick={() => handleRowClick(row)}
               >
                 {displayColumns.map((column) => {
+                  const canExpand = isRowExpandable
+                    ? isRowExpandable(row)
+                    : expandable;
                   if (column.id === "__expand__") {
                     return (
                       <TableCell key={String(column.id)}>
@@ -159,12 +165,19 @@ export function DynamicTable<T>({
                               : "flex justify-end"
                           }
                         >
-                          <ChevronDown
-                            size={20}
-                            className={`text-gray-400 transition-transform ${
-                              isExpanded ? "rotate-180" : ""
-                            }`}
-                          />
+                          {canExpand ? (
+                            <ChevronDown
+                              size={20}
+                              className={`text-gray-400 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                              aria-label={
+                                isExpanded
+                                  ? `Recolher ${expandButtonLabel}`
+                                  : `Expandir ${expandButtonLabel}`
+                              }
+                            />
+                          ) : null}
                         </div>
                       </TableCell>
                     );
@@ -197,7 +210,9 @@ export function DynamicTable<T>({
                     colSpan={displayColumns.length}
                     className="p-0 bg-gray-50"
                   >
-                    <div className="p-4">{expandedContent(row)}</div>
+                    <div className={expandedContentClassName ?? "p-4"}>
+                      {expandedContent(row)}
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : null}

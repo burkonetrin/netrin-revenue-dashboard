@@ -13,6 +13,7 @@ import { DataSourceDetailRoute } from "@/components/DataSourceDetailRoute";
 import { ProviderDetailRoute } from "@/components/ProviderDetailRoute";
 import { ProvidersAndSourcesPage } from "@/components/ProvidersAndSourcesPage";
 import { DataIntelligencePage } from "@/components/DataIntelligencePage";
+import { FinancialManagementRoute } from "@/components/FinancialManagementRoute";
 import { BannedBettorDetailPage } from "@/components/BannedBettorDetailPage";
 import { PROTOTYPE_BASE_PATH } from "@/constants";
 
@@ -32,6 +33,7 @@ export function App() {
             path="clientes/:clientId/franquias/:franchiseId"
             element={<CommercialFranchiseDetailPage />}
           />
+          <Route path="gestao-financeira" element={<FinancialManagementRoute />} />
           <Route path="inteligencia-de-dados" element={<DataIntelligencePage />} />
           <Route
             path="inteligencia-de-dados/impedidos/:sportId"

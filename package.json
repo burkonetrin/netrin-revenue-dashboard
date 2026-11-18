@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/react": "^0.5.3",
     "@heroui/react": "^2.8.5",
     "@heroui/system": "^2.4.23",
     "@heroui/theme": "^2.4.23",
