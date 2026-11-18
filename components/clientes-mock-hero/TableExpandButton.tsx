@@ -18,7 +18,10 @@ export function TableExpandButton({
       className="flex justify-center border-none bg-transparent cursor-pointer p-1"
       aria-label={ariaLabel}
       aria-expanded={expanded}
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
     >
       <ChevronDown
         size={20}

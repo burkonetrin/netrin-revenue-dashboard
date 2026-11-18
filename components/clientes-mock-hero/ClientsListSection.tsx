@@ -55,6 +55,7 @@ import {
   useClientListInvoiceStatusStore,
 } from "@/features/clients/store/client-list-invoice-status.store";
 import { resolveClientListInvoiceStatus } from "@/features/clients/utils/client-list-invoice-display.utils";
+import { NewClientDrawer } from "@/features/clients/components/NewClientDrawer";
 
 export type TableSort = { key: "ltv" | "fat" | "cons" | null; dir: "asc" | "desc" };
 
@@ -234,6 +235,7 @@ export function ClientsListSection({
   const [isBulkCloseModalOpen, setIsBulkCloseModalOpen] = useState(false);
   const [isBillClientsModalOpen, setIsBillClientsModalOpen] = useState(false);
   const [billSingleClient, setBillSingleClient] = useState<MockClient | null>(null);
+  const [isNewClientDrawerOpen, setIsNewClientDrawerOpen] = useState(false);
 
   const statusRevision = useClientListInvoiceStatusStore((state) => state.revision);
   const closeManyClients = useClientListInvoiceStatusStore((state) => state.closeMany);
@@ -374,6 +376,7 @@ export function ClientsListSection({
           <ClientsListToolbarOverflow
             showInactiveItems={showInactiveItems}
             openInvoiceClientCount={billClientsPreview.openClientCount}
+            onNewClient={() => setIsNewClientDrawerOpen(true)}
             onBillClients={() => setIsBillClientsModalOpen(true)}
             onToggleShowInactive={onToggleShowInactive}
           />
@@ -621,6 +624,10 @@ export function ClientsListSection({
           billSingleClientInvoice(billSingleClient.id);
           setBillSingleClient(null);
         }}
+      />
+      <NewClientDrawer
+        isOpen={isNewClientDrawerOpen}
+        onOpenChange={setIsNewClientDrawerOpen}
       />
     </div>
   );

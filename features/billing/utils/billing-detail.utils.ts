@@ -193,6 +193,12 @@ const FRANCHISE_SEND_EMAIL_COLUMN = {
   cellClassName: "pl-3 align-middle whitespace-nowrap w-[1%] text-center",
 };
 
+const FRANCHISE_ROW_EXPAND_COLUMN = {
+  align: "start" as const,
+  headerClassName: "text-left pr-3 whitespace-nowrap w-[1%]",
+  cellClassName: "pr-3 align-middle whitespace-nowrap w-[1%] text-center",
+};
+
 /**
  * Busca franchise table columns na API.
  */
@@ -201,11 +207,13 @@ export function getFranchiseTableColumns(
 ): ColumnConfig<BillingFranchiseLine>[] {
   const columns: ColumnConfig<BillingFranchiseLine>[] = [
     { id: "name", label: "Franquia", ...FRANCHISE_NAME_COLUMN },
+    { id: "productName", label: "Produto", ...FRANCHISE_DATA_COLUMN },
     { id: "pricingModel", label: "Valor da franquia", ...FRANCHISE_DATA_COLUMN },
     { id: "consumption", label: "Consultas feitas", ...FRANCHISE_DATA_COLUMN },
     { id: "excessAmount", label: "Excedente", ...FRANCHISE_DATA_COLUMN },
     { id: "total", label: "Total", ...FRANCHISE_DATA_COLUMN },
     { id: "sendEmail", label: "Enviar detalhes", ...FRANCHISE_SEND_EMAIL_COLUMN },
+    { id: "rowExpand", label: "", ...FRANCHISE_ROW_EXPAND_COLUMN },
   ];
 
   const totalIndex = columns.findIndex(({ id }) => id === "total");
@@ -216,6 +224,63 @@ export function getFranchiseTableColumns(
   });
 
   return columns;
+}
+
+const WORKFLOW_CHILD_TABLE_OMIT_COLUMN_IDS = new Set([
+  "dueDate",
+  "sendEmail",
+  "rowExpand",
+]);
+
+/**
+ * Colunas da tabela aninhada de franquias filhas de Workflow (sem vencimento nem ações).
+ */
+export function getWorkflowChildFranchiseTableColumns(
+  scope: BillingInvoiceScope,
+): ColumnConfig<BillingFranchiseLine>[] {
+  return getFranchiseTableColumns(scope).filter(
+    (column) => !WORKFLOW_CHILD_TABLE_OMIT_COLUMN_IDS.has(String(column.id)),
+  );
+}
+
+/**
+ * Remove franquias que já aparecem aninhadas sob um pai Workflow.
+ */
+/**
+ * Total exibido na linha da franquia, incluindo filhas aninhadas de Workflow quando houver.
+ */
+export function resolveFranchiseDisplayTotal(franchise: BillingFranchiseLine): number {
+  const ownTotal = franchise.total;
+  const children = franchise.childFranchises;
+
+  if (!children?.length) {
+    return ownTotal;
+  }
+
+  let childrenTotal = 0;
+  for (const child of children) {
+    childrenTotal += child.total;
+  }
+
+  return ownTotal + childrenTotal;
+}
+
+export function getTopLevelBillingFranchises(
+  franchises: BillingFranchiseLine[],
+): BillingFranchiseLine[] {
+  const nestedChildIds = new Set<string>();
+
+  for (const franchise of franchises) {
+    for (const child of franchise.childFranchises ?? []) {
+      nestedChildIds.add(child.id);
+    }
+  }
+
+  if (nestedChildIds.size === 0) {
+    return franchises;
+  }
+
+  return franchises.filter((franchise) => !nestedChildIds.has(franchise.id));
 }
 
 /**

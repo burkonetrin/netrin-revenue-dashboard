@@ -462,6 +462,7 @@ function mapItemToFranchiseLine(
     id: item.deductible?.value ?? item.id,
     billingItemId: item.id,
     name: item.deductible?.label ?? "",
+    productName: item.product?.label ?? undefined,
     pricingModel,
     fixedPrice:
       pricingModel === "fixed" || pricingModel === "fixed_with_range_excess"

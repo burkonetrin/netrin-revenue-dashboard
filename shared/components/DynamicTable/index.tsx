@@ -32,6 +32,10 @@ export function DynamicTable<T>({
   isLoading,
   disableRowHover = false,
   getCellClassName,
+  nestedRowContent,
+  nestedRowExpandedKeys,
+  nestedRowCellClassName,
+  nestedRowInnerClassName,
 }: DynamicTableProps<T>) {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
@@ -119,6 +123,13 @@ export function DynamicTable<T>({
         {data.map((row) => {
           const rowKey = keyExtractor(row);
           const isExpanded = expandable && expandedRowKeys.has(rowKey);
+          const isNestedRowExpanded = Boolean(
+            nestedRowContent &&
+              nestedRowExpandedKeys?.has(rowKey),
+          );
+          const nestedContent = isNestedRowExpanded
+            ? nestedRowContent?.(row)
+            : null;
           const rowIsClickable = isRowClickable
             ? isRowClickable(row)
             : Boolean(onRowClick || expandable);
@@ -187,6 +198,26 @@ export function DynamicTable<T>({
                     className="p-0 bg-gray-50"
                   >
                     <div className="p-4">{expandedContent(row)}</div>
+                  </TableCell>
+                </TableRow>
+              ) : null}
+              {nestedContent ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={displayColumns.length}
+                    className={
+                      nestedRowCellClassName ??
+                      "p-0 border-b border-gray-200 align-top"
+                    }
+                  >
+                    <div
+                      className={
+                        nestedRowInnerClassName ??
+                        "border-l border-primary-100 bg-white px-4 py-2"
+                      }
+                    >
+                      {nestedContent}
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : null}

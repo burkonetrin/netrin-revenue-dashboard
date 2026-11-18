@@ -7,8 +7,13 @@ import {
   RadioGroup,
   Switch,
 } from "@heroui/react";
+import { useState } from "react";
 import { CONTRACTS_MOCK } from "../../clientesDashboardMockData";
 import { SapCodeSectionMock } from "./ClientTagsSectionMock";
+import {
+  ClientPaymentInfoEditSidebar,
+  type ClientPaymentInfoEditSidebarState,
+} from "@/features/clients/payment-info-tab/components/ClientPaymentInfoEditSidebar";
 
 const CLIENT_SINGLE_INVOICE_LABEL =
   "Emitir uma única nota fiscal para o cliente";
@@ -35,14 +40,23 @@ function PaymentStatusChipMock({
 
 function ContractPaymentCardMock({
   contractName,
+  contractId,
   modeDefault = "contract",
   configured = true,
   showFranchises = false,
+  onEditPayment,
 }: {
   contractName: string;
+  contractId: string;
   modeDefault?: "contract" | "deductible" | "unify";
   configured?: boolean;
   showFranchises?: boolean;
+  onEditPayment: (input: {
+    contractId: string;
+    contractName: string;
+    franchiseId?: string;
+    franchiseName?: string;
+  }) => void;
 }) {
   const franchises =
     CONTRACTS_MOCK.find((c) => c.name === contractName)?.franchises.filter(
@@ -104,6 +118,9 @@ function ContractPaymentCardMock({
           radius="sm"
           size="md"
           className="h-10 min-w-0 border-2 border-default-300 bg-white px-4 text-sm font-normal text-foreground"
+          onPress={() =>
+            onEditPayment({ contractId, contractName })
+          }
         >
           Editar informações
         </Button>
@@ -124,7 +141,20 @@ function ContractPaymentCardMock({
                 </span>
                 <div className="flex shrink-0 items-center gap-5">
                   <PaymentStatusChipMock configured={false} />
-                  <Button color="primary" radius="sm" size="md" className="h-10 px-4 text-sm">
+                  <Button
+                    color="primary"
+                    radius="sm"
+                    size="md"
+                    className="h-10 px-4 text-sm"
+                    onPress={() =>
+                      onEditPayment({
+                        contractId,
+                        contractName,
+                        franchiseId: fr.id,
+                        franchiseName: fr.name,
+                      })
+                    }
+                  >
                     Configurar
                   </Button>
                 </div>
@@ -138,6 +168,36 @@ function ContractPaymentCardMock({
 }
 
 export function ClientDetailPaymentInfoMock() {
+  const [paymentSidebar, setPaymentSidebar] =
+    useState<ClientPaymentInfoEditSidebarState | null>(null);
+
+  const openPaymentSidebar = (input: {
+    contractId: string;
+    contractName: string;
+    franchiseId?: string;
+    franchiseName?: string;
+  }) => {
+    const owner = input.franchiseId
+      ? {
+          type: "deductible" as const,
+          contractId: input.contractId,
+          deductibleId: input.franchiseId,
+        }
+      : {
+          type: "contract" as const,
+          contractId: input.contractId,
+        };
+
+    setPaymentSidebar({
+      owner,
+      contractName: input.contractName,
+      franchiseName: input.franchiseName,
+    });
+  };
+
+  const contractOne = CONTRACTS_MOCK[0];
+  const contractTwo = CONTRACTS_MOCK.length > 1 ? CONTRACTS_MOCK[1] : CONTRACTS_MOCK[0];
+
   return (
     <div className="mt-4 space-y-6">
       <SapCodeSectionMock />
@@ -158,14 +218,25 @@ export function ClientDetailPaymentInfoMock() {
         <h3 className="text-base font-medium leading-6 text-default-600 m-0">
           Contratos
         </h3>
-        <ContractPaymentCardMock contractName="CONTRATO 01" configured />
         <ContractPaymentCardMock
-          contractName="CONTRATO 02"
+          contractName={contractOne.name}
+          contractId={contractOne.id}
+          configured
+          onEditPayment={openPaymentSidebar}
+        />
+        <ContractPaymentCardMock
+          contractName={contractTwo.name}
+          contractId={contractTwo.id}
           modeDefault="deductible"
           configured={false}
           showFranchises
+          onEditPayment={openPaymentSidebar}
         />
       </div>
+      <ClientPaymentInfoEditSidebar
+        sidebar={paymentSidebar}
+        onClose={() => setPaymentSidebar(null)}
+      />
     </div>
   );
 }

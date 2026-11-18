@@ -29,6 +29,28 @@ export interface BillingFranchiseConsumption {
   sublabel?: string;
 }
 
+/** Linha da tooltip de hierarquia Workflow (franquia pai e filhas). */
+export interface BillingWorkflowHierarchyConsultationEntry {
+  franchiseName: string;
+  consultations: number;
+  /** Valor faturado exibido na tooltip ao lado da quantidade de consultas. */
+  billedAmount?: number;
+}
+
+/** Tooltip ao lado de “Consultas feitas”. */
+export type BillingFranchiseConsumptionInfo =
+  | {
+      kind: "workflow_hierarchy";
+      entries: BillingWorkflowHierarchyConsultationEntry[];
+    }
+  | {
+      kind: "workflow_split";
+      workflowConsultations: number;
+      outsideWorkflowConsultations: number;
+      workflowBilledAmount?: number;
+      outsideWorkflowBilledAmount?: number;
+    };
+
 /**
  * Define a estrutura de billing franchise line.
  */
@@ -37,16 +59,20 @@ export interface BillingFranchiseLine {
   /** UUID do item na entry/invoice (path param de email-consumption). Não confundir com `id` (deductible). */
   billingItemId: string;
   name: string;
+  productName?: string;
   pricingModel: BillingFranchisePricingModel;
   fixedPrice?: number;
   priceRanges?: BillingPriceRange[];
   /** Preço unitário de excedente do snapshot (`excessUnitPrice`); ausente quando null/vazio na API. */
   excessUnitPrice?: number;
   consumption: BillingFranchiseConsumption;
+  consumptionInfo?: BillingFranchiseConsumptionInfo;
   excessAmount: number;
   excessLabel?: string;
   /** Valor monetário do excedente em linha secundária (mesmo padrão de `consumption.sublabel`). */
   excessSublabel?: string;
+  /** Tooltip de consultas Workflow exibido ao lado da coluna Excedente. */
+  excessInfo?: BillingFranchiseConsumptionInfo;
   total: number;
   dueDate?: string;
   /**
@@ -54,6 +80,8 @@ export interface BillingFranchiseLine {
    * REQ-6/7 US 14628 — exibe tooltip no total da franquia.
    */
   isExcessOnlyBilling?: boolean;
+  /** Franquias filhas de Workflow exibidas ao expandir a linha pai. */
+  childFranchises?: BillingFranchiseLine[];
 }
 
 export type BillingInvoiceMode = "contract" | "franchise";

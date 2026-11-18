@@ -198,6 +198,8 @@ export interface ContractWithFranchises {
 export interface PaymentInfoFormValues {
   nfeBranch: string;
   nfeBranchCode: string;
+  /** Vencimento no dia da emissão da nota (pagamento à vista). */
+  paymentOnInvoiceIssueDate: boolean;
   paymentArrangement: PaymentArrangement;
   paymentPrepaidMonths: string;
   paymentPostpaidMonths: string;

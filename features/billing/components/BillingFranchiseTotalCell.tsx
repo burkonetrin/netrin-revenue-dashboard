@@ -8,6 +8,7 @@ import {
   TOOLTIP_BODY_CLASS,
 } from "@/shared/constants/tooltip.constants";
 import type { BillingFranchiseLine } from "../types/billing-detail.types";
+import { resolveFranchiseDisplayTotal } from "../utils/billing-detail.utils";
 
 const EXCESS_ONLY_TOOLTIP_LINES = [
   "O valor desta franquia já foi faturado anteriormente.",
@@ -22,7 +23,7 @@ interface BillingFranchiseTotalCellProps {
  * Célula de total da franquia, com tooltip quando a competência fatura só excedente.
  */
 export function BillingFranchiseTotalCell({ franchise }: BillingFranchiseTotalCellProps) {
-  const totalText = formatCurrency(franchise.total);
+  const totalText = formatCurrency(resolveFranchiseDisplayTotal(franchise));
 
   if (!franchise.isExcessOnlyBilling) {
     return <span>{totalText}</span>;

@@ -264,6 +264,7 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
   const fantasyName = client.nome.split(" ").slice(0, 2).join(" ");
   const [isActive, setIsActive] = useState(client.ativo);
   const [zipCode, setZipCode] = useState("01310100");
+  const [foreignIdentification, setForeignIdentification] = useState("");
 
   return (
     <div className="mt-4">
@@ -389,6 +390,15 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
             <SelectItem key="up_to_date">Em dia</SelectItem>
             <SelectItem key="overdue">Inadimplente</SelectItem>
           </Select>
+          <Input
+            label="Identificação de estrangeiro"
+            labelPlacement="outside"
+            aria-label="Identificação de estrangeiro"
+            placeholder="Digite a identificação"
+            value={foreignIdentification}
+            onValueChange={setForeignIdentification}
+            classNames={defaultInputClassNames}
+          />
           <div className="col-span-3 flex justify-end gap-3 mt-4">
             <Button type="button" variant="bordered">
               Reconsultar CNPJ

@@ -42,4 +42,9 @@ export interface DynamicTableProps<T> {
   disableRowHover?: boolean;
   /** Classes extras por célula (ex.: linha alta só na coluna de vencimento). */
   getCellClassName?: (row: T, columnId: keyof T | string) => string | undefined;
+  /** Conteúdo em linha colspan abaixo da linha principal (expansão customizada). */
+  nestedRowContent?: (row: T) => React.ReactNode | null;
+  nestedRowExpandedKeys?: Set<string | number>;
+  nestedRowCellClassName?: string;
+  nestedRowInnerClassName?: string;
 }
