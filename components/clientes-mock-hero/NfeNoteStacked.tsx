@@ -3,6 +3,7 @@
 import { Chip } from "@heroui/react";
 import type { MockNfeNote } from "../../clientesDashboardMockData";
 import {
+  fmtDetail,
   nfeNoteDescription,
   nfeNoteTitleLabel,
 } from "../../clientesDashboardMockFormat";
@@ -33,10 +34,14 @@ interface NfeNoteStackedProps {
 }
 
 export function NfeNoteStacked({ note, className = "" }: NfeNoteStackedProps) {
-  const referencia = note.referencia?.trim();
+  const valorLabel =
+    note.valor != null ? fmtDetail(note.valor) : null;
+  const produtoLabel = note.produto?.trim();
+
+  const metaLineClass = "m-0 text-[12px] text-zinc-500";
 
   return (
-    <span className={`flex flex-col gap-1.5 w-full min-w-0 ${className}`.trim()}>
+    <span className={`flex flex-col gap-3 w-full min-w-0 ${className}`.trim()}>
       <span className="flex flex-wrap items-center gap-3">
         <span className="text-sm font-medium text-zinc-900">
           {nfeNoteTitleLabel(note)}
@@ -52,18 +57,23 @@ export function NfeNoteStacked({ note, className = "" }: NfeNoteStackedProps) {
           {note.statusPagamento}
         </Chip>
       </span>
-      <span className="flex flex-wrap items-center gap-x-5 text-[12px] text-zinc-500">
-        {referencia ? (
-          <span>
-            <span className="font-semibold text-zinc-700">Ref.</span> {referencia}
-          </span>
+      <span className="flex flex-col gap-2">
+        {valorLabel ? (
+          <p className={metaLineClass}>
+            <span className="font-semibold text-zinc-700">Valor:</span> {valorLabel}
+          </p>
         ) : null}
-        <span>
+        <p className={metaLineClass}>
           <span className="font-semibold text-zinc-700">Vencimento:</span>{" "}
           {note.vencimento}
-        </span>
+        </p>
+        {produtoLabel ? (
+          <p className={metaLineClass}>
+            <span className="font-semibold text-zinc-700">Produto:</span> {produtoLabel}
+          </p>
+        ) : null}
       </span>
-      <p className="text-[12px] leading-snug text-zinc-600 line-clamp-2">
+      <p className="m-0 text-[12px] leading-snug text-zinc-600 line-clamp-2">
         {nfeNoteDescription(note)}
       </p>
     </span>

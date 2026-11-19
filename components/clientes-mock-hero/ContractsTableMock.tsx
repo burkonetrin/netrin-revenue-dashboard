@@ -33,7 +33,6 @@ import {
   formatBillingReferenceInterval,
   franchiseBillingModelTooltipContent,
 } from "../../clientesDashboardMockFormat";
-import { FaturadoWithBadge } from "./FaturadoCell";
 import { FranchisePopover } from "./FranchisePopover";
 import { MockInfoTooltip } from "./MockInfoTooltip";
 import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
@@ -59,7 +58,7 @@ const FRANCHISE_SORT_INITIAL: HierarchySortState<FranchiseSortKey> = {
   dir: "desc",
 };
 
-const FRANCHISE_TABLE_COLSPAN = 8;
+const FRANCHISE_TABLE_COLSPAN = 9;
 
 function contractSortValue(ct: MockContract, key: ContractSortKey): number {
   switch (key) {
@@ -224,9 +223,8 @@ function FranchiseNestedTable({
               onToggle={toggleFranchiseSort}
               className={clientHierarchyFranchiseTableHeadCellClass}
             />
-            <th
-              className={`${clientHierarchyFranchiseTableHeadCellClass} w-[4.5rem]`}
-            />
+            <th className={clientHierarchyFranchiseTableHeadCellClass}>Detalhes</th>
+            <th className={clientHierarchyFranchiseTableHeadCellClass}>Métricas</th>
           </tr>
         </thead>
         <tbody>
@@ -303,13 +301,6 @@ function FranchiseNestedTable({
                 <span className={`block mt-0.5 ${clientHierarchySublineClassName}`}>
                   {f.consUsed} de {fmtN(f.consLim)}
                 </span>
-                {referenceSubline ? (
-                  <span
-                    className={`block mt-0.5 ${clientHierarchySublineClassName}`}
-                  >
-                    {referenceSubline}
-                  </span>
-                ) : null}
               </td>
               <td className={franchiseCell}>
                 <div>{fmtDetail(f.excVal)}</div>
@@ -320,28 +311,29 @@ function FranchiseNestedTable({
                 </span>
               </td>
               <td className={franchiseCell}>
-                <FaturadoWithBadge
-                  amount={f.totalPeriodo}
-                  statusKey={f.faturaStatus}
-                  valorPagoParcial={f.valorPagoParcial}
-                  detailed
-                  layout="badge-right"
-                />
+                <span className="block">{fmtDetail(f.totalPeriodo)}</span>
                 <span className={`block mt-0.5 ${clientHierarchySublineClassName}`}>
                   {fmtN(f.consUsed)} consultas
                 </span>
+                {referenceSubline ? (
+                  <span
+                    className={`block mt-0.5 ${clientHierarchySublineClassName}`}
+                  >
+                    {referenceSubline}
+                  </span>
+                ) : null}
               </td>
               <td className={franchiseCellCenter}>
-                <div className="flex items-center justify-center gap-5">
-                  {productNumbersRow ? (
-                    <TableExpandButton
-                      expanded={isDailyOpen}
-                      ariaLabel={`${isDailyOpen ? "Ocultar" : "Exibir"} gráfico diário de ${f.name}`}
-                      onClick={() => toggleFranchiseDaily(f.id)}
-                    />
-                  ) : null}
-                  <FranchisePopover franchise={f} noRenew={listMode} />
-                </div>
+                <FranchisePopover franchise={f} noRenew={listMode} />
+              </td>
+              <td className={franchiseCellCenter}>
+                {productNumbersRow ? (
+                  <TableExpandButton
+                    expanded={isDailyOpen}
+                    ariaLabel={`${isDailyOpen ? "Ocultar" : "Exibir"} métricas de ${f.name}`}
+                    onClick={() => toggleFranchiseDaily(f.id)}
+                  />
+                ) : null}
               </td>
             </tr>
             {isDailyOpen && productNumbersRow ? (
@@ -485,14 +477,7 @@ export function ContractsTableMock({
                 <td className={contractCell}>{fmt(ct.media)}</td>
                 <td className={contractCell}>{fmt(ct.total12)}</td>
                 <td className={contractCell}>{fmt(ct.mrr)}</td>
-                <td className={contractCell}>
-                  <FaturadoWithBadge
-                    amount={ct.faturado}
-                    statusKey={ct.faturaStatus}
-                    valorPagoParcial={ct.valorPagoParcial}
-                    layout="badge-below"
-                  />
-                </td>
+                <td className={contractCell}>{fmt(ct.faturado)}</td>
                 <td className={contractCell}>
                   <TableExpandButton
                     expanded={open}

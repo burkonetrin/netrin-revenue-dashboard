@@ -1,6 +1,7 @@
 import {
   CLIENT_ROW_ACTIONS_MENU,
   INVOICE_STATUS,
+  getClientListBillingFranchises,
   type ClientRowMenuEntry,
   type InvoiceStatusKey,
   type MockClient,
@@ -107,28 +108,69 @@ function withClientReferencia(
   }));
 }
 
-export function clientInvoiceNotes(client: MockClient): MockNfeNote[] {
-  if (client.nfe.length > 0) {
-    return withClientReferencia(client.nfe, client.referencia);
-  }
-  const status = invoiceStatusLabel(client.faturaStatus);
-  const fromProdutos = client.produtos.slice(0, 3).map((produto, i) => ({
-    tipo: "Franquia" as const,
-    nome: produto,
-    referencia: client.referencia,
-    vencimento: client.vencimentoNF,
-    statusPagamento: i === 0 ? status : "Pagamento aberto",
+function inferNfeNoteProduct(note: MockNfeNote, client: MockClient): string {
+  if (note.produto?.trim()) return note.produto.trim();
+  const nome = note.nome.toLowerCase();
+  const matched = client.produtos.find((produto) => {
+    const product = produto.toLowerCase();
+    return (
+      nome.includes(product) ||
+      product.includes(nome) ||
+      (product.includes("background") &&
+        (nome.includes("bgc") || nome.includes("background"))) ||
+      (product.includes("idv") &&
+        (nome.includes("idv") || nome.includes("identidade"))) ||
+      (product.includes("workflow") && nome.includes("workflow")) ||
+      (product.includes("monitor") && nome.includes("monitor")) ||
+      (product.includes("api") && nome.includes("api"))
+    );
+  });
+  if (matched) return matched;
+  return client.produtos[0] ?? "—";
+}
+
+function enrichNfeNotesForClient(
+  notes: MockNfeNote[],
+  client: MockClient,
+): MockNfeNote[] {
+  if (notes.length === 0) return notes;
+  const amounts = splitClientInvoiceAmount(client.fat, notes.length);
+  return notes.map((note, index) => ({
+    ...note,
+    valor: note.valor ?? amounts[index],
+    produto: inferNfeNoteProduct(note, client),
   }));
-  if (fromProdutos.length > 0) return fromProdutos;
-  return [
-    {
-      tipo: "Franquia",
-      nome: "Franquia principal",
+}
+
+export function clientInvoiceNotes(client: MockClient): MockNfeNote[] {
+  let notes: MockNfeNote[];
+  if (client.nfe.length > 0) {
+    notes = withClientReferencia(client.nfe, client.referencia);
+  } else {
+    const status = invoiceStatusLabel(client.faturaStatus);
+    const fromProdutos = client.produtos.slice(0, 3).map((produto, i) => ({
+      tipo: "Franquia" as const,
+      nome: produto,
       referencia: client.referencia,
+      produto,
       vencimento: client.vencimentoNF,
-      statusPagamento: status,
-    },
-  ];
+      statusPagamento: i === 0 ? status : "Pagamento aberto",
+    }));
+    if (fromProdutos.length > 0) {
+      notes = fromProdutos;
+    } else {
+      notes = [
+        {
+          tipo: "Franquia",
+          nome: "Franquia principal",
+          referencia: client.referencia,
+          vencimento: client.vencimentoNF,
+          statusPagamento: status,
+        },
+      ];
+    }
+  }
+  return enrichNfeNotesForClient(notes, client);
 }
 
 export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
@@ -136,7 +178,9 @@ export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
   const badge = count > 0 ? nfeCountLabel(count) : undefined;
   const billing = useClientListInvoiceStatusStore.getState().getState(client.id);
   const closeToggleLabel =
-    billing.status === "fatura_fechada" ? "Reabrir conferência" : "Aprovar fatura";
+    billing.status === "fatura_fechada"
+      ? "Reabrir conferência"
+      : "Aprovar para faturamento";
   const showCloseToggle = isClientListCloseToggleEligible(client.id);
   const showBillClient = isClientListBillEligible(client.id);
 
@@ -144,7 +188,7 @@ export function clientRowActionsMenu(client: MockClient): ClientRowMenuEntry[] {
     if (entry.kind === "action" && entry.label === "Ver notas fiscais") {
       return badge ? [{ ...entry, badge }] : [entry];
     }
-    if (entry.kind === "action" && entry.label === "Aprovar fatura") {
+    if (entry.kind === "action" && entry.label === "Aprovar para faturamento") {
       if (!showCloseToggle) return [];
       return [{ ...entry, label: closeToggleLabel }];
     }
@@ -192,7 +236,7 @@ export function clientSidebarNotes(client: MockClient): MockNfeNote[] {
       merged.push(extra);
     }
   }
-  return merged;
+  return enrichNfeNotesForClient(merged, client);
 }
 
 /** Rótulo acessível para radios e leitores de tela. */
@@ -209,9 +253,9 @@ export function nfeNoteDescription(note: MockNfeNote): string {
 }
 
 export function nfeNoteAriaLabel(note: MockNfeNote): string {
-  const reference = nfeNoteConsumptionReferenceLabel(note);
   const parts = [nfeNoteTitleLabel(note)];
-  if (reference) parts.push(reference);
+  if (note.produto) parts.push(`Produto: ${note.produto}`);
+  if (note.valor != null) parts.push(`Valor: ${fmtDetail(note.valor)}`);
   parts.push(`Vencimento: ${note.vencimento}`, nfeNoteDescription(note), note.statusPagamento);
   return parts.join(", ");
 }
@@ -219,6 +263,24 @@ export function nfeNoteAriaLabel(note: MockNfeNote): string {
 /** @deprecated Use `NfeNoteStacked` ou `nfeNoteAriaLabel`. */
 export function nfeRadioLabel(note: MockNfeNote): string {
   return nfeNoteAriaLabel(note);
+}
+
+const FRANCHISE_SOURCES_BY_PRODUCT: Record<string, string[]> = {
+  "Background Check": [
+    "Receita Federal — CPF",
+    "Serasa Experian",
+    "Boa Vista SCPC",
+  ],
+  "ID Validation": ["Serpro — Datavalid", "Único Check", "ID Wall"],
+  Monitoramento: ["Lista restritiva OFAC", "Mídias negativas", "Processos judiciais"],
+};
+
+/** Fontes da franquia para a sidebar de detalhes (mock). */
+export function franchiseMockSources(franchise: MockFranchise): string[] {
+  if (franchise.sources?.length) return franchise.sources;
+  const byProduct = FRANCHISE_SOURCES_BY_PRODUCT[franchise.product];
+  if (byProduct) return byProduct;
+  return [`Fonte — ${franchise.product}`, "Fonte complementar"];
 }
 
 export function franchiseUserLabel(franchise: MockFranchise): string {
@@ -252,4 +314,100 @@ export function invoiceStatusLabel(statusKey: InvoiceStatusKey): string {
     chip: "inv-open",
   };
   return meta.label;
+}
+
+/** Resolve o status da nota a partir do texto exibido no mock de NF-e. */
+export function invoiceStatusKeyFromPaymentLabel(
+  paymentLabel: string,
+  fallback: InvoiceStatusKey = "faturado_aberto",
+): InvoiceStatusKey {
+  const normalized = paymentLabel.trim().toLowerCase();
+  const entries = Object.entries(INVOICE_STATUS) as [
+    InvoiceStatusKey,
+    { label: string; chip: string },
+  ][];
+  for (const [key, meta] of entries) {
+    if (meta.label.toLowerCase() === normalized) return key;
+  }
+  if (normalized.includes("conferir")) return "aberta";
+  if (normalized.includes("conferida")) return "fatura_fechada";
+  if (normalized.includes("parcial")) return "pago_parcial";
+  if (normalized.includes("total")) return "pago_total";
+  if (normalized.includes("cancelamento")) return "cancel_solicitado";
+  if (normalized.includes("cancelada")) return "nota_cancelada";
+  if (normalized.includes("vencida")) return "nota_vencida";
+  if (normalized.includes("parcelada") || normalized.includes("parcela")) {
+    return "divida_parcelada";
+  }
+  if (normalized.includes("contábil") || normalized.includes("contabil")) {
+    return "baixa_contabil";
+  }
+  if (normalized.includes("excedente") || normalized.includes("duplic")) {
+    return "pago_duplicidade";
+  }
+  if (normalized.includes("enviada")) return "enviada_faturar";
+  if (normalized.includes("aberto") || normalized.includes("aberta")) {
+    return "faturado_aberto";
+  }
+  return fallback;
+}
+
+export interface ClientListInvoiceExtraRow {
+  name: string;
+  amount: number;
+  statusKey?: InvoiceStatusKey;
+  statusLabel?: string;
+}
+
+function splitClientInvoiceAmount(total: number, count: number): number[] {
+  if (count <= 1) return [total];
+  const weights = Array.from({ length: count }, (_, index) => 1.08 - index * 0.1);
+  const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+  const amounts = weights.map((weight) => Math.round((total * weight) / weightSum));
+  amounts[0] += total - amounts.reduce((sum, value) => sum + value, 0);
+  return amounts;
+}
+
+/** Todas as linhas de fatura por franquia/nota na listagem (mock). */
+export function getClientListInvoiceRows(client: MockClient): ClientListInvoiceExtraRow[] {
+  if (client.nfe.length > 0) {
+    const amounts = splitClientInvoiceAmount(client.fat, client.nfe.length);
+    return client.nfe.map((note, index) => ({
+      name: note.nome,
+      amount: amounts[index],
+      statusKey: invoiceStatusKeyFromPaymentLabel(note.statusPagamento),
+    }));
+  }
+  const franchises = getClientListBillingFranchises(client);
+  if (franchises.length > 0) {
+    return franchises.map((franchise) => ({
+      name: franchise.name,
+      amount: franchise.valor,
+      statusKey: franchise.faturaStatus,
+    }));
+  }
+  const notes = clientInvoiceNotes(client);
+  if (notes.length > 0) {
+    const amounts = splitClientInvoiceAmount(client.fat, notes.length);
+    return notes.map((note, index) => ({
+      name: note.nome,
+      amount: amounts[index],
+      statusKey: invoiceStatusKeyFromPaymentLabel(note.statusPagamento),
+    }));
+  }
+  return [
+    {
+      name: client.produtos[0] ?? "Franquia principal",
+      amount: client.fat,
+      statusKey: client.faturaStatus,
+    },
+  ];
+}
+
+/** Demais notas/franquias além da exibida na célula (mock). */
+export function getClientListInvoiceExtraRows(
+  client: MockClient,
+): ClientListInvoiceExtraRow[] {
+  const rows = getClientListInvoiceRows(client);
+  return rows.length > 1 ? rows.slice(1) : [];
 }

@@ -19,6 +19,10 @@ export interface MockNfeNote {
   nome: string;
   /** Período de consumo, ex.: `set/2025 - set/2025`. */
   referencia?: string;
+  /** Valor da nota exibido na sidebar. */
+  valor?: number;
+  /** Produto vinculado à nota. */
+  produto?: string;
   vencimento: string;
   statusPagamento: string;
   /** Texto descritivo exibido na sidebar (até duas linhas). */
@@ -101,6 +105,8 @@ export interface MockFranchise {
   billingOveragePerQuery?: number;
   /** Nome do modelo Background Check (subtítulo na listagem). */
   backgroundCheckTemplateName?: string;
+  /** Fontes vinculadas (sidebar Detalhes). */
+  sources?: string[];
 }
 
 export interface MockContract {
@@ -284,7 +290,7 @@ export const INVOICE_STATUS: Record<
 > = {
   aberta: { label: "A conferir", chip: "inv-open" },
   fatura_fechada: { label: "Conferida", chip: "inv-closed" },
-  enviada_faturar: { label: "Enviada para faturar", chip: "inv-sent" },
+  enviada_faturar: { label: "Faturado", chip: "inv-sent" },
   faturado_aberto: {
     label: "Pagamento aberto",
     chip: "inv-due",
@@ -330,10 +336,8 @@ export const CLIENT_ROW_ACTIONS_MENU: ClientRowMenuEntry[] = [
   { kind: "heading", label: "Faturamento" },
   { kind: "action", label: "Adicionar fatura" },
   { kind: "action", label: "Ajustar fatura" },
-  { kind: "action", label: "Aprovar fatura" },
+  { kind: "action", label: "Aprovar para faturamento" },
   { kind: "action", label: "Faturar cliente" },
-  { kind: "divider" },
-  { kind: "heading", label: "Nota fiscal" },
   { kind: "action", label: "Ver notas fiscais" },
   { kind: "action", label: "Ver pagamento excedente" },
 ];
@@ -1115,23 +1119,6 @@ export function consumptionHealthFromPct(consPct: number): ClientHealthKey {
   return "oportunidade";
 }
 
-function franchiseToConsumo(f: MockFranchise): MockClientFranchiseConsumo {
-  const cons =
-    f.consLim > 0
-      ? Math.min(999, Math.round((f.consUsed / f.consLim) * 100))
-      : 0;
-  return {
-    name: f.name,
-    cons,
-    usado: f.consUsed,
-    lim: f.consLim,
-    health: consumptionHealthFromPct(cons),
-  };
-}
-
-const DEMO_CONTRACT_FRANCHISE_CONSUMOS: MockClientFranchiseConsumo[] =
-  CONTRACTS_MOCK[0].franchises.filter((f) => f.ativo).map(franchiseToConsumo);
-
 export const CLIENT_HEALTH_FILTER_CHECKBOX_ID: Record<ClientHealthKey, string> = {
   danger: "health_risco_alto",
   warning: "health_risco_medio",
@@ -1147,6 +1134,42 @@ export function clientHasFranchiseWithHealth(
   return getClientFranchiseConsumptions(client).some((row) => row.health === health);
 }
 
+function splitMockAmountAcrossParts(total: number, partCount: number): number[] {
+  if (partCount <= 1) return [total];
+  const weights = Array.from({ length: partCount }, (_, index) => 1.1 - index * 0.12);
+  const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+  const amounts = weights.map((weight) => Math.round((total * weight) / weightSum));
+  const roundedTotal = amounts.reduce((sum, value) => sum + value, 0);
+  amounts[0] += total - roundedTotal;
+  return amounts;
+}
+
+/** Linhas de faturamento por franquia/produto na listagem (mock). */
+export function getClientListBillingFranchises(
+  client: MockClient,
+): Pick<MockFranchise, "name" | "valor" | "faturaStatus">[] {
+  if (client.prod < 2) return [];
+  const seed = client.id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const amounts = splitMockAmountAcrossParts(client.fat, client.prod);
+  const alternateStatuses: InvoiceStatusKey[] = [
+    "faturado_aberto",
+    "pago_total",
+    "aberta",
+    "pago_parcial",
+  ];
+  return client.produtos.slice(0, client.prod).map((produto, index) => {
+    const note = client.nfe[index];
+    return {
+      name: note?.nome ?? `Franquia ${produto}`,
+      valor: amounts[index] ?? Math.round(client.fat / client.prod),
+      faturaStatus:
+        index === 0
+          ? client.faturaStatus
+          : alternateStatuses[(seed + index) % alternateStatuses.length],
+    };
+  });
+}
+
 /** Consumo por franquia na listagem de clientes (mock). */
 export function getClientFranchiseConsumptions(
   client: MockClient,
@@ -1154,7 +1177,7 @@ export function getClientFranchiseConsumptions(
   if (client.prod < 2) {
     return [
       {
-        name: client.nome,
+        name: client.produtos[0] ?? client.nome,
         cons: client.cons,
         usado: client.usado,
         lim: client.lim,
@@ -1162,7 +1185,27 @@ export function getClientFranchiseConsumptions(
       },
     ];
   }
-  return DEMO_CONTRACT_FRANCHISE_CONSUMOS;
+  const seed = client.id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const activeTemplates = CONTRACTS_MOCK[0].franchises.filter((franchise) => franchise.ativo);
+  const rowCount = Math.min(client.prod, client.produtos.length);
+  const rows: MockClientFranchiseConsumo[] = [];
+  for (let index = 0; index < rowCount; index += 1) {
+    const template = activeTemplates[index % activeTemplates.length];
+    const jitter = ((seed + index * 31) % 35) / 100;
+    const share = 0.22 + index * 0.18 + jitter;
+    const usado = Math.max(1, Math.round(client.usado * share));
+    const lim = Math.max(usado, Math.round(client.lim * (0.3 + index * 0.17)));
+    const cons = lim > 0 ? Math.min(999, Math.round((usado / lim) * 100)) : 0;
+    const note = client.nfe[index];
+    rows.push({
+      name: note?.nome ?? client.produtos[index] ?? template.name,
+      cons,
+      usado,
+      lim,
+      health: consumptionHealthFromPct(cons),
+    });
+  }
+  return rows;
 }
 
 export const SL: Record<ClientHealthKey, string> = {

@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { BillingDueDateDownloadLinks } from "@/features/billing/components/BillingDueDateDownloadLinks";
 import type { MockNfeNote } from "../../clientesDashboardMockData";
 import { NfeNoteStacked } from "./NfeNoteStacked";
@@ -10,15 +11,19 @@ interface NfeNotesListContentProps {
 
 export function NfeNotesListContent({ notes }: NfeNotesListContentProps) {
   return (
-    <div className="flex flex-col gap-3">
-      {notes.map((note, i) => (
-        <div
-          key={i}
-          className="rounded-lg bg-zinc-50 px-4 py-3"
-        >
+    <div className="flex flex-col">
+      {notes.map((note, index) => (
+        <Fragment key={`${note.tipo}-${note.nome}-${index}`}>
+          {index > 0 ? (
+            <div
+              className="my-4 border-t border-zinc-200"
+              role="separator"
+              aria-hidden
+            />
+          ) : null}
           <NfeNoteStacked note={note} />
-          <BillingDueDateDownloadLinks className="mt-2.5" />
-        </div>
+          <BillingDueDateDownloadLinks className="mt-3.5" />
+        </Fragment>
       ))}
     </div>
   );

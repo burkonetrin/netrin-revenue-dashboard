@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type {
   InvoiceStatusKey,
   MockParcelaAtrasada,
@@ -33,6 +34,7 @@ function StatusWithExtras({
   valorPagoExcedente,
   excedenteDestino,
   parcelasAtrasadas,
+  trailingAfterStatus,
 }: {
   statusKey: InvoiceStatusKey;
   faturadoAmount: number;
@@ -40,6 +42,7 @@ function StatusWithExtras({
   valorPagoExcedente?: number;
   excedenteDestino?: "reembolsado" | "abatido";
   parcelasAtrasadas?: MockParcelaAtrasada[];
+  trailingAfterStatus?: ReactNode;
 }) {
   const showParcelas =
     statusKey === "divida_parcelada" &&
@@ -55,6 +58,7 @@ function StatusWithExtras({
   return (
     <span className="inline-flex flex-nowrap items-center gap-1.5">
       <InvoiceStatusChip statusKey={statusKey} />
+      {trailingAfterStatus}
       {showPagoParcial ? (
         <MockInfoTooltip
           content={
@@ -106,6 +110,7 @@ export function FaturadoWithBadge({
   parcelasAtrasadas,
   detailed = false,
   layout = "badge-below",
+  trailingAfterStatus,
 }: {
   amount: number;
   statusKey: InvoiceStatusKey;
@@ -115,6 +120,8 @@ export function FaturadoWithBadge({
   parcelasAtrasadas?: MockParcelaAtrasada[];
   detailed?: boolean;
   layout?: FaturadoLayout;
+  /** Conteúdo imediatamente à direita do chip de status (ex.: +N). */
+  trailingAfterStatus?: ReactNode;
 }) {
   const val = detailed ? fmtDetail(amount) : fmt(amount);
 
@@ -129,6 +136,7 @@ export function FaturadoWithBadge({
           valorPagoExcedente={valorPagoExcedente}
           excedenteDestino={excedenteDestino}
           parcelasAtrasadas={parcelasAtrasadas}
+          trailingAfterStatus={trailingAfterStatus}
         />
       </span>
     );
@@ -145,6 +153,7 @@ export function FaturadoWithBadge({
           valorPagoExcedente={valorPagoExcedente}
           excedenteDestino={excedenteDestino}
           parcelasAtrasadas={parcelasAtrasadas}
+          trailingAfterStatus={trailingAfterStatus}
         />
       </div>
     </div>

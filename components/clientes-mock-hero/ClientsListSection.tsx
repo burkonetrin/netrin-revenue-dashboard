@@ -12,9 +12,19 @@ import {
   getClientFranchiseConsumptions,
   LIST_COLSPAN,
   type ClientHealthKey,
+  type InvoiceStatusKey,
   type MockClient,
+  type MockClientFranchiseConsumo,
 } from "../../clientesDashboardMockData";
-import { clientRowActionsMenu, fmt, mockClientLtv } from "../../clientesDashboardMockFormat";
+import {
+  clientRowActionsMenu,
+  fmt,
+  fmtDetail,
+  getClientListInvoiceRows,
+  mockClientLtv,
+  type ClientListInvoiceExtraRow,
+} from "../../clientesDashboardMockFormat";
+import { ClientListOverflowChip } from "./ClientListOverflowChip";
 import type { FilterDrawerStatus } from "./ClientesFilterDrawer";
 import { ContractsTableMock } from "./ContractsTableMock";
 import { DetailKpiGrid } from "./DetailKpiGrid";
@@ -22,6 +32,7 @@ import { FaturadoWithBadge } from "./FaturadoCell";
 import {
   ClientStatusChip,
   HealthChip,
+  InvoiceStatusChip,
 } from "./MockChips";
 import { MockInfoTooltip } from "./MockInfoTooltip";
 import { TOOLTIP_TITLE_CLASS } from "@/shared/constants/tooltip.constants";
@@ -59,39 +70,15 @@ import { NewClientDrawer } from "@/features/clients/components/NewClientDrawer";
 
 export type TableSort = { key: "ltv" | "fat" | "cons" | null; dir: "asc" | "desc" };
 
-function ClientConsumptionCell({ client }: { client: MockClient }) {
-  const franchises = getClientFranchiseConsumptions(client);
-  const multi = franchises.length > 1;
+const franchiseTooltipLabelClass = "m-0 text-xs font-medium text-zinc-800";
 
-  if (!multi) {
-    return (
-      <>
-        <div className="flex items-center gap-2 flex-nowrap">
-          <span>{client.cons}%</span>
-          <HealthChip health={client.s} />
-        </div>
-        <div className={`mt-1 ${clientHierarchySublineClassName}`}>
-          {client.usado.toLocaleString("pt-BR")} de{" "}
-          {client.lim.toLocaleString("pt-BR")}
-        </div>
-      </>
-    );
-  }
-
-  const totalUsado = franchises.reduce((sum, f) => sum + f.usado, 0);
-  const totalLim = franchises.reduce((sum, f) => sum + f.lim, 0);
-  const totalCons =
-    totalLim > 0
-      ? Math.min(999, Math.round((totalUsado / totalLim) * 100))
-      : 0;
-  const franchiseTooltipLabelClass = "m-0 text-xs font-medium text-zinc-800";
-
-  const consumoLine = (
-    usado: number,
-    lim: number,
-    cons: number,
-    health?: MockClient["s"],
-  ) => (
+function consumoLine(
+  usado: number,
+  lim: number,
+  cons: number,
+  health?: MockClient["s"],
+) {
+  return (
     <div className="flex items-center gap-2 flex-nowrap mt-0.5 text-xs text-zinc-700">
       <span>
         {usado.toLocaleString("pt-BR")} de {lim.toLocaleString("pt-BR")}
@@ -100,31 +87,139 @@ function ClientConsumptionCell({ client }: { client: MockClient }) {
       {health != null ? <HealthChip health={health} /> : null}
     </div>
   );
+}
+
+function ClientFranchiseConsumptionTooltip({
+  franchises,
+}: {
+  franchises: MockClientFranchiseConsumo[];
+}) {
+  const totalUsado = franchises.reduce((sum, franchise) => sum + franchise.usado, 0);
+  const totalLim = franchises.reduce((sum, franchise) => sum + franchise.lim, 0);
+  const totalCons =
+    totalLim > 0
+      ? Math.min(999, Math.round((totalUsado / totalLim) * 100))
+      : 0;
 
   return (
-    <div className="flex items-center gap-1.5 flex-nowrap">
-      <span>{franchises.length} Franquias</span>
-      <MockInfoTooltip
-        content={
-          <div>
-            <p className={franchiseTooltipLabelClass}>Total de consumo</p>
-            {consumoLine(totalUsado, totalLim, totalCons)}
-            <div
-              className="my-3 border-t border-zinc-200"
-              role="separator"
-            />
-            <div className="flex flex-col gap-3">
-              {franchises.map((f) => (
-                <div key={f.name}>
-                  <p className={franchiseTooltipLabelClass}>{f.name}</p>
-                  {consumoLine(f.usado, f.lim, f.cons, f.health)}
-                </div>
-              ))}
-            </div>
+    <div>
+      <p className={franchiseTooltipLabelClass}>Total de consumo</p>
+      {consumoLine(totalUsado, totalLim, totalCons)}
+      <div className="my-3 border-t border-zinc-200" role="separator" />
+      <div className="flex flex-col gap-3">
+        {franchises.map((franchise) => (
+          <div key={franchise.name}>
+            <p className={franchiseTooltipLabelClass}>{franchise.name}</p>
+            {consumoLine(franchise.usado, franchise.lim, franchise.cons, franchise.health)}
           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function faturadoTooltipAmountLine(amount: number) {
+  return <p className="m-0 mt-0.5 text-xs text-zinc-700">{fmtDetail(amount)}</p>;
+}
+
+function faturadoTooltipLine(amount: number, statusKey: InvoiceStatusKey) {
+  return (
+    <div className="flex items-center gap-2 flex-nowrap mt-0.5 text-xs text-zinc-700">
+      <span>{fmtDetail(amount)}</span>
+      <InvoiceStatusChip statusKey={statusKey} />
+    </div>
+  );
+}
+
+function ClientFranchiseFaturaTooltip({
+  totalAmount,
+  totalStatusKey,
+  rows,
+}: {
+  totalAmount: number;
+  totalStatusKey: InvoiceStatusKey;
+  rows: ClientListInvoiceExtraRow[];
+}) {
+  return (
+    <div>
+      <p className={franchiseTooltipLabelClass}>Total faturado</p>
+      {faturadoTooltipAmountLine(totalAmount)}
+      <div className="my-3 border-t border-zinc-200" role="separator" />
+      <div className="flex flex-col gap-3">
+        {rows.map((row) => (
+          <div key={row.name}>
+            <p className={franchiseTooltipLabelClass}>{row.name}</p>
+            {faturadoTooltipLine(row.amount, row.statusKey ?? totalStatusKey)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ClientConsumptionCell({ client }: { client: MockClient }) {
+  const franchises = getClientFranchiseConsumptions(client);
+  const primary = franchises[0];
+  const extraCount = franchises.length - 1;
+  const tooltip = <ClientFranchiseConsumptionTooltip franchises={franchises} />;
+
+  return (
+    <div className="flex items-start gap-1.5 flex-nowrap">
+      <div>
+        <div className="flex items-center gap-2 flex-nowrap">
+          <span>{primary.cons}%</span>
+          <HealthChip health={primary.health} />
+        </div>
+        <div className={`mt-1 ${clientHierarchySublineClassName}`}>
+          {primary.usado.toLocaleString("pt-BR")} de{" "}
+          {primary.lim.toLocaleString("pt-BR")}
+        </div>
+      </div>
+      {extraCount > 0 ? (
+        <ClientListOverflowChip
+          count={extraCount}
+          ariaLabel={`Mais ${extraCount} franquias`}
+          content={tooltip}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function ClientFaturaCell({
+  client,
+  statusKey,
+}: {
+  client: MockClient;
+  statusKey: InvoiceStatusKey;
+}) {
+  const invoiceRows = getClientListInvoiceRows(client);
+  const extraCount = invoiceRows.length - 1;
+  const overflowChip =
+    extraCount > 0 ? (
+      <ClientListOverflowChip
+        count={extraCount}
+        ariaLabel={`Mais ${extraCount} notas`}
+        content={
+          <ClientFranchiseFaturaTooltip
+            totalAmount={client.fat}
+            totalStatusKey={statusKey}
+            rows={invoiceRows}
+          />
         }
       />
-    </div>
+    ) : null;
+
+  return (
+    <FaturadoWithBadge
+      amount={client.fat}
+      statusKey={statusKey}
+      valorPagoParcial={client.valorPagoParcial}
+      valorPagoExcedente={client.pagamentoExcedente?.valor}
+      excedenteDestino={client.pagamentoExcedente?.destino}
+      parcelasAtrasadas={client.parcelasAtrasadas}
+      trailingAfterStatus={overflowChip}
+    />
   );
 }
 
@@ -253,7 +348,7 @@ export function ClientsListSection({
   }, [currentCompetence, billingStatusRevision]);
 
   const openWorkflowForClient = (client: MockClient, action: string) => {
-    if (action === "Aprovar fatura" || action === "Reabrir conferência") {
+    if (action === "Aprovar para faturamento" || action === "Reabrir conferência") {
       if (!isClientListCloseToggleEligible(client.id)) return;
       const state = useClientListInvoiceStatusStore.getState().getState(client.id);
       setClientClosed(client.id, state.status !== "fatura_fechada");
@@ -421,17 +516,6 @@ export function ClientsListSection({
               <th className={clientHierarchyTableHeadCellClass}>Referência</th>
               <th
                 className={clientHierarchySortableTableHeadCellClass(
-                  tableSort.key === "fat",
-                )}
-                onClick={() => toggleSort("fat")}
-              >
-                Valor{" "}
-                <span className="inline-flex align-middle ml-1 opacity-70">
-                  {sortIcon("fat")}
-                </span>
-              </th>
-              <th
-                className={clientHierarchySortableTableHeadCellClass(
                   tableSort.key === "cons",
                 )}
                 onClick={() => toggleSort("cons")}
@@ -442,12 +526,23 @@ export function ClientsListSection({
                 </span>
               </th>
               <th
-                className={`${clientHierarchyTableHeadCellCenterClass} w-[72px]`}
+                className={clientHierarchySortableTableHeadCellClass(
+                  tableSort.key === "fat",
+                )}
+                onClick={() => toggleSort("fat")}
               >
-                Detalhes
+                Fatura{" "}
+                <span className="inline-flex align-middle ml-1 opacity-70">
+                  {sortIcon("fat")}
+                </span>
               </th>
               <th className={`${clientHierarchyTableHeadCellCenterClass} w-14`}>
                 Ações
+              </th>
+              <th
+                className={`${clientHierarchyTableHeadCellCenterClass} w-[72px]`}
+              >
+                Contratos
               </th>
             </tr>
           </thead>
@@ -523,26 +618,10 @@ export function ClientsListSection({
                       {c.referencia}
                     </td>
                     <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
-                      <FaturadoWithBadge
-                        amount={c.fat}
-                        statusKey={displayInvoiceStatus}
-                        valorPagoParcial={c.valorPagoParcial}
-                        valorPagoExcedente={c.pagamentoExcedente?.valor}
-                        excedenteDestino={c.pagamentoExcedente?.destino}
-                        parcelasAtrasadas={c.parcelasAtrasadas}
-                      />
-                    </td>
-                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
                       <ClientConsumptionCell client={c} />
                     </td>
-                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top text-center">
-                      <TableExpandButton
-                        expanded={open}
-                        ariaLabel="Detalhes"
-                        onClick={() =>
-                          setExpandedListClientId(open ? null : c.id)
-                        }
-                      />
+                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top">
+                      <ClientFaturaCell client={c} statusKey={displayInvoiceStatus} />
                     </td>
                     <td
                       className="px-4 py-3.5 border-b border-zinc-100 align-top text-center"
@@ -553,6 +632,15 @@ export function ClientsListSection({
                         ariaLabel="Ações do cliente"
                         onSelectAction={(action) =>
                           openWorkflowForClient(c, action)
+                        }
+                      />
+                    </td>
+                    <td className="px-4 py-3.5 border-b border-zinc-100 align-top text-center">
+                      <TableExpandButton
+                        expanded={open}
+                        ariaLabel="Contratos"
+                        onClick={() =>
+                          setExpandedListClientId(open ? null : c.id)
                         }
                       />
                     </td>
