@@ -8,6 +8,7 @@ import type {
   DeductibleBillingModel,
   FixedPriceInfo,
 } from "../types/deductibles.types";
+import { stripFranchiseComboAnchor } from "./franchiseBasicProductSelection.utils";
 import { normalizePriceRanges, validateChainedPriceRanges } from "./priceRangeChain.utils";
 
 /**
@@ -249,6 +250,7 @@ export function buildDeductiblePayload(
 
   const payload: CreateDeductibleRequest = {
     ...rest,
+    productIds: stripFranchiseComboAnchor(rest.productIds ?? []),
     // Modelos com faixa: última aberta cobre o excedente — não enviar excessUnitPrice.
     excessUnitPrice: isFixedOnly ? (excessUnitPrice ?? 0) : null,
     automaticBlocking: isFixedOnly ? automaticBlocking : false,

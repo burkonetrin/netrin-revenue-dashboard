@@ -35,6 +35,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { clientFranchiseDetailPath } from "@/constants";
+import {
+  mockFranchiseTypeShortLabel,
+  resolveMockFranchiseIsTest,
+} from "@/clientesDashboardMockFormat";
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { ClientContactsTab } from "@/features/clients/components/ClientContactsTab";
@@ -50,6 +54,8 @@ import { fmtDetail } from "../../clientesDashboardMockFormat";
 import { ClientDetailPaymentInfoMock } from "./ClientDetailPaymentInfoMock";
 import { ClientPaginatedTableFooter } from "./ClientPaginatedTableFooter";
 import { ClientTagsSectionMock } from "./ClientTagsSectionMock";
+import { NewFranchiseDrawerNew } from "@/features/clients/components/NewFranchiseDrawerNew";
+import { useClientById } from "@/features/clients/hooks/useClientById";
 
 const TABLE_TH = "bg-gray-50 text-gray-700 font-semibold text-xs";
 const TABLE_TD = "text-gray-900 border-b border-gray-200 h-12 text-xs";
@@ -106,7 +112,7 @@ function mapFranchiseRow(f: MockFranchise): MockFranchiseRow {
     id: f.id,
     name: f.name,
     isActive: f.ativo,
-    isTest: false,
+    isTest: resolveMockFranchiseIsTest(f.tipo),
     billingModel: f.billingModelName ?? "—",
     beginningTerm: start,
     endTerm: end,
@@ -196,7 +202,7 @@ function ContractFranchisesExpanded({
       label: "Tipo",
       render: (value) => (
         <Chip size="sm" variant="flat" color="default">
-          {value ? "Teste" : "Produção"}
+          {mockFranchiseTypeShortLabel(Boolean(value))}
         </Chip>
       ),
     },
@@ -232,11 +238,6 @@ function ContractFranchisesExpanded({
 
   return (
     <div className="py-2 px-3 bg-white space-y-3">
-      <div className="flex items-center gap-2">
-        <Button size="sm" variant="bordered">
-          Nova franquia
-        </Button>
-      </div>
       {deductibles.length === 0 ? (
         <p className="text-sm text-default-500 py-4 m-0">
           Ainda não há franquias neste contrato
@@ -418,11 +419,16 @@ export function ClientDetailContractsPanel({
 }: {
   client: MockClient;
 }) {
+  const { data: clientDetails } = useClientById(client.id);
   const [page, setPage] = useState(1);
   const [expandedRowKeys, setExpandedRowKeys] = useState<Set<string | number>>(
     new Set(),
   );
   const [showInactiveContracts, setShowInactiveContracts] = useState(false);
+  const [newFranchiseDrawer, setNewFranchiseDrawer] = useState({
+    isOpen: false,
+    contractId: "",
+  });
 
   const contracts = useMemo(() => {
     const rows = CONTRACTS_MOCK.map(mapContractRow);
@@ -519,11 +525,24 @@ export function ClientDetailContractsPanel({
           });
         }}
         expandedContent={(row) => (
-          <ContractFranchisesExpanded
-            contractId={row.id}
-            clientId={client.id}
-            showInactive={showInactiveContracts}
-          />
+          <div className="py-2 px-3 bg-white space-y-3">
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="bordered"
+                onPress={() =>
+                  setNewFranchiseDrawer({ isOpen: true, contractId: row.id })
+                }
+              >
+                Nova franquia
+              </Button>
+            </div>
+            <ContractFranchisesExpanded
+              contractId={row.id}
+              clientId={client.id}
+              showInactive={showInactiveContracts}
+            />
+          </div>
         )}
         classNames={{
           th: "bg-default-100 text-gray-700 font-semibold text-xs",
@@ -537,6 +556,16 @@ export function ClientDetailContractsPanel({
         page={page}
         totalPages={1}
         onPageChange={setPage}
+      />
+      <NewFranchiseDrawerNew
+        isOpen={newFranchiseDrawer.isOpen}
+        contractId={newFranchiseDrawer.contractId}
+        clientId={client.id}
+        clientIsTest={clientDetails?.isTest}
+        nfeUnificationLevel={clientDetails?.nfeUnificationLevel}
+        onClose={() =>
+          setNewFranchiseDrawer((prev) => ({ ...prev, isOpen: false }))
+        }
       />
     </div>
   );

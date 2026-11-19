@@ -1,4 +1,8 @@
-import type { PaginationInfo } from "@/shared/types/pagination.types";
+import type {
+  ListProductsParams,
+  PaginatedProductsResponse,
+  Product,
+} from "../types/products.types";
 
 export interface ProductListItem {
   id: string;
@@ -6,38 +10,74 @@ export interface ProductListItem {
   isActive: boolean;
 }
 
-export interface PaginatedProductsResponse {
-  data: ProductListItem[];
-  pagination: PaginationInfo;
-}
-
-export interface ListProductsParams {
-  page?: number;
-  pageSize?: number;
-  limit?: number;
-  sortBy?: string | null;
-  sortDirection?: "asc" | "desc" | null;
-}
+const MOCK_SELLABLE: Product[] = [
+  {
+    id: "prod-bgc",
+    name: "Background Check",
+    internalName: "BGC",
+    isActive: true,
+    serviceTypes: [{ id: "st-bgc-1", name: "Padrão", internalName: "PADRAO" }],
+  },
+  {
+    id: "prod-idv",
+    name: "ID Validation",
+    internalName: "IDV",
+    isActive: true,
+    serviceTypes: [
+      { id: "st-idv-web", name: "Web", internalName: "WEB" },
+      { id: "st-idv-api", name: "API", internalName: "API" },
+    ],
+  },
+  {
+    id: "prod-nucleus",
+    name: "Consulta Netrin",
+    internalName: "NUCLEUS",
+    isActive: true,
+    serviceTypes: [{ id: "st-nuc-1", name: "Consulta", internalName: "CONSULTA" }],
+  },
+  {
+    id: "prod-api",
+    name: "API",
+    internalName: "API",
+    isActive: true,
+    serviceTypes: [{ id: "st-api-1", name: "API", internalName: "API" }],
+  },
+  {
+    id: "prod-audicon",
+    name: "Audicon",
+    internalName: "AUDICON",
+    isActive: true,
+    serviceTypes: [{ id: "st-audicon-1", name: "Audicon", internalName: "AUDICON" }],
+  },
+  {
+    id: "prod-enrichment",
+    name: "Enriquecimento",
+    internalName: "ENRICHMENT",
+    isActive: true,
+    serviceTypes: [{ id: "st-enrichment-1", name: "Enriquecimento", internalName: "ENRICHMENT" }],
+  },
+];
 
 export async function getProducts(
   params?: ListProductsParams,
 ): Promise<PaginatedProductsResponse> {
-  const data: ProductListItem[] = [
-    { id: "0195694a-939a-7c9c-b169-2f22b8264779", name: "Nucleus", isActive: true },
-    { id: "prod-api", name: "API", isActive: true },
-    { id: "prod-bgc", name: "BGC", isActive: true },
-    { id: "0195694a-939a-7c9c-b169-2f22b8264770", name: "SafePartner", isActive: true },
-  ];
-
+  const pageSize = params?.pageSize ?? params?.limit ?? 20;
+  const data = MOCK_SELLABLE.slice(0, pageSize);
   return {
-    data: data.slice(0, params?.pageSize ?? 20),
+    data,
     pagination: {
       hasNext: false,
       hasPrevious: false,
       page: params?.page ?? 1,
-      pageSize: params?.pageSize ?? 20,
+      pageSize,
       totalPages: 1,
-      totalRecords: data.length,
+      totalRecords: MOCK_SELLABLE.length,
     },
   };
+}
+
+export async function getSellableProducts(
+  params?: ListProductsParams,
+): Promise<PaginatedProductsResponse> {
+  return getProducts(params);
 }

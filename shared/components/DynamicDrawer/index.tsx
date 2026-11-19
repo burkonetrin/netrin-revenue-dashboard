@@ -41,27 +41,22 @@ export function DynamicDrawer({
         closeButton: `text-2xl ${classNames?.closeButton || ""}`,
       }}
     >
-      <DrawerContent
-        data-testid={dataTestId}
-        className={classNames?.content}
-      >
+      <DrawerContent data-testid={dataTestId} className={classNames?.content}>
         <DrawerHeader className={`text-[30px] ${classNames?.header || ""}`}>
-          <div className="flex flex-col gap-1">
-            <span>{title}</span>
-            {subtitle ? (
-              typeof subtitle === "string" ? (
-                <span className="text-sm font-normal text-zinc-500 leading-snug">
-                  {subtitle}
-                </span>
+          {subtitle ? (
+            <div className="flex flex-col gap-1">
+              <span>{title}</span>
+              {typeof subtitle === "string" ? (
+                <span className="text-sm font-normal text-zinc-500 leading-snug">{subtitle}</span>
               ) : (
                 subtitle
-              )
-            ) : null}
-          </div>
+              )}
+            </div>
+          ) : (
+            title
+          )}
         </DrawerHeader>
-        <DrawerBody className={`flex-none! mb-8 ${classNames?.body || ""}`}>
-          {component}
-        </DrawerBody>
+        <DrawerBody className={`flex-none! mb-8 ${classNames?.body || ""}`}>{component}</DrawerBody>
         {footer ? (
           <DrawerFooter className={classNames?.footer}>{footer}</DrawerFooter>
         ) : null}

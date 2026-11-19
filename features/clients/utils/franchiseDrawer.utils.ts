@@ -46,7 +46,7 @@ export function isFranchiseStepProceedable({
   canListBackgroundCheckTemplates: boolean;
 }): boolean {
   if (step === "basic") {
-    return Boolean(
+    const termsValid = Boolean(
       state.beginningTerm &&
         state.endTerm &&
         isFranchiseTermOrderValid({
@@ -54,6 +54,8 @@ export function isFranchiseStepProceedable({
           endTerm: state.endTerm,
         }),
     );
+    if (!termsValid) return false;
+    return isFranchiseBasicProductSelectionValid(state.productIds, canListProducts);
   }
 
   if (step === "payment") return !isPaymentStepLoading;
@@ -77,14 +79,6 @@ export function isFranchiseStepProceedable({
     }
 
     return validateExcessOrBlocking(state, selectedOption);
-  }
-
-  if (step === "products") {
-    return (
-      canListProducts &&
-      state.productIds.length > 0 &&
-      state.productIds.every((product) => Boolean(product.serviceTypeId))
-    );
   }
 
   if (step === "templates") {
@@ -113,6 +107,7 @@ export function getFranchisePrimaryActionLabel(
   return "Salvar e prosseguir";
 }
 import type { BillingModelOption, CreateDeductibleRequest } from "../types/deductibles.types";
+import { isFranchiseBasicProductSelectionValid } from "./franchiseBasicProductSelection.utils";
 import {
   findBillingModelOption,
   getFixedPriceIncludedConsultations,

@@ -11,11 +11,11 @@ import {
   BreadcrumbItem,
   Breadcrumbs,
   Button,
+  Chip,
   Spinner,
   Switch,
   Tab,
   Tabs,
-  addToast,
 } from "@heroui/react";
 import { CLIENTS_PERMISSIONS } from "../constants/clientsPermissions.constants";
 import { useBillingModels } from "../hooks/useBillingModels";
@@ -33,21 +33,16 @@ import type { BillingModelOption } from "../types/deductibles.types";
 import { formatTermDateLabel } from "../utils/franchiseTermBounds.utils";
 import { FranchiseBackgroundCheckTemplatesTab } from "./FranchiseBackgroundCheckTemplatesTab";
 import { FranchiseDeactivateConfirmModal } from "./FranchiseDeactivateConfirmModal";
-import { FranchiseLinkedProductsTab } from "./FranchiseLinkedProductsTab";
 import { FranchiseLinkedSourcesTab } from "./FranchiseLinkedSourcesTab";
-import { FranchisePaymentInfoTab } from "./FranchisePaymentInfoTab";
 import { FranchiseInfoCard, franchiseDetailsTabsClassNames } from "./franchiseDetails.shared";
 import { getCurrentMonth } from "@/features/billing/utils/billing-list.utils";
 import { formatBillingCompetence } from "@/features/billing/utils/billing.utils";
-
-function openEditPlaceholder(step: string) {
-  addToast({
-    title: "Editar franquia",
-    description: `Passo "${step}" — fluxo completo disponível no Nucleus; simulação de salvamento no protótipo.`,
-    color: "primary",
-    timeout: 4000,
-  });
-}
+import {
+  type FranchiseDrawerStep,
+  NewFranchiseDrawerNew,
+} from "./NewFranchiseDrawerNew";
+import { mockFranchiseDetailsTypeLabel } from "@/clientesDashboardMockFormat";
+import { formatFranchiseProductsDisplay } from "../utils/franchiseBasicProductSelection.utils";
 
 interface FranchiseDetailsPageNewProps {
   clientId: string;
@@ -57,9 +52,7 @@ interface FranchiseDetailsPageNewProps {
 
 type FranchiseDetailTabKey =
   | "sobre"
-  | "informacoes-pagamento"
   | "financeiro"
-  | "produtos"
   | "modelos-background-check"
   | "fontes-vinculadas";
 
@@ -96,6 +89,9 @@ export function FranchiseDetailsPageNew({
 
   const [selectedTab, setSelectedTab] = useState<FranchiseDetailTabKey>("sobre");
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerInitialStep, setDrawerInitialStep] = useState<FranchiseDrawerStep>("basic");
+  const [drawerPresentation, setDrawerPresentation] = useState<"create" | "edit">("edit");
 
   const currentCompetenceLabel = useMemo(
     () => formatBillingCompetence(getCurrentMonth()),
@@ -105,12 +101,7 @@ export function FranchiseDetailsPageNew({
   const canEnterDetails = can(CLIENTS_PERMISSIONS.deductibleDetails);
   const canOverview = can(CLIENTS_PERMISSIONS.deductibleOverview);
   const canBillingModel = can(CLIENTS_PERMISSIONS.deductibleBillingModel);
-  const canProducts = can(CLIENTS_PERMISSIONS.deductibleUpdateOverview);
   const canSources = can(CLIENTS_PERMISSIONS.deductibleSources);
-  const canPaymentInfo = can(CLIENTS_PERMISSIONS.paymentInfo);
-  const shouldShowPaymentInfo =
-    canPaymentInfo && client?.nfeUnificationLevel?.value === "deductible" && !deductible?.isTest;
-
   useEffect(() => {
     if (!canEnterDetails) {
       navigate(`${PROTOTYPE_BASE_PATH}/clientes/${clientId}?tab=contratos`, { replace: true });
@@ -125,13 +116,11 @@ export function FranchiseDetailsPageNew({
   const visibleTabs = useMemo(() => {
     const tabs: FranchiseDetailTabKey[] = [];
     if (canOverview) tabs.push("sobre");
-    if (shouldShowPaymentInfo) tabs.push("informacoes-pagamento");
     if (canBillingModel) tabs.push("financeiro");
-    if (canProducts) tabs.push("produtos");
     if (hasBgcProduct && canSources) tabs.push("modelos-background-check");
     if (!hasBgcProduct && canSources) tabs.push("fontes-vinculadas");
     return tabs;
-  }, [canOverview, shouldShowPaymentInfo, canBillingModel, canProducts, canSources, hasBgcProduct]);
+  }, [canOverview, canBillingModel, canSources, hasBgcProduct]);
 
   useEffect(() => {
     if (visibleTabs.length === 0) return;
@@ -231,7 +220,11 @@ export function FranchiseDetailsPageNew({
                       color="primary"
                       className="px-6 w-fit"
                       radius="sm"
-                      onPress={() => openEditPlaceholder("basic")}
+                      onPress={() => {
+                        setDrawerPresentation("create");
+                        setDrawerInitialStep("basic");
+                        setIsDrawerOpen(true);
+                      }}
                     >
                       Editar
                     </Button>
@@ -268,6 +261,11 @@ export function FranchiseDetailsPageNew({
                     onKeepInBilling={() => confirmDeactivate("keep")}
                     onRemoveFromBilling={() => confirmDeactivate("remove")}
                   />
+                  <div className="flex gap-2">
+                    <Chip variant="flat" color="default">
+                      {mockFranchiseDetailsTypeLabel(deductible.isTest)}
+                    </Chip>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,7 +286,7 @@ export function FranchiseDetailsPageNew({
                         : "-"
                     }
                   />
-                  {deductible.isTest && (
+                  {deductible.isTest ? (
                     <FranchiseInfoCard
                       label="Período da franquia"
                       value={
@@ -298,17 +296,18 @@ export function FranchiseDetailsPageNew({
                           : "-"
                       }
                     />
+                  ) : (
+                    <FranchiseInfoCard
+                      label="Centro de lucro"
+                      value={
+                        isLoadingProfitCenter
+                          ? "-"
+                          : (deductibleProfitCenter?.profitCenter?.label ?? "-")
+                      }
+                    />
                   )}
                   {!deductible.isTest && (
                     <>
-                      <FranchiseInfoCard
-                        label="Centro de lucro"
-                        value={
-                          isLoadingProfitCenter
-                            ? "-"
-                            : (deductibleProfitCenter?.profitCenter?.label ?? "-")
-                        }
-                      />
                       <FranchiseInfoCard
                         label="Centro de lucro (excedente)"
                         value={
@@ -317,21 +316,22 @@ export function FranchiseDetailsPageNew({
                             : (deductibleProfitCenter?.overageProfitCenter?.label ?? "-")
                         }
                       />
+                      <FranchiseInfoCard
+                        label="Produto"
+                        value={formatFranchiseProductsDisplay(deductible.products)}
+                      />
                     </>
                   )}
+                  {deductible.isTest ? (
+                    <div className="md:col-span-2">
+                      <FranchiseInfoCard
+                        label="Produto"
+                        value={formatFranchiseProductsDisplay(deductible.products)}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </div>
-            </Tab>
-          )}
-
-          {shouldShowPaymentInfo && (
-            <Tab key="informacoes-pagamento" title="Informações de pagamento">
-              <FranchisePaymentInfoTab
-                clientId={clientId}
-                contractId={contractId}
-                franchiseId={franchiseId}
-                onEdit={() => openEditPlaceholder("payment")}
-              />
             </Tab>
           )}
 
@@ -343,7 +343,11 @@ export function FranchiseDetailsPageNew({
                     color="primary"
                     className="px-6"
                     radius="sm"
-                    onPress={() => openEditPlaceholder("billing")}
+                    onPress={() => {
+                      setDrawerPresentation("edit");
+                      setDrawerInitialStep("billing");
+                      setIsDrawerOpen(true);
+                    }}
                   >
                     Editar
                   </Button>
@@ -418,20 +422,15 @@ export function FranchiseDetailsPageNew({
             </Tab>
           )}
 
-          {canProducts && (
-            <Tab key="produtos" title="Produtos da franquia">
-              <FranchiseLinkedProductsTab
-                products={deductible.products ?? []}
-                onEdit={() => openEditPlaceholder("products")}
-              />
-            </Tab>
-          )}
-
           {hasBgcProduct && canSources && (
             <Tab key="modelos-background-check" title="Modelos Background Check">
               <FranchiseBackgroundCheckTemplatesTab
                 franchiseId={franchiseId}
-                onEdit={() => openEditPlaceholder("templates")}
+                onEdit={() => {
+                  setDrawerPresentation("edit");
+                  setDrawerInitialStep("templates");
+                  setIsDrawerOpen(true);
+                }}
               />
             </Tab>
           )}
@@ -440,12 +439,33 @@ export function FranchiseDetailsPageNew({
             <Tab key="fontes-vinculadas" title="Fontes vinculadas">
               <FranchiseLinkedSourcesTab
                 franchiseId={franchiseId}
-                onEdit={() => openEditPlaceholder("sources")}
+                onEdit={() => {
+                  setDrawerPresentation("edit");
+                  setDrawerInitialStep("sources");
+                  setIsDrawerOpen(true);
+                }}
               />
             </Tab>
           )}
         </Tabs>
       )}
+
+      <NewFranchiseDrawerNew
+        key={
+          isDrawerOpen
+            ? `franchise-wizard-${franchiseId}-${drawerInitialStep}`
+            : "franchise-wizard-closed"
+        }
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        contractId={contractId}
+        clientId={clientId}
+        deductibleId={franchiseId}
+        initialStep={drawerInitialStep}
+        wizardPresentation={drawerPresentation}
+        nfeUnificationLevel={client?.nfeUnificationLevel}
+        clientIsTest={client?.isTest}
+      />
     </div>
   );
 }

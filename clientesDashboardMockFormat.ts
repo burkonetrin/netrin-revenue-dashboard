@@ -411,3 +411,18 @@ export function getClientListInvoiceExtraRows(
   const rows = getClientListInvoiceRows(client);
   return rows.length > 1 ? rows.slice(1) : [];
 }
+
+/** Indica franquia de teste a partir do campo `tipo` do mock (listagem ↔ detalhes). */
+export function resolveMockFranchiseIsTest(tipo: string): boolean {
+  return tipo.toLowerCase().includes("teste");
+}
+
+/** Rótulo curto do tipo na listagem de contratos (coluna Tipo). */
+export function mockFranchiseTypeShortLabel(isTest: boolean): string {
+  return isTest ? "Teste" : "Produção";
+}
+
+/** Rótulo do chip na aba Sobre dos detalhes da franquia. */
+export function mockFranchiseDetailsTypeLabel(isTest: boolean): string {
+  return isTest ? "Franquia de Teste" : "Franquia de Produção";
+}

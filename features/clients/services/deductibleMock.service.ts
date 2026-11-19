@@ -1,3 +1,4 @@
+import { resolveMockFranchiseIsTest } from "@/clientesDashboardMockFormat";
 import { CONTRACTS_MOCK, type MockFranchise } from "@/clientesDashboardMockData";
 import type {
   BillingModelOption,
@@ -6,6 +7,7 @@ import type {
   PaginatedDeductiblesResponse,
 } from "../types/deductibles.types";
 import type { PaymentInfoResponse } from "../types/contractsFranchises.types";
+import { mapMockFranchiseProductToDeductibleProduct } from "../utils/franchiseMockProduct.utils";
 
 function parseVigenciaToIsoRange(vigencia: string): { beginningTerm: string; endTerm: string } {
   const parts = vigencia.split(" - ").map((p) => p.trim());
@@ -57,7 +59,7 @@ function mapFranchiseToDetailed(
   franchise: MockFranchise,
 ): DetailedDeductibleResponse {
   const { beginningTerm, endTerm } = parseVigenciaToIsoRange(franchise.vigencia);
-  const isTest = franchise.tipo.toLowerCase().includes("teste");
+  const isTest = resolveMockFranchiseIsTest(franchise.tipo);
   const isFixedPrice = (franchise.billingModelName ?? "").toLowerCase().includes("fixo");
   const now = "2026-03-01T12:00:00.000Z";
 
@@ -85,18 +87,7 @@ function mapFranchiseToDetailed(
     createdAt: now,
     updatedAt: now,
     excessUnitPrice: franchise.billingOveragePerQuery ?? null,
-    products: [
-      {
-        id: `prod-${franchise.id}`,
-        name: franchise.product,
-        internalName: franchise.product.replace(/\s+/g, "_").toUpperCase(),
-        serviceType: {
-          id: "st-1",
-          name: "Consulta",
-          internalName: "CONSULTA",
-        },
-      },
-    ],
+    products: [mapMockFranchiseProductToDeductibleProduct(franchise.product)],
     hideBillingModel: false,
     hideDataSourcesStep: false,
     hideTestFlag: false,

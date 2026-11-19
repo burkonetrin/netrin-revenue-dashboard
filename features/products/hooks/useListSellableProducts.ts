@@ -1,27 +1,19 @@
 "use client";
 
+import type { ErrorResponse } from "@/shared/utils/errorParser";
 import { useQuery } from "@tanstack/react-query";
-import type { Product } from "../types/products.types";
+import type { AxiosError } from "axios";
+import { getSellableProducts } from "../services/products.service";
+import type { ListProductsParams, PaginatedProductsResponse } from "../types/products.types";
 
-const MOCK_SELLABLE_PRODUCTS: Product[] = [
-  {
-    id: "prod-bgc",
-    name: "Background Check",
-    internalName: "BGC",
-    isActive: true,
-  } as Product,
-  {
-    id: "prod-idv",
-    name: "ID Validation",
-    internalName: "IDV",
-    isActive: true,
-  } as Product,
-];
-
-export function useListSellableProducts(enabled = true) {
-  return useQuery({
-    queryKey: ["products", "sellable"],
-    queryFn: async () => MOCK_SELLABLE_PRODUCTS,
-    enabled,
+export function useListSellableProducts(
+  params?: ListProductsParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery<PaginatedProductsResponse, AxiosError<ErrorResponse>>({
+    queryKey: ["useListSellableProducts", params],
+    queryFn: async () => getSellableProducts(params),
+    enabled: options?.enabled ?? true,
+    placeholderData: (previousData) => previousData,
   });
 }

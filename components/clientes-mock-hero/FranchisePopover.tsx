@@ -7,6 +7,8 @@ import type { MockFranchise } from "../../clientesDashboardMockData";
 import {
   franchiseMockSources,
   franchiseUserLabel,
+  mockFranchiseTypeShortLabel,
+  resolveMockFranchiseIsTest,
 } from "../../clientesDashboardMockFormat";
 
 interface FranchisePopoverProps {
@@ -38,7 +40,10 @@ function FranchiseDetailsBody({
   return (
     <div className="flex flex-col gap-4 text-left">
       <InfoBlock title="Usuários vinculados" value={franchiseUserLabel(franchise)} />
-      <InfoBlock title="Tipo" value={franchise.tipo} />
+      <InfoBlock
+        title="Tipo"
+        value={mockFranchiseTypeShortLabel(resolveMockFranchiseIsTest(franchise.tipo))}
+      />
       <InfoBlock title="Status" value={franchise.status} />
       <InfoBlock title="Renovação automática" value={franchise.renAuto} />
       <div>
