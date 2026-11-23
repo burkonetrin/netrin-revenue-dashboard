@@ -53,7 +53,7 @@ import {
 import { fmtDetail } from "../../clientesDashboardMockFormat";
 import { ClientDetailPaymentInfoMock } from "./ClientDetailPaymentInfoMock";
 import { ClientPaginatedTableFooter } from "./ClientPaginatedTableFooter";
-import { ClientTagsSectionMock } from "./ClientTagsSectionMock";
+import { ClientTagsSectionMock, SapCodeSectionMock } from "./ClientTagsSectionMock";
 import { NewFranchiseDrawerNew } from "@/features/clients/components/NewFranchiseDrawerNew";
 import { useClientById } from "@/features/clients/hooks/useClientById";
 
@@ -265,7 +265,6 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
   const fantasyName = client.nome.split(" ").slice(0, 2).join(" ");
   const [isActive, setIsActive] = useState(client.ativo);
   const [zipCode, setZipCode] = useState("01310100");
-  const [foreignIdentification, setForeignIdentification] = useState("");
 
   return (
     <div className="mt-4">
@@ -281,6 +280,15 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
               Ativo
             </Switch>
           </div>
+          <SapCodeSectionMock />
+          <Input
+            label="CNPJ"
+            labelPlacement="outside"
+            defaultValue={client.cnpj}
+            isReadOnly
+            isDisabled
+            classNames={defaultInputClassNames}
+          />
           <Input
             label="Nome do cliente"
             labelPlacement="outside"
@@ -294,9 +302,28 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
             classNames={defaultInputClassNames}
           />
           <Input
-            label="CNPJ"
+            label="Tenant"
             labelPlacement="outside"
-            defaultValue={client.cnpj}
+            defaultValue={`tenant-${client.id}`}
+            isReadOnly
+            isDisabled
+            classNames={defaultInputClassNames}
+          />
+          <Select
+            label="Situação de pagamento"
+            labelPlacement="outside"
+            aria-label="Situação de pagamento"
+            placeholder="Selecione uma opção"
+            defaultSelectedKeys={["up_to_date"]}
+            classNames={defaultSelectClassNames}
+          >
+            <SelectItem key="up_to_date">Em dia</SelectItem>
+            <SelectItem key="overdue">Inadimplente</SelectItem>
+          </Select>
+          <Input
+            label="Arquivado"
+            labelPlacement="outside"
+            defaultValue="Não"
             isReadOnly
             isDisabled
             classNames={defaultInputClassNames}
@@ -305,22 +332,6 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
             label="Segmento"
             labelPlacement="outside"
             defaultValue={segment}
-            classNames={defaultInputClassNames}
-          />
-          <Input
-            label="Tenant"
-            labelPlacement="outside"
-            defaultValue={`tenant-${client.id}`}
-            isReadOnly
-            isDisabled
-            classNames={defaultInputClassNames}
-          />
-          <Input
-            label="Arquivado"
-            labelPlacement="outside"
-            defaultValue="Não"
-            isReadOnly
-            isDisabled
             classNames={defaultInputClassNames}
           />
           <Input
@@ -378,26 +389,6 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
             defaultValue="SP"
             isReadOnly
             isDisabled
-            classNames={defaultInputClassNames}
-          />
-          <Select
-            label="Situação de pagamento"
-            labelPlacement="outside"
-            aria-label="Situação de pagamento"
-            placeholder="Selecione uma opção"
-            defaultSelectedKeys={["up_to_date"]}
-            classNames={defaultSelectClassNames}
-          >
-            <SelectItem key="up_to_date">Em dia</SelectItem>
-            <SelectItem key="overdue">Inadimplente</SelectItem>
-          </Select>
-          <Input
-            label="Identificação de estrangeiro"
-            labelPlacement="outside"
-            aria-label="Identificação de estrangeiro"
-            placeholder="Digite a identificação"
-            value={foreignIdentification}
-            onValueChange={setForeignIdentification}
             classNames={defaultInputClassNames}
           />
           <div className="col-span-3 flex justify-end gap-3 mt-4">

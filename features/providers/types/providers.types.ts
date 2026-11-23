@@ -1,7 +1,11 @@
 import type { PaginationInfo } from "@/shared/types/pagination.types";
 
-/** Tipo de fornecedor alinhado ao Administrator (`direct` | `indirect_captcha` | `indirect_proxy`). */
-export type ProviderType = "direct" | "indirect_captcha" | "indirect_proxy";
+/** Tipo de fornecedor alinhado ao Administrator. */
+export type ProviderType =
+  | "direct"
+  | "indirect_captcha"
+  | "indirect_proxy"
+  | "indirect_infra";
 
 /** Opção tipada retornada pela API em listagens/detalhe. */
 export interface ProviderTypeOption {

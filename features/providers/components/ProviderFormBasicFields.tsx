@@ -87,6 +87,9 @@ export function ProviderFormBasicFields({
         <SelectItem key="indirect_proxy">
           {buildProviderTypeOption("indirect_proxy").label}
         </SelectItem>
+        <SelectItem key="indirect_infra">
+          {buildProviderTypeOption("indirect_infra").label}
+        </SelectItem>
       </Select>
     </div>
   );

@@ -4,6 +4,12 @@ export type ProviderInvoiceVariant =
   | "indirect-prepaid"
   | "direct-prepaid";
 
+import {
+  isDirectProviderType,
+  isIndirectProviderType,
+} from "./providerType.utils";
+import type { ProviderType } from "../types/providers.types";
+
 export type ProviderInvoiceVariantResolution =
   | { status: "valid"; variant: ProviderInvoiceVariant }
   | {
@@ -26,8 +32,8 @@ export function resolveProviderInvoiceVariant(
     return { status: "invalid", reason: "missing-provider-type" };
   }
 
-  const raw = input.providerType.value;
-  if (raw !== "direct" && raw !== "indirect_captcha" && raw !== "indirect_proxy") {
+  const raw = input.providerType.value as ProviderType | null | undefined;
+  if (!raw || (!isDirectProviderType(raw) && !isIndirectProviderType(raw))) {
     return { status: "invalid", reason: "unknown-provider-type" };
   }
 

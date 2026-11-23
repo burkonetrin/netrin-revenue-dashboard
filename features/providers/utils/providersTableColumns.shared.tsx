@@ -63,6 +63,31 @@ export function buildProviderDescriptionColumn<T>(): ColumnConfig<T> {
   };
 }
 
+type DirectProviderLink = {
+  provider: { value: string; label?: string };
+  isDefault?: boolean;
+};
+
+/** Coluna de fornecedor padrão (direto) das fontes na listagem. */
+export function buildProviderDefaultProviderColumn<
+  T extends { directProviders?: DirectProviderLink[] },
+>(): ColumnConfig<T> {
+  return {
+    id: "defaultProvider",
+    label: "Fornecedor padrão",
+    render: (_, row) => {
+      const defaultLink =
+        row.directProviders?.find((entry) => entry.isDefault) ??
+        row.directProviders?.[0];
+      const label =
+        defaultLink?.provider.label?.trim() || defaultLink?.provider.value;
+      return (
+        <span className="text-default-700 line-clamp-1">{label ? String(label) : "—"}</span>
+      );
+    },
+  };
+}
+
 /** Coluna de nome interno das tabelas de providers. */
 export function buildProviderInternalNameColumn<T>(): ColumnConfig<T> {
   return {

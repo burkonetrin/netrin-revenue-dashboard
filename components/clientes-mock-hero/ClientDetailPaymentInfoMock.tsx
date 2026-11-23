@@ -9,7 +9,6 @@ import {
 } from "@heroui/react";
 import { useState } from "react";
 import { CONTRACTS_MOCK } from "../../clientesDashboardMockData";
-import { SapCodeSectionMock } from "./ClientTagsSectionMock";
 import {
   ClientPaymentInfoEditSidebar,
   type ClientPaymentInfoEditSidebarState,
@@ -200,7 +199,6 @@ export function ClientDetailPaymentInfoMock() {
 
   return (
     <div className="mt-4 space-y-6">
-      <SapCodeSectionMock />
       <div className="flex flex-col gap-4 rounded-lg border border-default-200 bg-white px-[18px] py-4">
         <div className="flex items-center justify-between gap-4">
           <Switch

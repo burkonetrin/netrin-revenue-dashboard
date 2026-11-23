@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import { AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   getBlockedDocuments,
@@ -30,18 +31,29 @@ export function BankValidationDadosBancariosPanel({
     () => savedBlockedDocuments.length,
     [savedBlockedDocuments],
   );
+  const hasBlockedDocuments = blockedCountLabel > 0;
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end gap-4">
         <MonthCompetencePicker
           value={referenceMonth}
           onChange={onReferenceMonthChange}
         />
         <Button
-          variant="bordered"
+          variant={hasBlockedDocuments ? "flat" : "bordered"}
+          color={hasBlockedDocuments ? "warning" : "default"}
           radius="sm"
-          className="h-[42px]"
+          className={
+            hasBlockedDocuments
+              ? "h-[42px] border border-warning-500 bg-warning-50 text-warning-600 data-[hover=true]:bg-warning-100"
+              : "h-[42px]"
+          }
+          startContent={
+            hasBlockedDocuments ? (
+              <AlertTriangle size={18} aria-hidden className="shrink-0" />
+            ) : undefined
+          }
           onPress={() => setBlockedDrawerOpen(true)}
         >
           Documentos bloqueados ({blockedCountLabel})

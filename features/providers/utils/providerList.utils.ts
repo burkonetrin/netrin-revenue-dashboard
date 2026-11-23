@@ -1,5 +1,5 @@
 import type { Provider } from "../types/providers.types";
-import { buildProviderTypeOption } from "./providerType.utils";
+import { buildProviderTypeOption, isProviderType } from "./providerType.utils";
 
 /**
  * Label da coluna Tipo (SUP-02).
@@ -7,7 +7,7 @@ import { buildProviderTypeOption } from "./providerType.utils";
 export function getProviderTypeLabel(provider: Provider): string {
   if (provider.providerType?.label) return provider.providerType.label;
   const value = provider.providerType?.value;
-  if (value === "direct" || value === "indirect_captcha" || value === "indirect_proxy") {
+  if (value && isProviderType(value)) {
     return buildProviderTypeOption(value).label;
   }
   return "—";

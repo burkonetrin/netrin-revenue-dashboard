@@ -1,5 +1,6 @@
 "use client";
 
+import { defaultInputClassNames } from "@/shared/styles/inputClassNames";
 import { Button, Input } from "@heroui/react";
 import { CirclePlus, X } from "lucide-react";
 import { useState } from "react";
@@ -39,37 +40,26 @@ export function ClientTagsSectionMock() {
   );
 }
 
-export const SAP_CODE_SAVE_LABEL = "Salvar código";
-
 export function SapCodeSectionMock() {
-  const [value, setValue] = useState("100234");
+  const [sapCode, setSapCode] = useState("100234");
+  const [sankhyaCode, setSankhyaCode] = useState("200345");
+
   return (
-    <div className="flex items-end gap-4">
-      <div className="flex w-[301px] max-w-full flex-col">
-        <label className="pb-3 pr-2 text-sm font-normal leading-4 text-default-600">
-          Código SAP
-        </label>
-        <Input
-          aria-label="Código SAP"
-          value={value}
-          onValueChange={setValue}
-          radius="lg"
-          classNames={{
-            inputWrapper:
-              "h-10 min-h-10 bg-default-100 shadow-none! border-0! hover:bg-default-100",
-            input: "text-sm text-foreground",
-          }}
-        />
-      </div>
-      <Button
-        variant="bordered"
-        color="default"
-        radius="sm"
-        size="md"
-        className="h-10 min-w-0 border-2 border-default-300 px-4 text-sm font-normal text-foreground"
-      >
-        {SAP_CODE_SAVE_LABEL}
-      </Button>
-    </div>
+    <>
+      <Input
+        label="Código SAP"
+        labelPlacement="outside"
+        value={sapCode}
+        onValueChange={setSapCode}
+        classNames={defaultInputClassNames}
+      />
+      <Input
+        label="Código Sankhya"
+        labelPlacement="outside"
+        value={sankhyaCode}
+        onValueChange={setSankhyaCode}
+        classNames={defaultInputClassNames}
+      />
+    </>
   );
 }

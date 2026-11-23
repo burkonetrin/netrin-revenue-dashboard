@@ -20,9 +20,9 @@ import { useUpdateDataSource } from "../hooks/useUpdateDataSource";
 import type { DataSource, EditSourceFormData } from "../types/data-sources.types";
 import { displayToPathName, pathNameToDisplay } from "../utils/pathName.utils";
 import {
+  buildProviderDefaultProviderColumn,
   buildProviderDescriptionColumn,
   buildProviderIdColumn,
-  buildProviderInternalNameColumn,
   providerTableClassNames,
 } from "../utils/providersTableColumns.shared";
 import { formatSourceCurrency } from "../utils/sourceCurrency.utils";
@@ -214,8 +214,8 @@ export function SourcesTab() {
         </Link>
       ),
     },
-    buildProviderInternalNameColumn<DataSource & { actions?: never }>(),
     buildProviderDescriptionColumn<DataSource & { actions?: never }>(),
+    buildProviderDefaultProviderColumn<DataSource & { actions?: never }>(),
     {
       id: "referenceCost",
       label: "Custo de referência (R$)",

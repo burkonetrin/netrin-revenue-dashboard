@@ -27,9 +27,17 @@ function FormSectionTitle({ children }: { children: string }) {
   return <h3 className="text-base font-medium text-default-600">{children}</h3>;
 }
 
-function FieldLabel({ children }: { children: string }) {
-  return <p className="text-sm text-zinc-500">{children}</p>;
-}
+const EXAMPLE_CAPTCHA_PROVIDERS: ProviderUsageInfo[] = [
+  { id: "prov-aggregator", name: "Agregador Netrin", providerType: { value: "indirect_captcha", label: "Indireto - Captcha" }, dataSources: [] },
+  { id: "prov-captcha-alt", name: "2Captcha Brasil", providerType: { value: "indirect_captcha", label: "Indireto - Captcha" }, dataSources: [] },
+  { id: "prov-captcha-solver", name: "AntiCaptcha Netrin", providerType: { value: "indirect_captcha", label: "Indireto - Captcha" }, dataSources: [] },
+];
+
+const EXAMPLE_PROXY_PROVIDERS: ProviderUsageInfo[] = [
+  { id: "prov-proxy-bridge", name: "Proxy Gateway BR", providerType: { value: "indirect_proxy", label: "Indireto - Proxy" }, dataSources: [] },
+  { id: "prov-proxy-residential", name: "Proxy Residencial SP", providerType: { value: "indirect_proxy", label: "Indireto - Proxy" }, dataSources: [] },
+  { id: "prov-proxy-datacenter", name: "Proxy Datacenter SA", providerType: { value: "indirect_proxy", label: "Indireto - Proxy" }, dataSources: [] },
+];
 
 function DefaultBadge({ show }: { show: boolean }) {
   if (!show) {
@@ -45,26 +53,45 @@ function DefaultBadge({ show }: { show: boolean }) {
   );
 }
 
-function IndirectProvidersCard({
-  emptyMessage,
+function IndirectProvidersTable({
+  headerTitle,
   providers,
+  emptyMessage,
 }: {
-  emptyMessage: string;
+  headerTitle: string;
   providers: ProviderUsageInfo[];
+  emptyMessage: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-default-200 bg-white">
-      {providers.length === 0 ? (
-        <p className="px-4 py-3 text-sm text-default-400">{emptyMessage}</p>
-      ) : (
-        <ul className="divide-y divide-default-200">
-          {providers.map((provider) => (
-            <li key={provider.id} className="px-4 py-3 text-sm text-default-700">
-              {provider.name}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed border-collapse text-sm">
+        <thead>
+          <tr className="text-left">
+            <th className={`rounded-lg ${providerNativeTableHeadCellClass}`}>{headerTitle}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {providers.length === 0 ? (
+            <tr>
+              <td className="px-3 py-6 text-center text-sm text-default-400">{emptyMessage}</td>
+            </tr>
+          ) : (
+            providers.map((provider, index) => {
+              const isLastRow = index === providers.length - 1;
+              return (
+                <tr
+                  key={provider.id}
+                  className={`text-sm text-default-700 ${
+                    isLastRow ? "" : "border-b border-default-100"
+                  }`}
+                >
+                  <td className="px-3 py-3">{provider.name}</td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -119,6 +146,10 @@ export function EditSourceForm({
     sourceId,
     "indirect_proxy",
   );
+
+  const captchaTableProviders =
+    captchaProviders.length > 0 ? captchaProviders : EXAMPLE_CAPTCHA_PROVIDERS;
+  const proxyTableProviders = proxyProviders.length > 0 ? proxyProviders : EXAMPLE_PROXY_PROVIDERS;
 
   const update = (partial: Partial<EditSourceFormData>) => {
     onFormDataChange({ ...formData, ...partial });
@@ -236,8 +267,7 @@ export function EditSourceForm({
       </div>
 
       <div className="flex flex-col">
-        <div className="border-t border-default-200" />
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mt-4 flex flex-col gap-4">
           <FormSectionTitle>Fornecedores</FormSectionTitle>
           <div className="overflow-x-auto">
           <RadioGroup
@@ -332,22 +362,22 @@ export function EditSourceForm({
         </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-8">
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Fornecedores de captcha</FieldLabel>
-            <IndirectProvidersCard
-              emptyMessage="Nenhum fornecedor de captcha vinculado ao fornecedor direto selecionado"
-              providers={captchaProviders}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Fornecedores de proxy</FieldLabel>
-            <IndirectProvidersCard
-              emptyMessage="Nenhum fornecedor de proxy vinculado ao fornecedor direto selecionado"
-              providers={proxyProviders}
-            />
-          </div>
+        <div className="mt-4 flex flex-col gap-6">
+          <IndirectProvidersTable
+            headerTitle="Fornecedores de captcha"
+            providers={captchaTableProviders}
+            emptyMessage="Nenhum fornecedor de captcha vinculado ao fornecedor direto selecionado"
+          />
+          <IndirectProvidersTable
+            headerTitle="Fornecedores de proxy"
+            providers={proxyTableProviders}
+            emptyMessage="Nenhum fornecedor de proxy vinculado ao fornecedor direto selecionado"
+          />
+          <IndirectProvidersTable
+            headerTitle="Fornecedores de infra"
+            providers={[]}
+            emptyMessage="Nenhum fornecedor de infra vinculado ao fornecedor direto selecionado"
+          />
         </div>
       </div>
     </div>
