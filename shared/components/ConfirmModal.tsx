@@ -24,6 +24,7 @@ interface ConfirmModalProps {
   confirmLabel: string;
   onConfirm: () => void;
   isConfirmLoading?: boolean;
+  confirmColor?: "primary" | "danger";
 }
 
 /** Modal de confirmação genérico (padrão Nucleus). */
@@ -36,6 +37,7 @@ export function ConfirmModal({
   confirmLabel,
   onConfirm,
   isConfirmLoading = false,
+  confirmColor = "primary",
 }: ConfirmModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md" classNames={HEROUI_MODAL_CLASS_NAMES}>
@@ -52,7 +54,7 @@ export function ConfirmModal({
             {cancelLabel}
           </Button>
           <Button
-            color="primary"
+            color={confirmColor}
             className={MODAL_FOOTER_BUTTON_CLASS}
             onPress={onConfirm}
             isLoading={isConfirmLoading}

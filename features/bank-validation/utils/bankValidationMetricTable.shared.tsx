@@ -16,6 +16,14 @@ export const BANK_VALIDATION_FIXED_SOURCE_COLUMNS = [
   { key: "trio", label: "Trio" },
 ] as const;
 
+/** Larguras das colunas de dados (Total / Stark / Trio alinhados entre níveis). */
+export const BANK_VALIDATION_METRIC_COLUMN_WIDTHS = {
+  label: 300,
+  total: 168,
+  stark: 136,
+  trio: 136,
+} as const;
+
 /** Normaliza o nome da fonte para comparação case-insensitive. */
 export function normalizeBankValidationSourceName(value: string) {
   return value.trim().toLowerCase();
@@ -93,21 +101,28 @@ export function BankValidationMetricLabel({ row }: { row: BankValidationMetricRo
 export function buildBankValidationSourceColumns<TRow extends BankValidationMetricRow>(
   sources: BankValidationSourceInfo[],
   formatTotal: (row: TRow) => string,
+  options?: { metricColumnLabel?: string },
 ): ColumnConfig<TRow>[] {
   return [
     {
       id: "label",
-      label: "Métrica",
+      label: options?.metricColumnLabel ?? "Métrica",
+      width: BANK_VALIDATION_METRIC_COLUMN_WIDTHS.label,
       render: (_, row) => <BankValidationMetricLabel row={row} />,
     },
     {
       id: "total",
       label: "Total",
+      width: BANK_VALIDATION_METRIC_COLUMN_WIDTHS.total,
       render: (_, row) => formatTotal(row),
     },
     ...BANK_VALIDATION_FIXED_SOURCE_COLUMNS.map<ColumnConfig<TRow>>((source) => ({
       id: `source:${source.key}`,
       label: source.label,
+      width:
+        source.key === "stark"
+          ? BANK_VALIDATION_METRIC_COLUMN_WIDTHS.stark
+          : BANK_VALIDATION_METRIC_COLUMN_WIDTHS.trio,
       render: (_, row) =>
         formatBankValidationMetricValue(
           getBankValidationSourceMetricValue(row, sources, source.key),
