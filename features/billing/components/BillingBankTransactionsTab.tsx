@@ -2,7 +2,7 @@
 
 import { DynamicTable } from "@/shared/components/DynamicTable";
 import type { ColumnConfig } from "@/shared/components/DynamicTable/types";
-import { useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { billingBankTransactionsMock } from "../mock/billingBankTransactions.mock";
 import type { BillingBankTransactionRow } from "../types/billing-bank-transaction.types";
 import { EMPTY_BANK_TRANSACTION_FILTERS } from "../types/support-tools-filters.types";
@@ -26,6 +26,7 @@ import { formatBankTransactionDateTime } from "../utils/billing-bank-transaction
 import { downloadSupportToolsCsv } from "../utils/support-tools-csv-export.utils";
 import { SupportToolsClientCell, SupportToolsUserCell } from "./support-tools/SupportToolsTableCells";
 import { SupportToolsTaskIdCell } from "./support-tools/SupportToolsTaskIdCell";
+import { SupportToolsEmptyResultsPrompt } from "./support-tools/SupportToolsEmptyResultsPrompt";
 import { SupportToolsFiltersToolbar } from "./support-tools/SupportToolsFiltersToolbar";
 import {
   computeBankTransactionBillableSummary,
@@ -120,24 +121,39 @@ const columns: ColumnConfig<BillingBankTransactionRow>[] = [
   },
 ];
 
-export function BillingBankTransactionsTab() {
+interface BillingBankTransactionsTabProps {
+  registerHeaderToolbar?: (toolbar: ReactNode) => void;
+}
+
+export function BillingBankTransactionsTab({
+  registerHeaderToolbar,
+}: BillingBankTransactionsTabProps) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filters, setFilters] = useState(EMPTY_BANK_TRANSACTION_FILTERS);
-
-  const data = useMemo(
-    () => filterBankTransactionRows(billingBankTransactionsMock, filters),
-    [filters],
-  );
+  const [hasAppliedSearch, setHasAppliedSearch] = useState(false);
 
   const hasFilters = hasActiveBankTransactionFilters(filters);
 
+  const data = useMemo(() => {
+    if (!hasAppliedSearch) {
+      return [];
+    }
+    return filterBankTransactionRows(billingBankTransactionsMock, filters);
+  }, [filters, hasAppliedSearch]);
+
   const summary = useMemo(() => computeBankTransactionBillableSummary(data), [data]);
 
-  const clearFilters = () => {
-    setFilters(EMPTY_BANK_TRANSACTION_FILTERS);
-  };
+  const applyFilters = useCallback((next: typeof EMPTY_BANK_TRANSACTION_FILTERS) => {
+    setFilters(next);
+    setHasAppliedSearch(true);
+  }, []);
 
-  const exportCsv = () => {
+  const clearFilters = useCallback(() => {
+    setFilters(EMPTY_BANK_TRANSACTION_FILTERS);
+    setHasAppliedSearch(false);
+  }, []);
+
+  const exportCsv = useCallback(() => {
     downloadSupportToolsCsv("transacoes-bancarias.csv", data, [
       { header: "ID da consulta", value: (row) => String(row.id) },
       { header: "Micro depósito", value: (row) => row.microDepositStatus ?? "" },
@@ -170,40 +186,62 @@ export function BillingBankTransactionsTab() {
       { header: "Usuário", value: (row) => row.username },
       { header: "Task ID", value: (row) => row.taskId ?? "" },
     ]);
-  };
+  }, [data]);
+
+  const openFilters = useCallback(() => {
+    setIsFiltersOpen(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!registerHeaderToolbar) {
+      return;
+    }
+    registerHeaderToolbar(
+      <SupportToolsFiltersToolbar
+        hasFilters={hasFilters}
+        onOpenFilters={openFilters}
+        onClearFilters={clearFilters}
+        onExportCsv={hasAppliedSearch ? exportCsv : undefined}
+      />,
+    );
+    return () => {
+      registerHeaderToolbar(null);
+    };
+  }, [registerHeaderToolbar, hasFilters, hasAppliedSearch, openFilters, clearFilters, exportCsv]);
+
+  const showResults = hasAppliedSearch;
 
   return (
     <div className="space-y-4">
-      <SupportToolsFiltersToolbar
-        hasFilters={hasFilters}
-        onOpenFilters={() => setIsFiltersOpen(true)}
-        onClearFilters={clearFilters}
-        onExportCsv={exportCsv}
-      />
+      {showResults ? (
+        <>
+          <SupportToolsSummaryCards summary={summary} />
 
-      <SupportToolsSummaryCards summary={summary} />
-
-      <div className="overflow-x-auto">
-        <DynamicTable
-          columns={columns}
-          data={data}
-          keyExtractor={(row) => String(row.id)}
-          layout="auto"
-          classNames={{
-            wrapper: "rounded-lg border border-gray-200 min-w-0 overflow-x-auto",
-            table: "w-max min-w-full",
-            td: "text-xs align-middle py-3",
-            th: "text-xs",
-          }}
-        />
-      </div>
+          <div className="overflow-x-auto">
+            <DynamicTable
+              columns={columns}
+              data={data}
+              keyExtractor={(row) => String(row.id)}
+              layout="auto"
+              classNames={{
+                wrapper: "rounded-lg border border-gray-200 min-w-0 overflow-x-auto",
+                table: "w-max min-w-full",
+                td: "text-xs align-middle py-3",
+                th: "text-xs",
+              }}
+            />
+          </div>
+        </>
+      ) : (
+        <SupportToolsEmptyResultsPrompt />
+      )}
 
       <BillingBankTransactionsFiltersDrawer
         isOpen={isFiltersOpen}
         filters={filters}
         suggestionRows={billingBankTransactionsMock}
         onOpenChange={setIsFiltersOpen}
-        onApply={setFilters}
+        onApply={applyFilters}
         onClear={clearFilters}
       />
     </div>

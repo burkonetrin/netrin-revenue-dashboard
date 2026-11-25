@@ -17,7 +17,7 @@ export function SupportToolsFiltersToolbar({
   onExportCsv,
 }: SupportToolsFiltersToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-nowrap items-center gap-2">
     <div
       className={`flex w-fit items-center rounded-lg ${
         hasFilters ? "bg-primary-600" : "bg-transparent"

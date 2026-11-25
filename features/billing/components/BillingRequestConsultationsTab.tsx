@@ -2,7 +2,7 @@
 
 import { DynamicTable } from "@/shared/components/DynamicTable";
 import type { ColumnConfig } from "@/shared/components/DynamicTable/types";
-import { useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { billingRequestConsultationsMock } from "../mock/billingRequestConsultations.mock";
 import type { BillingRequestConsultationRow } from "../types/billing-request-consultation.types";
 import { EMPTY_REQUEST_CONSULTATION_FILTERS } from "../types/support-tools-filters.types";
@@ -23,6 +23,7 @@ import {
   BillingRequestExecutedAtCell,
   BillingRequestUserCell,
 } from "./BillingRequestConsultationCells";
+import { SupportToolsEmptyResultsPrompt } from "./support-tools/SupportToolsEmptyResultsPrompt";
 import { SupportToolsFiltersToolbar } from "./support-tools/SupportToolsFiltersToolbar";
 import { SupportToolsTaskIdCell } from "./support-tools/SupportToolsTaskIdCell";
 import {
@@ -93,24 +94,39 @@ const columns: ColumnConfig<BillingRequestConsultationRow>[] = [
   },
 ];
 
-export function BillingRequestConsultationsTab() {
+interface BillingRequestConsultationsTabProps {
+  registerHeaderToolbar?: (toolbar: ReactNode) => void;
+}
+
+export function BillingRequestConsultationsTab({
+  registerHeaderToolbar,
+}: BillingRequestConsultationsTabProps) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filters, setFilters] = useState(EMPTY_REQUEST_CONSULTATION_FILTERS);
-
-  const data = useMemo(
-    () => filterRequestConsultationRows(billingRequestConsultationsMock, filters),
-    [filters],
-  );
+  const [hasAppliedSearch, setHasAppliedSearch] = useState(false);
 
   const hasFilters = hasActiveRequestConsultationFilters(filters);
 
+  const data = useMemo(() => {
+    if (!hasAppliedSearch) {
+      return [];
+    }
+    return filterRequestConsultationRows(billingRequestConsultationsMock, filters);
+  }, [filters, hasAppliedSearch]);
+
   const summary = useMemo(() => computeConsultationBillableSummary(data), [data]);
 
-  const clearFilters = () => {
-    setFilters(EMPTY_REQUEST_CONSULTATION_FILTERS);
-  };
+  const applyFilters = useCallback((next: typeof EMPTY_REQUEST_CONSULTATION_FILTERS) => {
+    setFilters(next);
+    setHasAppliedSearch(true);
+  }, []);
 
-  const exportCsv = () => {
+  const clearFilters = useCallback(() => {
+    setFilters(EMPTY_REQUEST_CONSULTATION_FILTERS);
+    setHasAppliedSearch(false);
+  }, []);
+
+  const exportCsv = useCallback(() => {
     downloadSupportToolsCsv("consultas-requisicoes.csv", data, [
       { header: "Origem", value: (row) => row.origin },
       { header: "Cliente", value: (row) => row.clientName },
@@ -129,40 +145,62 @@ export function BillingRequestConsultationsTab() {
       { header: "Cache", value: (row) => formatBillingRequestCache(row.cache) },
       { header: "Task ID", value: (row) => row.taskId ?? "" },
     ]);
-  };
+  }, [data]);
+
+  const openFilters = useCallback(() => {
+    setIsFiltersOpen(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!registerHeaderToolbar) {
+      return;
+    }
+    registerHeaderToolbar(
+      <SupportToolsFiltersToolbar
+        hasFilters={hasFilters}
+        onOpenFilters={openFilters}
+        onClearFilters={clearFilters}
+        onExportCsv={hasAppliedSearch ? exportCsv : undefined}
+      />,
+    );
+    return () => {
+      registerHeaderToolbar(null);
+    };
+  }, [registerHeaderToolbar, hasFilters, hasAppliedSearch, openFilters, clearFilters, exportCsv]);
+
+  const showResults = hasAppliedSearch;
 
   return (
     <div className="space-y-4">
-      <SupportToolsFiltersToolbar
-        hasFilters={hasFilters}
-        onOpenFilters={() => setIsFiltersOpen(true)}
-        onClearFilters={clearFilters}
-        onExportCsv={exportCsv}
-      />
+      {showResults ? (
+        <>
+          <SupportToolsSummaryCards summary={summary} />
 
-      <SupportToolsSummaryCards summary={summary} />
-
-      <div className="overflow-x-auto">
-        <DynamicTable
-          columns={columns}
-          data={data}
-          keyExtractor={(row) => `${row.origin}-${row.id}`}
-          layout="auto"
-          classNames={{
-            wrapper: "rounded-lg border border-gray-200 min-w-0 overflow-x-auto",
-            table: "w-max min-w-full",
-            td: "text-xs align-middle py-3",
-            th: "text-xs",
-          }}
-        />
-      </div>
+          <div className="overflow-x-auto">
+            <DynamicTable
+              columns={columns}
+              data={data}
+              keyExtractor={(row) => `${row.origin}-${row.id}`}
+              layout="auto"
+              classNames={{
+                wrapper: "rounded-lg border border-gray-200 min-w-0 overflow-x-auto",
+                table: "w-max min-w-full",
+                td: "text-xs align-middle py-3",
+                th: "text-xs",
+              }}
+            />
+          </div>
+        </>
+      ) : (
+        <SupportToolsEmptyResultsPrompt />
+      )}
 
       <BillingRequestConsultationsFiltersDrawer
         isOpen={isFiltersOpen}
         filters={filters}
         suggestionRows={billingRequestConsultationsMock}
         onOpenChange={setIsFiltersOpen}
-        onApply={setFilters}
+        onApply={applyFilters}
         onClear={clearFilters}
       />
     </div>
