@@ -40,9 +40,17 @@ export function ClientTagsSectionMock() {
   );
 }
 
-export function SapCodeSectionMock() {
-  const [sapCode, setSapCode] = useState("100234");
-  const [sankhyaCode, setSankhyaCode] = useState("200345");
+interface SapCodeSectionMockProps {
+  sapCodeInitial?: string;
+  sankhyaCodeInitial?: string;
+}
+
+export function SapCodeSectionMock({
+  sapCodeInitial = "100234",
+  sankhyaCodeInitial = "200345",
+}: SapCodeSectionMockProps) {
+  const [sapCode, setSapCode] = useState(sapCodeInitial);
+  const [sankhyaCode, setSankhyaCode] = useState(sankhyaCodeInitial);
 
   return (
     <>

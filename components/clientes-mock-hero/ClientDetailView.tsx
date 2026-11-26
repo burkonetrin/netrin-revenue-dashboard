@@ -50,7 +50,10 @@ import {
 
 } from "./ClientDetailTabPanels";
 
-import { PendingPaymentAlert } from "./PendingPaymentAlert";
+import {
+  MISSING_SANKHYA_CODE_MESSAGE,
+  PendingPaymentAlert,
+} from "./PendingPaymentAlert";
 
 import { UserFormDrawerMock } from "./UserFormDrawerMock";
 
@@ -161,6 +164,7 @@ export function ClientDetailView({ clientId }: ClientDetailViewProps) {
 
 
   const showMissingPaymentAlert = client.pendingPaymentInfo === true;
+  const showMissingSankhyaCodeAlert = client.missingSankhyaCode === true;
 
 
 
@@ -202,14 +206,14 @@ export function ClientDetailView({ clientId }: ClientDetailViewProps) {
 
 
 
-      {showMissingPaymentAlert ? (
-
-        <div className="mt-6">
-
-          <PendingPaymentAlert visible />
-
+      {showMissingPaymentAlert || showMissingSankhyaCodeAlert ? (
+        <div className="mt-6 flex flex-col gap-3">
+          <PendingPaymentAlert visible={showMissingPaymentAlert} />
+          <PendingPaymentAlert
+            visible={showMissingSankhyaCodeAlert}
+            message={MISSING_SANKHYA_CODE_MESSAGE}
+          />
         </div>
-
       ) : null}
 
 

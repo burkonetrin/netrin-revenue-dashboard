@@ -11,10 +11,7 @@ import { Checkbox, Input, Select, SelectItem, Spinner } from "@heroui/react";
 import { SourceGroupSourcesStep } from "./SourceGroupSourcesStep";
 import type { SourceGroupFormData } from "../types/data-source-bundles.types";
 
-export type SourceGroupFormStep = 1 | 2;
-
 interface SourceGroupFormProps {
-  step: SourceGroupFormStep;
   formData: SourceGroupFormData;
   onFormDataChange: (data: SourceGroupFormData) => void;
   isLoading?: boolean;
@@ -26,11 +23,22 @@ interface SourceGroupFormProps {
   showSourceError?: boolean;
 }
 
+function FormSectionTitle({
+  children,
+  className = "",
+}: {
+  children: string;
+  className?: string;
+}) {
+  return (
+    <h3 className={`text-base font-medium text-default-600 ${className}`.trim()}>{children}</h3>
+  );
+}
+
 /**
  * Formulário de grupo de fontes (bundle).
  */
 export function SourceGroupForm({
-  step,
   formData,
   onFormDataChange,
   isLoading = false,
@@ -59,18 +67,6 @@ export function SourceGroupForm({
     );
   }
 
-  if (step === 2) {
-    return (
-      <SourceGroupSourcesStep
-        selectedSources={formData.selectedSources}
-        onSelectedSourcesChange={(selectedSources) =>
-          onFormDataChange({ ...formData, selectedSources })
-        }
-        showSourceError={showSourceError}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6 font-sans">
       <Checkbox
@@ -87,6 +83,8 @@ export function SourceGroupForm({
       >
         Ativo
       </Checkbox>
+
+      <FormSectionTitle>Dados básicos</FormSectionTitle>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="source-group-name" className="text-sm text-zinc-500">
@@ -124,7 +122,15 @@ export function SourceGroupForm({
         </Select>
       </div>
 
-      {showSourceError && <p className="text-tiny text-danger">Campo obrigatório</p>}
+      <FormSectionTitle className="mt-4">Fontes</FormSectionTitle>
+
+      <SourceGroupSourcesStep
+        selectedSources={formData.selectedSources}
+        onSelectedSourcesChange={(selectedSources) =>
+          onFormDataChange({ ...formData, selectedSources })
+        }
+        showSourceError={showSourceError}
+      />
     </div>
   );
 }

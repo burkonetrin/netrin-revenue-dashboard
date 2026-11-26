@@ -37,6 +37,7 @@ const INITIAL_FORM_DATA: EditSourceFormData = {
   description: "",
   shortDescription: "",
   longDescription: "",
+  observations: "",
   internalName: "",
   pathDisplay: "",
   referenceCost: "",
@@ -101,6 +102,7 @@ export function SourcesTab() {
       description: sourceDetail.description ?? "",
       shortDescription: sourceDetail.description ?? "",
       longDescription: "",
+      observations: sourceDetail.observations ?? "",
       internalName: sourceDetail.internalName,
       pathDisplay: pathNameToDisplay(sourceDetail.pathName),
       referenceCost:
@@ -142,6 +144,7 @@ export function SourcesTab() {
         data: {
           name: formData.shortName,
           description: formData.shortDescription,
+          observations: formData.observations.trim() || null,
           internalName: formData.internalName,
           pathName: displayToPathName(formData.pathDisplay),
           referenceCost: formData.referenceCost

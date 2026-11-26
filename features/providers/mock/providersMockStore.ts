@@ -840,6 +840,7 @@ export function mockUpdateDataSource(id: string, data: UpdateDataSourceRequest):
     ...dataSources[idx],
     name: data.name,
     description: data.description,
+    observations: data.observations ?? dataSources[idx].observations,
     internalName: data.internalName,
     pathName: data.pathName,
     referenceCost: parsedReference ?? dataSources[idx].referenceCost,

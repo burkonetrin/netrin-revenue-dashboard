@@ -2,7 +2,18 @@
 
 import { AlertTriangle } from "lucide-react";
 
-export function PendingPaymentAlert({ visible }: { visible: boolean }) {
+const PAYMENT_MESSAGE = "Faltam informações de pagamento neste cliente";
+
+export const MISSING_SANKHYA_CODE_MESSAGE =
+  "Código Sankhya não identificado. Este cliente somente será integrado após seu código ser definido no Sankhya";
+
+export function PendingPaymentAlert({
+  visible,
+  message = PAYMENT_MESSAGE,
+}: {
+  visible: boolean;
+  message?: string;
+}) {
   if (!visible) return null;
   return (
     <div
@@ -10,7 +21,7 @@ export function PendingPaymentAlert({ visible }: { visible: boolean }) {
       role="alert"
     >
       <AlertTriangle size={22} className="shrink-0 text-gray-900" />
-      <span>Faltam informações de pagamento neste cliente</span>
+      <span>{message}</span>
     </div>
   );
 }

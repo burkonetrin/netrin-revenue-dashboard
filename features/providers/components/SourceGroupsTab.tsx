@@ -149,7 +149,6 @@ export function SourceGroupsTab() {
   const pageSize = 10;
   const [drawerMode, setDrawerMode] = useState<DrawerMode>("create");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerStep, setDrawerStep] = useState<1 | 2>(1);
   const [editingBundleId, setEditingBundleId] = useState<string | null>(null);
   const [formData, setFormData] = useState<SourceGroupFormData>(INITIAL_FORM_DATA);
   const hydratedBundleIdRef = useRef<string | null>(null);
@@ -280,7 +279,6 @@ export function SourceGroupsTab() {
   const resetDrawer = useCallback(() => {
     setEditingBundleId(null);
     hydratedBundleIdRef.current = null;
-    setDrawerStep(1);
     setFormData(INITIAL_FORM_DATA);
     setShowProductError(false);
     setShowNameError(false);
@@ -296,7 +294,6 @@ export function SourceGroupsTab() {
   const handleNewGroup = useCallback(() => {
     resetDrawer();
     setDrawerMode("create");
-    setDrawerStep(1);
     setIsDrawerOpen(true);
   }, [resetDrawer]);
 
@@ -305,7 +302,6 @@ export function SourceGroupsTab() {
     setFormData(INITIAL_FORM_DATA);
     setEditingBundleId(bundle.id);
     setDrawerMode("edit");
-    setDrawerStep(1);
     setIsDrawerOpen(true);
   }, []);
 
@@ -316,21 +312,6 @@ export function SourceGroupsTab() {
   const handleViewLinkedClients = useCallback((bundle: DataSourceBundle) => {
     setLinkedClientsBundle(bundle);
   }, []);
-
-  const handleProceed = useCallback(() => {
-    const missingName = !formData.name.trim();
-    const missingProducts = !hasProducts;
-
-    if (missingName || missingProducts) {
-      setShowNameError(missingName);
-      if (missingProducts) {
-        setShowProductError(true);
-      }
-      return;
-    }
-    setShowNameError(false);
-    setDrawerStep(2);
-  }, [formData.name, hasProducts]);
 
   const refreshBundleData = useCallback(async (bundleId?: string) => {
     await queryClient.refetchQueries(
@@ -345,9 +326,19 @@ export function SourceGroupsTab() {
     }
   }, [queryClient]);
 
-  const handleSave = useCallback(async (saveSources: boolean) => {
-    if (saveSources && !hasSources) {
+  const handleSave = useCallback(async () => {
+    const missingName = !formData.name.trim();
+    const missingProducts = !hasProducts;
+    const missingSources = !hasSources;
+
+    setShowNameError(missingName);
+    if (missingProducts) {
+      setShowProductError(true);
+    }
+    if (missingSources) {
       setShowSourceError(true);
+    }
+    if (missingName || missingProducts || missingSources) {
       return;
     }
 
@@ -371,7 +362,7 @@ export function SourceGroupsTab() {
         hydratedBundleIdRef.current = created.id;
         initialSnapshotRef.current = { isActive: formData.isActive, dataSourceIds: [] };
 
-        if (saveSources && dataSourceIds.length > 0) {
+        if (dataSourceIds.length > 0) {
           const status = await assignDataSources.mutateAsync({
             id: created.id,
             data: { dataSourceIds },
@@ -388,26 +379,24 @@ export function SourceGroupsTab() {
         });
         serverChanged = true;
 
-        if (saveSources) {
-          const { added, removed } = diffIds(dataSourceIds, initialSnapshotRef.current.dataSourceIds);
+        const { added, removed } = diffIds(dataSourceIds, initialSnapshotRef.current.dataSourceIds);
 
-          if (added.length > 0) {
-            const status = await assignDataSources.mutateAsync({
-              id: editingBundleId,
-              data: { dataSourceIds: added },
-            });
-            hasPartialResult ||= status === 206;
-            serverChanged = true;
-          }
+        if (added.length > 0) {
+          const status = await assignDataSources.mutateAsync({
+            id: editingBundleId,
+            data: { dataSourceIds: added },
+          });
+          hasPartialResult ||= status === 206;
+          serverChanged = true;
+        }
 
-          if (removed.length > 0) {
-            const status = await removeDataSources.mutateAsync({
-              id: editingBundleId,
-              data: { dataSourceIds: removed },
-            });
-            hasPartialResult ||= status === 206;
-            serverChanged = true;
-          }
+        if (removed.length > 0) {
+          const status = await removeDataSources.mutateAsync({
+            id: editingBundleId,
+            data: { dataSourceIds: removed },
+          });
+          hasPartialResult ||= status === 206;
+          serverChanged = true;
         }
       }
 
@@ -687,7 +676,6 @@ export function SourceGroupsTab() {
             </div>
           ) : (
             <SourceGroupForm
-              step={drawerStep}
               formData={formData}
               onFormDataChange={setFormData}
               isLoading={false}
@@ -702,45 +690,22 @@ export function SourceGroupsTab() {
         }
         footer={
           <div className={`${providerDrawerFooterStretchClass} font-sans`}>
-            {drawerStep === 2 && (
-              <Button
-                variant="light"
-                onPress={() => setDrawerStep(1)}
-                isDisabled={isSaving}
-                className={providerDrawerSecondaryStretchButtonClass}
-              >
-                Voltar
-              </Button>
-            )}
-            {drawerStep === 1 && (
-              <Button
-                variant="light"
-                onPress={handleCloseDrawer}
-                isDisabled={isSaving}
-                className={providerDrawerSecondaryStretchButtonClass}
-              >
-                Cancelar
-              </Button>
-            )}
-            {drawerStep === 1 && drawerMode === "edit" && (
-              <Button
-                variant="light"
-                onPress={() => handleSave(false)}
-                isLoading={isSaving}
-                isDisabled={!isFormReady || isSaving}
-                className={providerDrawerSecondaryStretchButtonClass}
-              >
-                Salvar e sair
-              </Button>
-            )}
+            <Button
+              variant="light"
+              onPress={handleCloseDrawer}
+              isDisabled={isSaving}
+              className={providerDrawerSecondaryStretchButtonClass}
+            >
+              Cancelar
+            </Button>
             <Button
               color="primary"
-              onPress={drawerStep === 1 ? handleProceed : () => handleSave(true)}
+              onPress={() => void handleSave()}
               isLoading={isSaving}
               isDisabled={!isFormReady || isSaving}
               className={providerDrawerPrimaryStretchButtonClass}
             >
-              {drawerStep === 1 ? "Prosseguir" : "Salvar grupo"}
+              Salvar
             </Button>
           </div>
         }

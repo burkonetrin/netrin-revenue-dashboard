@@ -239,6 +239,20 @@ export function EditSourceForm({
       </div>
 
       <div className="flex flex-col gap-2">
+        <label htmlFor="edit-source-observations" className="text-sm text-zinc-500">
+          Observações
+        </label>
+        <Textarea
+          id="edit-source-observations"
+          placeholder="Digite as observações"
+          value={formData.observations}
+          onValueChange={(observations) => update({ observations })}
+          classNames={defaultInputClassNames}
+          minRows={3}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
         <label htmlFor="edit-source-path" className="text-sm text-zinc-500">
           Path
         </label>

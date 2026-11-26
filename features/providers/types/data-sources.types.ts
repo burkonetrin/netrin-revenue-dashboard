@@ -15,6 +15,7 @@ export interface DataSource {
   id: string;
   name: string;
   description: string;
+  observations?: string;
   internalName: string;
   pathName: string[];
   consultationTypes?: Array<string | DataSourceConsultationType>;
@@ -94,6 +95,7 @@ export interface DataSourceQueryParams {
 export interface UpdateDataSourceRequest {
   name: string;
   description: string;
+  observations?: string | null;
   internalName: string;
   pathName: string[];
   referenceCost: string | null;
@@ -119,6 +121,7 @@ export interface EditSourceFormData {
   description: string;
   shortDescription: string;
   longDescription: string;
+  observations: string;
   internalName: string;
   pathDisplay: string;
   referenceCost: string;

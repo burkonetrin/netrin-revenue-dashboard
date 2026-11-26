@@ -280,7 +280,9 @@ export function ClientDetailAboutPanel({ client }: { client: MockClient }) {
               Ativo
             </Switch>
           </div>
-          <SapCodeSectionMock />
+          <SapCodeSectionMock
+            sankhyaCodeInitial={client.missingSankhyaCode ? "" : undefined}
+          />
           <Input
             label="CNPJ"
             labelPlacement="outside"

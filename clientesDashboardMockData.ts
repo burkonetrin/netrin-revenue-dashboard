@@ -67,6 +67,8 @@ export interface MockClient {
   nfe: MockNfeNote[];
   /** Exibe banner de pagamento pendente (aba Informações de pagamento). */
   pendingPaymentInfo?: boolean;
+  /** Exibe banner quando o código Sankhya ainda não foi identificado. */
+  missingSankhyaCode?: boolean;
 }
 
 export interface MockFranchise {
@@ -584,6 +586,7 @@ const CLIENT_PROFILES_BY_STATUS: Record<
     cnpj: "67.890.123/0001-45",
     inicio: "01/04/2023",
     ativo: true,
+    missingSankhyaCode: true,
     prod: 1,
     produtos: ["Background Check"],
     referencia: "set/2025 - set/2025",
